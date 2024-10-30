@@ -184,8 +184,22 @@ export function generateFooter () {
     )
   })
 
-  const text = document.createElement('div')
-  text.appendChild(document.createTextNode('Maintainer Thiemo Leonhardt'))
+  const maintainer = document.createElement('div')
+  maintainer.appendChild(document.createTextNode('Maintainer Thiemo Leonhardt'))
+
+  const contributorLink = document.createElement('div')
+  contributorLink.classList.add(
+    'hand'
+  )
+  contributorLink.appendChild(document.createTextNode('Contributors'))
+  contributorLink.setAttribute('href', 'https://gitlab.com/dev-ddi/cs-school-tools/struktog/-/blob/master/CONTRIBUTORS.md')
+  contributorLink.setAttribute('data-tooltip', 'Contributors')
+  contributorLink.addEventListener('click', () => {
+    window.open(
+      'https://gitlab.com/dev-ddi/cs-school-tools/struktog/-/blob/master/CONTRIBUTORS.md',
+      '_blank'
+    )
+  })
 
   const hash = document.createElement('div')
   hash.appendChild(document.createTextNode(__COMMIT_HASH__))
@@ -200,14 +214,16 @@ export function generateFooter () {
   impressumLink.addEventListener('click', () => {
     window.open(
       'https://ddi.education/impressum',
-      '_self'
+      '_blank'
     )
   })
 
   footerDiv.appendChild(footerSpan)
   footerSpan.appendChild(sourceLink)
   footerSpan.appendChild(document.createTextNode('|'))
-  footerSpan.appendChild(text)
+  footerSpan.appendChild(maintainer)
+  footerSpan.appendChild(document.createTextNode('|'))
+  footerSpan.appendChild(contributorLink)
   footerSpan.appendChild(document.createTextNode('|'))
   footerSpan.appendChild(hash)
   footerSpan.appendChild(document.createTextNode('|'))

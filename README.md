@@ -49,13 +49,6 @@ Aufgaben können über eine übergebene URL geladen werden. Der Server auf dem d
 
 Thiemo Leonhardt
 
-# Contributors
-
-Klaus Ramm,
-Tom-Maurice Schreiber
-Sören Schwab
-Georg Schlorf
-
 # Lizenz
 
 aGPL 3
