@@ -154,12 +154,6 @@ $main-background-color: rgba(128,212,255, 0.5);
     margin-left: 0.4em;
     flex: 1;
     display: none;
-    @media screen and (min-width: 480px) {
-      display: inline-block;
-    }
-    @media screen and (min-width: 1200px) {
-      display: none;
-    }
   }
 }
 
