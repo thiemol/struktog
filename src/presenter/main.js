@@ -726,8 +726,18 @@ export class Presenter {
       'data:application/json;charset=utf-8,' +
       encodeURIComponent(this.getStringifiedTree())
     // create filename with current date in the name
+    const now = new Date()
+    let hours = now.getHours()
+    let minutes = now.getMinutes()
+
+    hours = hours < 10 ? '0' + hours : hours
+    minutes = minutes < 10 ? '0' + minutes : minutes
+
+    const timeString = hours + '-' + minutes
+    // get Struktogramm Name
+    const structoName = document.getElementById('structoName').innerHTML
     const exportFileDefaultName =
-      'struktog_' + new Date(Date.now()).toJSON().substring(0, 10) + '.json'
+      structoName + '-' + new Date(Date.now()).toJSON().substring(0, 10) + '-' + timeString + '.json'
     // generate the download button element and append it to the node
     const linkElement = document.createElement('a')
     linkElement.setAttribute('href', dataUri)
@@ -739,6 +749,17 @@ export class Presenter {
    * Read input from a JSON file and replace the current model
    */
   readFile (event) {
+    const file = event.target.files[0]
+    if (!file) {
+      return
+    }
+    let fileName = file.name
+    const dashIndex = fileName.indexOf('-')
+    if (dashIndex !== -1) {
+      fileName = fileName.substring(0, dashIndex)
+    }
+    document.getElementById('structoName').innerHTML = fileName
+
     // create a FileReader instance
     const reader = new FileReader()
     // read file and parse JSON, then update model
