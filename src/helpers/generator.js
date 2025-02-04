@@ -89,6 +89,25 @@ export function generateHtmltree () {
   divider.classList.add('divider')
   document.body.appendChild(divider)
 
+  const dividerText = document.createElement('div')
+  dividerText.classList.add('divider-text')
+  dividerText.innerHTML = 'unbenannt'
+  dividerText.classList.add(
+    'tooltip',
+    'tooltip-bottom',
+    'hand'
+  )
+  dividerText.setAttribute('data-tooltip', 'Benenne dein Struktogramm.')
+  dividerText.addEventListener('click', () => {
+    let structoName = window.prompt('Bitte gib einen Namen für dein Struktogramm ein:')
+    if (structoName === null || structoName.trim() === ' ') {
+      structoName = 'unbenannt'
+    }
+    dividerText.innerHTML = structoName
+  })
+  dividerText.setAttribute('id', 'structoName')
+  document.body.appendChild(dividerText)
+
   // main
   const main = document.createElement('main')
   document.body.appendChild(main)
