@@ -213,7 +213,7 @@ export function generateFooter () {
   impressumLink.setAttribute('data-tooltip', 'Impressum')
   impressumLink.addEventListener('click', () => {
     window.open(
-      'https://ddi.education/impressum',
+      'https://ddi.education/impressum/',
       '_blank'
     )
   })
