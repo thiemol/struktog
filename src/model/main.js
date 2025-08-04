@@ -67,7 +67,6 @@ class Model {
    */
   findAndAlterElement (uid, subTree, alterFunction, hasRealParent, text) {
     // end the recursion
-    console.log(uid)
     if (subTree === null || subTree.type === 'Placeholder') {
       return subTree
     } else {

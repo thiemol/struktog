@@ -522,7 +522,7 @@ export class Presenter {
       }
       case 'InsertCase':
       case 'CatchNode':
-        if (deleteElem.followElement.followElement.type !== 'Placeholder') {
+        if (deleteElem.followElement.type !== 'Placeholder') {
           this.prepareRemoveQuestion(uid)
         } else {
           this.removeNodeFromTree(uid)
@@ -782,7 +782,12 @@ export class Presenter {
     // get Struktogramm Name
     const structoName = document.getElementById('structoName').innerHTML
     const exportFileDefaultName =
-      structoName + '-' + new Date(Date.now()).toJSON().substring(0, 10) + '-' + timeString + '.json'
+      structoName +
+      '-' +
+      new Date(Date.now()).toJSON().substring(0, 10) +
+      '-' +
+      timeString +
+      '.json'
     // generate the download button element and append it to the node
     const linkElement = document.createElement('a')
     linkElement.setAttribute('href', dataUri)
