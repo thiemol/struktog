@@ -103,11 +103,42 @@ const config = {
 }
 
 module.exports = (env, argv) => {
-  if (!argv || !argv.mode) {
-    config.mode = 'development'
-  }
-  if (!argv || !argv.mode || argv.mode === 'development') {
+  const isDev = argv && argv.mode === 'development'
+  // Mode setzen
+  config.mode = isDev ? 'development' : 'production'
+
+  if (isDev) {
+    // Schnellere & detailreichere Source-Maps
+    config.devtool = 'eval-source-map'
+
+    // Alle Optimierungen deaktivieren
+    config.optimization = {
+      minimize: false,
+      splitChunks: false,
+      runtimeChunk: false,
+      moduleIds: 'named',
+      chunkIds: 'named'
+    }
+
+    // SCSS-Regel anpassen: style-loader statt CSS-Extraktion
+    const sassRule = config.module.rules.find((r) =>
+      r.test.toString().includes('scss')
+    )
+    if (sassRule) {
+      sassRule.use = ['style-loader', 'css-loader', 'sass-loader']
+    }
+
+    // Plugins für Dev-Workflow filtern
+    config.plugins = config.plugins.filter(
+      (plugin) =>
+        !(plugin instanceof MiniCssExtractPlugin) &&
+        !(plugin instanceof CleanWebpackPlugin) &&
+        !(plugin instanceof CopyPlugin)
+    )
+  } else {
+    // Production-Sourcemaps (falls benötigt)
     config.devtool = 'source-map'
   }
+
   return config
 }
