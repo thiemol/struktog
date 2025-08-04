@@ -325,15 +325,11 @@ export class Presenter {
             type: 'InsertNode',
             followElement: { type: 'Placeholder' }
           },
-          // catchChild: {
-          //   id: guidGenerator(),
-          //   type: 'InsertNode',
-          //   followElement: { type: 'Placeholder' }
-          // },
           catches: [
             {
               id: guidGenerator(),
               type: 'InsertNode',
+              specialType: 'CatchNode',
               text: 'undefiniert',
               followElement: { type: 'Placeholder' }
             }
@@ -463,7 +459,11 @@ export class Presenter {
     }
 
     const deleteElem = this.model.getElementInTree(uid, this.model.getTree())
-    switch (deleteElem.type) {
+    let type = deleteElem.type
+    if (deleteElem.specialType && deleteElem.specialType === 'CatchNode') {
+      type = deleteElem.specialType
+    }
+    switch (type) {
       case 'TaskNode':
       case 'InputNode':
       case 'OutputNode':
@@ -521,6 +521,7 @@ export class Presenter {
         break
       }
       case 'InsertCase':
+      case 'CatchNode':
         if (deleteElem.followElement.followElement.type !== 'Placeholder') {
           this.prepareRemoveQuestion(uid)
         } else {

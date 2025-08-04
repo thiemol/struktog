@@ -247,8 +247,8 @@ class Model {
    * @return   subTree         altered subTree object (without removed element)
    */
   removeNode (subTree, hasRealParent, text) {
-    // InsertCases are just completely removed, they do not have follow elements
-    if (subTree.type === 'InsertCase') {
+    // InsertCases and CatchNodes are just completely removed, they do not have follow elements
+    if (subTree.type === 'InsertCase' || subTree.specialType === 'CatchNode') {
       return null
     }
     // remove a node, but check if the parent is a container and a placeholder must be inserted
@@ -384,6 +384,8 @@ class Model {
       subTree.catches.push({
         id: guidGenerator(),
         type: 'InsertNode',
+        text: 'undefiniert',
+        specialType: 'CatchNode',
         followElement: { type: 'Placeholder' }
       })
     }

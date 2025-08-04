@@ -845,7 +845,6 @@ export class Structogram {
           }
           const lengthCatches = subTree.catches.length
           for (let i = 0; i < lengthCatches; i++) {
-            // for (const catchElem of subTree.catches) {
             const catchElem = subTree.catches[i]
             // container for the vertical line to indent it correctly
             const vertLineContainer = newElement(
@@ -867,6 +866,11 @@ export class Structogram {
               divTryCatchNode
             )
             divCatch.id = catchElem.id
+
+            if (i !== 0) {
+              const optionDiv = this.createOptionDiv('CatchNode', divCatch.id)
+              divCatch.appendChild(optionDiv)
+            }
             const textCatch = newElement('div', ['symbol'], divCatch)
             textCatch.appendChild(document.createTextNode('Catch'))
 
@@ -1448,7 +1452,11 @@ export class Structogram {
     }
 
     // all elements can be moved, except InsertCases they are bind to the case node
-    if (type !== 'InsertCase' && type !== 'FunctionNode') {
+    if (
+      type !== 'InsertCase' &&
+      type !== 'FunctionNode' &&
+      type !== 'CatchNode'
+    ) {
       const moveElem = document.createElement('div')
       moveElem.classList.add('moveIcon')
       moveElem.classList.add('optionIcon')
@@ -1484,7 +1492,7 @@ export class Structogram {
    * @param    uid       id of the element
    * @return   div       complete build HTML structure
    */
-  createTextDiv (type, content, uid, nrCases = null, catchId) {
+  createTextDiv (type, content, uid, nrCases = null) {
     // create the parent container
     const textDiv = document.createElement('div')
     textDiv.classList.add('columnAuto', 'symbol')
