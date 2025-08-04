@@ -103,7 +103,7 @@ export class Presenter {
   }
 
   /**
-   * Start the tranformation of the model tree to sourcecode
+   * Start the transformation of the model tree to sourcecode
    *
    * @param   lang   programming language to which the translation happens
    */
@@ -315,7 +315,6 @@ export class Presenter {
         this.nextInsertElement = {
           id: guidGenerator(),
           type: 'TryCatchNode',
-          text: '',
           followElement: {
             id: guidGenerator(),
             type: 'InsertNode',
@@ -326,11 +325,19 @@ export class Presenter {
             type: 'InsertNode',
             followElement: { type: 'Placeholder' }
           },
-          catchChild: {
-            id: guidGenerator(),
-            type: 'InsertNode',
-            followElement: { type: 'Placeholder' }
-          }
+          // catchChild: {
+          //   id: guidGenerator(),
+          //   type: 'InsertNode',
+          //   followElement: { type: 'Placeholder' }
+          // },
+          catches: [
+            {
+              id: guidGenerator(),
+              type: 'InsertNode',
+              text: 'undefiniert',
+              followElement: { type: 'Placeholder' }
+            }
+          ]
         }
         break
     }
@@ -356,7 +363,7 @@ export class Presenter {
    * Helper function to correctly abort while using drag and drop
    */
   resetDrop () {
-    // while drag and droping an inserting element, the user can drop everywhere
+    // while drag and dropping an inserting element, the user can drop everywhere
     // if the location is not valid, one step more must be done to abort everything
     if (this.insertMode) {
       this.reset()
@@ -419,11 +426,42 @@ export class Presenter {
   }
 
   /**
+   * Add another new catch
+   *
+   * @param   uid   id of the clicked element in the struktogramm
+   */
+  addCatch (uid) {
+    this.updateUndo()
+    this.model.setTree(
+      this.model.findAndAlterElement(
+        uid,
+        this.model.getTree(),
+        this.model.insertNewCatch,
+        false,
+        ''
+      )
+    )
+    this.checkUndo()
+    this.updateBrowserStore()
+    this.renderAllViews()
+  }
+
+  /**
    * Remove the element from the tree
    *
    * @param   uid   id of the clicked element in the struktogramm
    */
   removeElement (uid) {
+    function _checkEmptyCatches (catches) {
+      // check if all catches are empty
+      for (const item of catches) {
+        if (item.followElement.type !== 'Placeholder') {
+          return false
+        }
+      }
+      return true
+    }
+
     const deleteElem = this.model.getElementInTree(uid, this.model.getTree())
     switch (deleteElem.type) {
       case 'TaskNode':
@@ -452,9 +490,10 @@ export class Presenter {
         }
         break
       case 'TryCatchNode':
+        // loop through all catches
         if (
           deleteElem.tryChild.followElement.type !== 'Placeholder' ||
-          deleteElem.catchChild.followElement.type !== 'Placeholder'
+          _checkEmptyCatches(deleteElem.catches)
         ) {
           this.prepareRemoveQuestion(uid)
         } else {
@@ -640,6 +679,7 @@ export class Presenter {
     }
     // insert the new node, on moving, its the removed
     const elemId = this.nextInsertElement.id
+    console.log(this.nextInsertElement)
     this.model.setTree(
       this.model.findAndAlterElement(
         uid,
@@ -649,7 +689,7 @@ export class Presenter {
         ''
       )
     )
-    // reset the buttons if moving occured
+    // reset the buttons if moving occurred
     if (moveState) {
       // TODO
       this.resetButtons()
@@ -674,9 +714,13 @@ export class Presenter {
    */
   switchEditState (uid, paramIndex = null) {
     let elem = document.getElementById(uid)
+    console.log(elem)
 
     // element is a function node
-    if (elem.children[0].children[0].classList.contains('func-box-header')) {
+    if (
+      elem.children[0].children.length &&
+      elem.children[0].children[0].classList.contains('func-box-header')
+    ) {
       let funcTextNode = null
       // click function name
       if (paramIndex === null) {

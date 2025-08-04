@@ -143,7 +143,7 @@ export function generateHtmltree () {
 
 /**
  * Generate HTML tree for footer
-**/
+ **/
 export function generateFooter () {
   // footer
   const footer = document.createElement('footer')
@@ -171,28 +171,27 @@ export function generateFooter () {
   }
 
   const sourceLink = document.createElement('div')
-  sourceLink.classList.add(
-    'hand'
-  )
+  sourceLink.classList.add('hand')
   sourceLink.appendChild(document.createTextNode('Source code'))
-  sourceLink.setAttribute('href', 'https://gitlab.com/dev-ddi/cs-school-tools/struktog')
+  sourceLink.setAttribute(
+    'href',
+    'https://gitlab.com/dev-ddi/cs-school-tools/struktog'
+  )
   sourceLink.setAttribute('data-tooltip', 'Gitlab Repository')
   sourceLink.addEventListener('click', () => {
-    window.open(
-      'https://gitlab.com/dev-ddi/cs-school-tools/struktog',
-      '_blank'
-    )
+    window.open('https://gitlab.com/dev-ddi/cs-school-tools/struktog', '_blank')
   })
 
   const maintainer = document.createElement('div')
   maintainer.appendChild(document.createTextNode('Maintainer Thiemo Leonhardt'))
 
   const contributorLink = document.createElement('div')
-  contributorLink.classList.add(
-    'hand'
-  )
+  contributorLink.classList.add('hand')
   contributorLink.appendChild(document.createTextNode('Contributors'))
-  contributorLink.setAttribute('href', 'https://gitlab.com/dev-ddi/cs-school-tools/struktog/-/blob/master/CONTRIBUTORS.md')
+  contributorLink.setAttribute(
+    'href',
+    'https://gitlab.com/dev-ddi/cs-school-tools/struktog/-/blob/master/CONTRIBUTORS.md'
+  )
   contributorLink.setAttribute('data-tooltip', 'Contributors')
   contributorLink.addEventListener('click', () => {
     window.open(
@@ -205,17 +204,12 @@ export function generateFooter () {
   hash.appendChild(document.createTextNode(__COMMIT_HASH__))
 
   const impressumLink = document.createElement('div')
-  impressumLink.classList.add(
-    'hand'
-  )
+  impressumLink.classList.add('hand')
   impressumLink.appendChild(document.createTextNode('Impressum'))
   impressumLink.setAttribute('href', 'https://ddi.education/impressum')
   impressumLink.setAttribute('data-tooltip', 'Impressum')
   impressumLink.addEventListener('click', () => {
-    window.open(
-      'https://ddi.education/impressum',
-      '_blank'
-    )
+    window.open('https://ddi.education/impressum/', '_blank')
   })
 
   footerDiv.appendChild(footerSpan)
@@ -278,10 +272,7 @@ export function generateInfoButton (domNode) {
   )
   infoButtonDiv.setAttribute('data-tooltip', 'Gitlab Repository')
   infoButtonDiv.addEventListener('click', () => {
-    window.open(
-      'https://gitlab.com/dev-ddi/cs-school-tools/struktog',
-      '_blank'
-    )
+    window.open('https://gitlab.com/dev-ddi/cs-school-tools/struktog', '_blank')
   })
 
   domNode.appendChild(infoButtonDiv)

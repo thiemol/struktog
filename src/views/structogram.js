@@ -110,9 +110,7 @@ export class Structogram {
 
     const optionsContainer2 = document.createElement('div')
     optionsContainer2.id = 'struktoOptions2'
-    optionsContainer2.classList.add(
-      'struktoOptions2'
-    )
+    optionsContainer2.classList.add('struktoOptions2')
     editorOptions.appendChild(optionsContainer2)
 
     this.createStrukOptions(optionsContainer2)
@@ -393,12 +391,12 @@ export class Structogram {
   }
 
   /**
-   * @param   countParam              count of variables inside the paramter div
+   * @param   countParam              count of variables inside the parameter div
    * @param   fpSize                  size for the input field
    * @param   paramDiv                div containing the function parameters
    * @param   spacingSize             spacing div between two DOM-elements
    * @param   uid                     id of the function node inside the model
-   * create and append a interactable variable to the parameters div
+   * create and append a variable to the parameters div
    */
   renderParam (countParam, paramDiv, spacingSize, fpSize, uid, content = null) {
     const paramPos = 3 * countParam
@@ -424,7 +422,7 @@ export class Structogram {
   /**
    * @param    uid                id of the function node inside the model (tree)
    * @param    content            function name given from the model
-   * @param    funcParams         variable names of the function paramers
+   * @param    funcParams         variable names of the function parameters
    * Return a function header with function name and parameters for editing
    */
   renderFunctionBox (uid, content, funcParams) {
@@ -845,53 +843,56 @@ export class Structogram {
             this.applyCodeEventListeners(elem)
             divTryContentBody.appendChild(elem)
           }
+          const lengthCatches = subTree.catches.length
+          for (let i = 0; i < lengthCatches; i++) {
+            // for (const catchElem of subTree.catches) {
+            const catchElem = subTree.catches[i]
+            // container for the vertical line to indent it correctly
+            const vertLineContainer = newElement(
+              'div',
+              ['container', 'columnAuto', 'loopShift'],
+              divTryCatchNode
+            )
+            const vertLine2 = newElement(
+              'div',
+              ['loopWidth', 'vcontainer'],
+              vertLineContainer
+            )
+            const vertLine = newElement('div', ['frameLeftBottom'], vertLine2)
+            vertLine.style.flex = '0 0 3px'
 
-          // container for the vertical line to indent it correctly
-          const vertLineContainer = newElement(
-            'div',
-            ['container', 'columnAuto', 'loopShift'],
-            divTryCatchNode
-          )
-          const vertLine2 = newElement(
-            'div',
-            ['loopWidth', 'vcontainer'],
-            vertLineContainer
-          )
-          const vertLine = newElement('div', ['frameLeftBottom'], vertLine2)
-          vertLine.style.flex = '0 0 3px'
+            const divCatch = newElement(
+              'div',
+              ['container', 'fixedHeight', 'padding', 'tryCatchNode'],
+              divTryCatchNode
+            )
+            divCatch.id = catchElem.id
+            const textCatch = newElement('div', ['symbol'], divCatch)
+            textCatch.appendChild(document.createTextNode('Catch'))
 
-          const divCatch = newElement(
-            'div',
-            ['container', 'fixedHeight', 'padding', 'tryCatchNode'],
-            divTryCatchNode
-          )
-          const textCatch = newElement('div', ['symbol'], divCatch)
-          textCatch.appendChild(document.createTextNode('Catch'))
+            const textDiv = this.createTextDiv(
+              catchElem.type,
+              catchElem.text,
+              catchElem.id,
+              null,
+              i
+            )
+            divCatch.appendChild(textDiv)
 
-          const textDiv = this.createTextDiv(
-            subTree.type,
-            subTree.text,
-            subTree.id
-          )
-          divCatch.appendChild(textDiv)
-
-          const divCatchContent = newElement(
-            'div',
-            ['columnAuto', 'container', 'loopShift'],
-            divTryCatchNode
-          )
-          const divCatchContentBody = newElement(
-            'div',
-            ['loopWidth', 'frameLeft', 'vcontainer'],
-            divCatchContent
-          )
-          for (const elem of this.renderElement(
-            subTree.catchChild,
-            false,
-            noInsert
-          )) {
-            this.applyCodeEventListeners(elem)
-            divCatchContentBody.appendChild(elem)
+            const divCatchContent = newElement(
+              'div',
+              ['columnAuto', 'container', 'loopShift'],
+              divTryCatchNode
+            )
+            const divCatchContentBody = newElement(
+              'div',
+              ['loopWidth', 'frameLeft', 'vcontainer'],
+              divCatchContent
+            )
+            for (const elem of this.renderElement(catchElem, false, noInsert)) {
+              this.applyCodeEventListeners(elem)
+              divCatchContentBody.appendChild(elem)
+            }
           }
 
           elemArray.push(container)
@@ -962,7 +963,7 @@ export class Structogram {
           const divChild = document.createElement('div')
           divChild.classList.add('columnAuto', 'container', 'loopShift')
 
-          // creates the inside of the functionf
+          // creates the inside of the function
           const divFunctionBody = document.createElement('div')
           divFunctionBody.classList.add('loopWidth', 'frameLeft', 'vcontainer')
 
@@ -1179,7 +1180,7 @@ export class Structogram {
    * @param    div          the HTML structure to be wrapped
    * @param    inserting    identifies the div as InsertNode
    * @param    moving       identifies the div as the original position while moving
-   * @return   div          completly wrapped HTML element
+   * @return   div          completely wrapped HTML element
    */
   addCssWrapper (div, inserting, moving) {
     const innerDiv = document.createElement('div')
@@ -1306,6 +1307,103 @@ export class Structogram {
     document.getElementById('IEModal').classList.add('active')
   }
 
+  openTryCatchOptions (uid) {
+    const content = document.getElementById('modal-content')
+    const footer = document.getElementById('modal-footer')
+    while (content.hasChildNodes()) {
+      content.removeChild(content.lastChild)
+    }
+    while (footer.hasChildNodes()) {
+      footer.removeChild(footer.lastChild)
+    }
+    const element = this.presenter.getElementByUid(uid)
+
+    const title = document.createElement('strong')
+    title.appendChild(
+      document.createTextNode(
+        'Einstellungen des ' + config.get().TryCatchNode.text + 's : '
+      )
+    )
+
+    const list = document.createElement('dl')
+    list.classList.add('container')
+    content.appendChild(list)
+    const caseNumberTitle = document.createElement('dt')
+    caseNumberTitle.classList.add('dtItem')
+    caseNumberTitle.appendChild(
+      document.createTextNode('Anzahl der Catch-Blöcke:')
+    )
+    list.appendChild(caseNumberTitle)
+    const caseNumber = document.createElement('dd')
+    caseNumber.classList.add('ddItem', 'container')
+    list.appendChild(caseNumber)
+    const caseNr = document.createElement('div')
+    caseNr.classList.add('text-center', 'shortenOnMobile')
+    caseNr.appendChild(document.createTextNode(element.catches.length))
+    caseNumber.appendChild(caseNr)
+    const addCase = document.createElement('div')
+    addCase.classList.add(
+      'addCaseIcon',
+      'hand',
+      'caseOptionsIcons',
+      'tooltip',
+      'tooltip-bottom'
+    )
+    addCase.addEventListener('click', () => {
+      this.presenter.addCatch(uid)
+      this.openTryCatchOptions(uid)
+    })
+    addCase.setAttribute('data-tooltip', 'Catch hinzufügen')
+    caseNumber.appendChild(addCase)
+
+    const defaultOnTitle = document.createElement('dt')
+    defaultOnTitle.classList.add('dtItem')
+    defaultOnTitle.appendChild(
+      // document.createTextNode('Sonst Zweig einschalten:')
+      document.createTextNode(' ')
+    )
+    list.appendChild(defaultOnTitle)
+    const defaultOn = document.createElement('dd')
+    defaultOn.classList.add('ddItem', 'container')
+    defaultOn.addEventListener('click', () => {
+      // this.presenter.switchDefaultState(uid)
+      this.openTryCatchOptions(uid)
+    })
+    // list.appendChild(defaultOn)
+    const defaultNo = document.createElement('div')
+    defaultNo.classList.add('text-center', 'shortenOnMobile')
+    defaultNo.setAttribute('data-abbr', 'N')
+    defaultOn.appendChild(defaultNo)
+    const defaultNoText = document.createElement('span')
+    defaultNoText.appendChild(document.createTextNode('Nein'))
+    defaultNo.appendChild(defaultNoText)
+    const switchDefault = document.createElement('div')
+    switchDefault.classList.add('hand', 'caseOptionsIcons')
+    if (element.defaultOn) {
+      switchDefault.classList.add('switchOn')
+    } else {
+      switchDefault.classList.add('switchOff')
+    }
+    defaultOn.appendChild(switchDefault)
+    const defaultYes = document.createElement('div')
+    defaultYes.classList.add('text-center', 'shortenOnMobile')
+    defaultYes.setAttribute('data-abbr', 'J')
+    defaultOn.appendChild(defaultYes)
+    const defaultYesText = document.createElement('span')
+    defaultYesText.appendChild(document.createTextNode('Ja'))
+    defaultYes.appendChild(defaultYesText)
+
+    const cancelButton = document.createElement('div')
+    cancelButton.classList.add('modal-buttons', 'hand')
+    cancelButton.appendChild(document.createTextNode('Schließen'))
+    cancelButton.addEventListener('click', () =>
+      document.getElementById('IEModal').classList.remove('active')
+    )
+    footer.appendChild(cancelButton)
+
+    document.getElementById('IEModal').classList.add('active')
+  }
+
   /**
    * Create option elements and add them to the displayed element
    *
@@ -1331,6 +1429,22 @@ export class Structogram {
       caseOptions.setAttribute('data-tooltip', 'Einstellung')
       caseOptions.addEventListener('click', () => this.openCaseOptions(uid))
       optionDiv.appendChild(caseOptions)
+    }
+
+    if (type === 'TryCatchNode') {
+      const tryCatchOptions = document.createElement('div')
+      tryCatchOptions.classList.add(
+        'gearIcon',
+        'optionIcon',
+        'hand',
+        'tooltip',
+        'tooltip-bottoml'
+      )
+      tryCatchOptions.setAttribute('data-tooltip', 'Einstellung')
+      tryCatchOptions.addEventListener('click', () =>
+        this.openTryCatchOptions(uid)
+      )
+      optionDiv.appendChild(tryCatchOptions)
     }
 
     // all elements can be moved, except InsertCases they are bind to the case node
@@ -1370,7 +1484,7 @@ export class Structogram {
    * @param    uid       id of the element
    * @return   div       complete build HTML structure
    */
-  createTextDiv (type, content, uid, nrCases = null) {
+  createTextDiv (type, content, uid, nrCases = null, catchId) {
     // create the parent container
     const textDiv = document.createElement('div')
     textDiv.classList.add('columnAuto', 'symbol')
@@ -1384,7 +1498,7 @@ export class Structogram {
       editDiv.classList.add(uid)
     }
 
-    // inputfield with eventlisteners
+    // inputfield with EventListener
     const editText = document.createElement('input')
     editText.type = 'text'
     editText.value = content
@@ -1422,6 +1536,9 @@ export class Structogram {
       case 'InsertCase':
         textDiv.classList.add('text-center')
         break
+      // case 'TryCatchNode':
+      //   textDiv.setAttribute('data-nbr', catchId)
+      //   textDiv.id = uid + catchId
     }
 
     // add displayed text when not in editing mode
@@ -1436,7 +1553,7 @@ export class Structogram {
       }
       innerTextDiv.addEventListener('click', () => {
         this.presenter.renderAllViews()
-        this.presenter.switchEditState(uid)
+        this.presenter.switchEditState(uid, null)
       })
     }
 
