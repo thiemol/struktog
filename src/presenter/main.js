@@ -103,7 +103,7 @@ export class Presenter {
   }
 
   /**
-   * Start the tranformation of the model tree to sourcecode
+   * Start the transformation of the model tree to sourcecode
    *
    * @param   lang   programming language to which the translation happens
    */
@@ -315,7 +315,6 @@ export class Presenter {
         this.nextInsertElement = {
           id: guidGenerator(),
           type: 'TryCatchNode',
-          text: '',
           followElement: {
             id: guidGenerator(),
             type: 'InsertNode',
@@ -326,11 +325,15 @@ export class Presenter {
             type: 'InsertNode',
             followElement: { type: 'Placeholder' }
           },
-          catchChild: {
-            id: guidGenerator(),
-            type: 'InsertNode',
-            followElement: { type: 'Placeholder' }
-          }
+          catches: [
+            {
+              id: guidGenerator(),
+              type: 'InsertNode',
+              specialType: 'CatchNode',
+              text: 'undefiniert',
+              followElement: { type: 'Placeholder' }
+            }
+          ]
         }
         break
     }
@@ -356,7 +359,7 @@ export class Presenter {
    * Helper function to correctly abort while using drag and drop
    */
   resetDrop () {
-    // while drag and droping an inserting element, the user can drop everywhere
+    // while drag and dropping an inserting element, the user can drop everywhere
     // if the location is not valid, one step more must be done to abort everything
     if (this.insertMode) {
       this.reset()
@@ -419,13 +422,48 @@ export class Presenter {
   }
 
   /**
+   * Add another new catch
+   *
+   * @param   uid   id of the clicked element in the struktogramm
+   */
+  addCatch (uid) {
+    this.updateUndo()
+    this.model.setTree(
+      this.model.findAndAlterElement(
+        uid,
+        this.model.getTree(),
+        this.model.insertNewCatch,
+        false,
+        ''
+      )
+    )
+    this.checkUndo()
+    this.updateBrowserStore()
+    this.renderAllViews()
+  }
+
+  /**
    * Remove the element from the tree
    *
    * @param   uid   id of the clicked element in the struktogramm
    */
   removeElement (uid) {
+    function _checkEmptyCatches (catches) {
+      // check if all catches are empty
+      for (const item of catches) {
+        if (item.followElement.type !== 'Placeholder') {
+          return false
+        }
+      }
+      return true
+    }
+
     const deleteElem = this.model.getElementInTree(uid, this.model.getTree())
-    switch (deleteElem.type) {
+    let type = deleteElem.type
+    if (deleteElem.specialType && deleteElem.specialType === 'CatchNode') {
+      type = deleteElem.specialType
+    }
+    switch (type) {
       case 'TaskNode':
       case 'InputNode':
       case 'OutputNode':
@@ -452,9 +490,10 @@ export class Presenter {
         }
         break
       case 'TryCatchNode':
+        // loop through all catches
         if (
           deleteElem.tryChild.followElement.type !== 'Placeholder' ||
-          deleteElem.catchChild.followElement.type !== 'Placeholder'
+          _checkEmptyCatches(deleteElem.catches)
         ) {
           this.prepareRemoveQuestion(uid)
         } else {
@@ -482,7 +521,8 @@ export class Presenter {
         break
       }
       case 'InsertCase':
-        if (deleteElem.followElement.followElement.type !== 'Placeholder') {
+      case 'CatchNode':
+        if (deleteElem.followElement.type !== 'Placeholder') {
           this.prepareRemoveQuestion(uid)
         } else {
           this.removeNodeFromTree(uid)
@@ -640,6 +680,7 @@ export class Presenter {
     }
     // insert the new node, on moving, its the removed
     const elemId = this.nextInsertElement.id
+    console.log(this.nextInsertElement)
     this.model.setTree(
       this.model.findAndAlterElement(
         uid,
@@ -649,7 +690,7 @@ export class Presenter {
         ''
       )
     )
-    // reset the buttons if moving occured
+    // reset the buttons if moving occurred
     if (moveState) {
       // TODO
       this.resetButtons()
@@ -674,9 +715,13 @@ export class Presenter {
    */
   switchEditState (uid, paramIndex = null) {
     let elem = document.getElementById(uid)
+    console.log(elem)
 
     // element is a function node
-    if (elem.children[0].children[0].classList.contains('func-box-header')) {
+    if (
+      elem.children[0].children.length &&
+      elem.children[0].children[0].classList.contains('func-box-header')
+    ) {
       let funcTextNode = null
       // click function name
       if (paramIndex === null) {
@@ -726,8 +771,23 @@ export class Presenter {
       'data:application/json;charset=utf-8,' +
       encodeURIComponent(this.getStringifiedTree())
     // create filename with current date in the name
+    const now = new Date()
+    let hours = now.getHours()
+    let minutes = now.getMinutes()
+
+    hours = hours < 10 ? '0' + hours : hours
+    minutes = minutes < 10 ? '0' + minutes : minutes
+
+    const timeString = hours + '-' + minutes
+    // get Struktogramm Name
+    const structoName = document.getElementById('structoName').innerHTML
     const exportFileDefaultName =
-      'struktog_' + new Date(Date.now()).toJSON().substring(0, 10) + '.json'
+      structoName +
+      '-' +
+      new Date(Date.now()).toJSON().substring(0, 10) +
+      '-' +
+      timeString +
+      '.json'
     // generate the download button element and append it to the node
     const linkElement = document.createElement('a')
     linkElement.setAttribute('href', dataUri)
@@ -739,6 +799,17 @@ export class Presenter {
    * Read input from a JSON file and replace the current model
    */
   readFile (event) {
+    const file = event.target.files[0]
+    if (!file) {
+      return
+    }
+    let fileName = file.name
+    const dashIndex = fileName.indexOf('-')
+    if (dashIndex !== -1) {
+      fileName = fileName.substring(0, dashIndex)
+    }
+    document.getElementById('structoName').innerHTML = fileName
+
     // create a FileReader instance
     const reader = new FileReader()
     // read file and parse JSON, then update model

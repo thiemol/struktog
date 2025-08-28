@@ -434,7 +434,9 @@ export class CodeView {
     const sourcecodeSelect = document.createElement('select')
     sourcecodeSelect.classList.add('form-select')
     sourcecodeSelect.id = 'SourcecodeSelect'
-    sourcecodeSelect.addEventListener('change', (event) => this.presenter.startTransforming(event))
+    sourcecodeSelect.addEventListener('change', (event) =>
+      this.presenter.startTransforming(event)
+    )
     const sourcecodeOption = document.createElement('option')
     sourcecodeOption.value = '--'
     sourcecodeOption.appendChild(document.createTextNode('--'))
@@ -448,7 +450,14 @@ export class CodeView {
 
     const sourcecodeCopy = document.createElement('div')
     sourcecodeCopy.setAttribute('data-tooltip', 'Kopiere Code')
-    sourcecodeCopy.classList.add('center', 'copyIcon', 'struktoOption', 'sourcecodeHeader', 'hand', 'tooltip')
+    sourcecodeCopy.classList.add(
+      'center',
+      'copyIcon',
+      'struktoOption',
+      'sourcecodeHeader',
+      'hand',
+      'tooltip'
+    )
     sourcecode.addEventListener('click', function (event) {
       navigator.clipboard.writeText(localStorage.getItem('struktog_code'))
     })
@@ -468,16 +477,24 @@ export class CodeView {
 
     this.domRoot = document.getElementById('Sourcecode')
 
-    this.generateCodeSwitch(this.presenter, document.getElementById('struktoOptions1'))
-    this.generateCodeSwitch(this.presenter, document.getElementById('struktoOptions2'))
+    this.generateCodeSwitch(
+      this.presenter,
+      document.getElementById('struktoOptions1')
+    )
+    this.generateCodeSwitch(
+      this.presenter,
+      document.getElementById('struktoOptions2')
+    )
 
-    if (typeof (Storage) !== 'undefined') {
+    if (typeof Storage !== 'undefined') {
       if ('displaySourcecode' in localStorage && 'lang' in localStorage) {
         const possibleLang = localStorage.lang
         if (possibleLang in this.translationMap) {
           this.lang = possibleLang
           sourcecodeSelect.value = this.lang
-          this.presenter.setSourcecodeDisplay(JSON.parse(localStorage.displaySourcecode))
+          this.presenter.setSourcecodeDisplay(
+            JSON.parse(localStorage.displaySourcecode)
+          )
           this.displaySourcecode('ToggleSourcecode')
         }
       }
@@ -495,7 +512,8 @@ export class CodeView {
       // check if translation is possible with current tree
       let isTranslatable = false
       for (const nodeType of this.translationMap[this.lang].untranslatable) {
-        isTranslatable = isTranslatable || this.checkForUntranslatable(model, nodeType)
+        isTranslatable =
+          isTranslatable || this.checkForUntranslatable(model, nodeType)
       }
 
       // create container for the spans
@@ -515,7 +533,11 @@ export class CodeView {
           codeText = codeText + i.textContent
         })
       } else {
-        codeBlock.appendChild(document.createTextNode('Das Struktogramm enthält Elemente, \nwelche in der gewählten Programmiersprache \nnicht direkt zur Verfügung stehen.\nDeshalb bitte manuell in Code überführen.'))
+        codeBlock.appendChild(
+          document.createTextNode(
+            'Das Struktogramm enthält Elemente, \nwelche in der gewählten Programmiersprache \nnicht direkt zur Verfügung stehen.\nDeshalb bitte manuell in Code überführen.'
+          )
+        )
       }
       localStorage.setItem('struktog_code', codeText)
 
@@ -526,14 +548,23 @@ export class CodeView {
 
   generateCodeSwitch (presenter, domNode) {
     const option = document.createElement('div')
-    option.classList.add('struktoOption', 'codeIcon', 'tooltip', 'tooltip-bottomCode', 'hand', 'ToggleSourcecode')
+    option.classList.add(
+      'struktoOption',
+      'codeIcon',
+      'tooltip',
+      'tooltip-bottomCode',
+      'hand',
+      'ToggleSourcecode'
+    )
     option.setAttribute('data-tooltip', 'Quellcode einblenden')
-    option.addEventListener('click', (event) => presenter.alterSourcecodeDisplay(event))
+    option.addEventListener('click', (event) =>
+      presenter.alterSourcecodeDisplay(event)
+    )
     domNode.appendChild(option)
   }
 
   setLang (lang) {
-    if (typeof (Storage) !== 'undefined') {
+    if (typeof Storage !== 'undefined') {
       localStorage.lang = lang
       localStorage.displaySourcecode = true
     }
@@ -543,11 +574,11 @@ export class CodeView {
   resetButtons () {}
 
   /**
-     * Add indentations to a text element
-     *
-     * @param    indentLevel   number of how many levels deep the node is
-     * @return   string        multiple indentations, times the level
-     */
+   * Add indentations to a text element
+   *
+   * @param    indentLevel   number of how many levels deep the node is
+   * @return   string        multiple indentations, times the level
+   */
   addIndentations (indentLevel) {
     let text = ''
     const defaultIndent = '    '
@@ -558,11 +589,11 @@ export class CodeView {
   }
 
   /**
-     * Create a span with text and a highlight class
-     *
-     * @param    text   text to be displayed
-     * @return   span   complete HTML structure with text and class
-     */
+   * Create a span with text and a highlight class
+   *
+   * @param    text   text to be displayed
+   * @return   span   complete HTML structure with text and class
+   */
   createHighlightedSpan (text) {
     const span = document.createElement('span')
     span.classList.add('text-code')
@@ -571,15 +602,18 @@ export class CodeView {
   }
 
   /**
-     * Check recursively elements if they match a given type
-     *
-     * @param    subTree    part of the tree with all children of current element
-     * @param    nodeType   type of the translation map element to be checked against
-     * @return   boolean    true, if the current element type is the given type
-     */
+   * Check recursively elements if they match a given type
+   *
+   * @param    subTree    part of the tree with all children of current element
+   * @param    nodeType   type of the translation map element to be checked against
+   * @return   boolean    true, if the current element type is the given type
+   */
   checkForUntranslatable (subTree, nodeType) {
     // end recursion
-    if (subTree.type === 'Placeholder' || (subTree.type === 'InsertNode' && subTree.followElement === null)) {
+    if (
+      subTree.type === 'Placeholder' ||
+      (subTree.type === 'InsertNode' && subTree.followElement === null)
+    ) {
       return false
     } else {
       // compare the types1
@@ -592,24 +626,46 @@ export class CodeView {
           case 'InputNode':
           case 'OutputNode':
           case 'TaskNode':
-            return false || this.checkForUntranslatable(subTree.followElement, nodeType)
+            return (
+              false ||
+              this.checkForUntranslatable(subTree.followElement, nodeType)
+            )
           case 'BranchNode':
-            return false || this.checkForUntranslatable(subTree.trueChild, nodeType) || this.checkForUntranslatable(subTree.falseChild, nodeType) || this.checkForUntranslatable(subTree.followElement, nodeType)
+            return (
+              false ||
+              this.checkForUntranslatable(subTree.trueChild, nodeType) ||
+              this.checkForUntranslatable(subTree.falseChild, nodeType) ||
+              this.checkForUntranslatable(subTree.followElement, nodeType)
+            )
           case 'TryCatchNode':
-            return false || this.checkForUntranslatable(subTree.tryChild, nodeType) || this.checkForUntranslatable(subTree.catchChild, nodeType) || this.checkForUntranslatable(subTree.followElement, nodeType)
+            return (
+              false ||
+              this.checkForUntranslatable(subTree.tryChild, nodeType) ||
+              this.checkForUntranslatable(subTree.catchChild, nodeType) ||
+              this.checkForUntranslatable(subTree.followElement, nodeType)
+            )
           case 'CountLoopNode':
           case 'HeadLoopNode':
           case 'FootLoopNode':
           case 'FunctionNode':
-            return false || this.checkForUntranslatable(subTree.child, nodeType) || this.checkForUntranslatable(subTree.followElement, nodeType)
-          case 'CaseNode':
-          {
+            return (
+              false ||
+              this.checkForUntranslatable(subTree.child, nodeType) ||
+              this.checkForUntranslatable(subTree.followElement, nodeType)
+            )
+          case 'CaseNode': {
             let state = false
             for (let i = 0; i < subTree.length; i++) {
-              state = state || this.checkForUntranslatable(subTree.cases[i], nodeType)
+              state =
+                state || this.checkForUntranslatable(subTree.cases[i], nodeType)
             }
-            state = state || this.checkForUntranslatable(subTree.defaultNode, nodeType)
-            return state || this.checkForUntranslatable(subTree.followElement, nodeType)
+            state =
+              state ||
+              this.checkForUntranslatable(subTree.defaultNode, nodeType)
+            return (
+              state ||
+              this.checkForUntranslatable(subTree.followElement, nodeType)
+            )
           }
         }
       }
@@ -617,16 +673,20 @@ export class CodeView {
   }
 
   /**
-     * Tranform an element to sourcecode with a translation mapping
-     *
-     * @param    subTree       part of the tree with all children of current element
-     * @param    indentLevel   number of indentation levels
-     * @param    lang          current sourcecode language
-     * @return   []            array of span elements with the tranformed element
-     */
+   * Tranform an element to sourcecode with a translation mapping
+   *
+   * @param    subTree       part of the tree with all children of current element
+   * @param    indentLevel   number of indentation levels
+   * @param    lang          current sourcecode language
+   * @return   []            array of span elements with the tranformed element
+   */
   transformToCode (subTree, indentLevel, lang, switchVar = false) {
     // end recursion
-    if (subTree.type === 'Placeholder' || (subTree.type === 'InsertNode' && subTree.followElement === null)) {
+    if (
+      !subTree ||
+      subTree.type === 'Placeholder' ||
+      (subTree.type === 'InsertNode' && subTree.followElement === null)
+    ) {
       return []
     } else {
       // create the span
@@ -645,194 +705,373 @@ export class CodeView {
       // switch to edit mode of equivalent element in the struktogramm
       const text = this.createHighlightedSpan(subTree.text)
       text.classList.add('hand')
-      text.addEventListener('click', () => this.presenter.switchEditState(subTree.id))
+      text.addEventListener('click', () =>
+        this.presenter.switchEditState(subTree.id)
+      )
 
       switch (subTree.type) {
         case 'InsertNode':
           return this.transformToCode(subTree.followElement, indentLevel, lang)
-        case 'InputNode':
-        {
+        case 'InputNode': {
           const inputPre = document.createElement('span')
           inputPre.classList.add('keyword')
-          inputPre.appendChild(document.createTextNode(this.addIndentations(indentLevel) + this.translationMap[lang].InputNode.pre))
+          inputPre.appendChild(
+            document.createTextNode(
+              this.addIndentations(indentLevel) +
+                this.translationMap[lang].InputNode.pre
+            )
+          )
           elemSpan.appendChild(inputPre)
           elemSpan.appendChild(text)
           const inputPost = document.createElement('span')
           inputPost.classList.add('keyword')
-          inputPost.appendChild(document.createTextNode(this.translationMap[lang].InputNode.post))
+          inputPost.appendChild(
+            document.createTextNode(this.translationMap[lang].InputNode.post)
+          )
           elemSpan.appendChild(inputPost)
-          return [elemSpan].concat(this.transformToCode(subTree.followElement, indentLevel, lang))
+          return [elemSpan].concat(
+            this.transformToCode(subTree.followElement, indentLevel, lang)
+          )
         }
-        case 'OutputNode':
-        {
+        case 'OutputNode': {
           const outputPre = document.createElement('span')
           outputPre.classList.add('keyword')
-          outputPre.appendChild(document.createTextNode(this.addIndentations(indentLevel) + this.translationMap[lang].OutputNode.pre))
+          outputPre.appendChild(
+            document.createTextNode(
+              this.addIndentations(indentLevel) +
+                this.translationMap[lang].OutputNode.pre
+            )
+          )
           elemSpan.appendChild(outputPre)
           elemSpan.appendChild(text)
           const outputPost = document.createElement('span')
           outputPost.classList.add('keyword')
-          outputPost.appendChild(document.createTextNode(this.translationMap[lang].OutputNode.post))
+          outputPost.appendChild(
+            document.createTextNode(this.translationMap[lang].OutputNode.post)
+          )
           elemSpan.appendChild(outputPost)
-          return [elemSpan].concat(this.transformToCode(subTree.followElement, indentLevel, lang))
+          return [elemSpan].concat(
+            this.transformToCode(subTree.followElement, indentLevel, lang)
+          )
         }
-        case 'TaskNode':
-        {
+        case 'TaskNode': {
           const taskPre = document.createElement('span')
           taskPre.classList.add('keyword')
-          taskPre.appendChild(document.createTextNode(this.addIndentations(indentLevel) + this.translationMap[lang].TaskNode.pre))
+          taskPre.appendChild(
+            document.createTextNode(
+              this.addIndentations(indentLevel) +
+                this.translationMap[lang].TaskNode.pre
+            )
+          )
           elemSpan.appendChild(taskPre)
           elemSpan.appendChild(text)
           const taskPost = document.createElement('span')
           taskPost.classList.add('keyword')
-          taskPost.appendChild(document.createTextNode(this.translationMap[lang].TaskNode.post))
+          taskPost.appendChild(
+            document.createTextNode(this.translationMap[lang].TaskNode.post)
+          )
           elemSpan.appendChild(taskPost)
-          return [elemSpan].concat(this.transformToCode(subTree.followElement, indentLevel, lang))
+          return [elemSpan].concat(
+            this.transformToCode(subTree.followElement, indentLevel, lang)
+          )
         }
-        case 'BranchNode':
-        {
+        case 'BranchNode': {
           const branchHeaderPre = document.createElement('span')
           branchHeaderPre.classList.add('keyword')
-          branchHeaderPre.appendChild(document.createTextNode(this.addIndentations(indentLevel) + this.translationMap[lang].BranchNode.pre))
+          branchHeaderPre.appendChild(
+            document.createTextNode(
+              this.addIndentations(indentLevel) +
+                this.translationMap[lang].BranchNode.pre
+            )
+          )
           elemSpan.appendChild(branchHeaderPre)
           elemSpan.appendChild(text)
           const branchHeaderPost = document.createElement('span')
           branchHeaderPost.classList.add('keyword')
-          branchHeaderPost.appendChild(document.createTextNode(this.translationMap[lang].BranchNode.post))
+          branchHeaderPost.appendChild(
+            document.createTextNode(this.translationMap[lang].BranchNode.post)
+          )
           elemSpan.appendChild(branchHeaderPost)
           let branch = [elemSpan]
           if (this.translationMap[lang].leftBracket !== '') {
             const leftBracket = document.createElement('span')
-            leftBracket.appendChild(document.createTextNode(this.addIndentations(indentLevel) + this.translationMap[lang].leftBracket + '\n'))
+            leftBracket.appendChild(
+              document.createTextNode(
+                this.addIndentations(indentLevel) +
+                  this.translationMap[lang].leftBracket +
+                  '\n'
+              )
+            )
             branch.push(leftBracket)
           }
-          const trueContent = this.transformToCode(subTree.trueChild, indentLevel + 1, lang)
-          const falseContent = this.transformToCode(subTree.falseChild, indentLevel + 1, lang)
+          const trueContent = this.transformToCode(
+            subTree.trueChild,
+            indentLevel + 1,
+            lang
+          )
+          const falseContent = this.transformToCode(
+            subTree.falseChild,
+            indentLevel + 1,
+            lang
+          )
           branch = branch.concat(trueContent)
           if (falseContent.length > 0) {
             const between = document.createElement('span')
-            between.appendChild(document.createTextNode(this.addIndentations(indentLevel) + this.translationMap[lang].BranchNode.between))
+            between.appendChild(
+              document.createTextNode(
+                this.addIndentations(indentLevel) +
+                  this.translationMap[lang].BranchNode.between
+              )
+            )
             branch.push(between)
           }
           branch = branch.concat(falseContent)
           if (this.translationMap[lang].rightBracket !== '') {
             const rightBracket = document.createElement('span')
-            rightBracket.appendChild(document.createTextNode(this.addIndentations(indentLevel) + this.translationMap[lang].rightBracket + '\n'))
+            rightBracket.appendChild(
+              document.createTextNode(
+                this.addIndentations(indentLevel) +
+                  this.translationMap[lang].rightBracket +
+                  '\n'
+              )
+            )
             branch.push(rightBracket)
           }
-          return branch.concat(this.transformToCode(subTree.followElement, indentLevel, lang))
+          return branch.concat(
+            this.transformToCode(subTree.followElement, indentLevel, lang)
+          )
         }
-        case 'TryCatchNode':
-        {
+        case 'TryCatchNode': {
           const tryHeaderPre = newElement('span', ['keyword'], elemSpan)
-          tryHeaderPre.appendChild(document.createTextNode(this.addIndentations(indentLevel) + this.translationMap[lang].TryCatchNode.pre))
+          tryHeaderPre.appendChild(
+            document.createTextNode(
+              this.addIndentations(indentLevel) +
+                this.translationMap[lang].TryCatchNode.pre
+            )
+          )
           let trycatch = [elemSpan]
           if (this.translationMap[lang].leftBracket !== '') {
             const leftBracket = document.createElement('span')
-            leftBracket.appendChild(document.createTextNode(this.addIndentations(indentLevel) + this.translationMap[lang].leftBracket + '\n'))
+            leftBracket.appendChild(
+              document.createTextNode(
+                this.addIndentations(indentLevel) +
+                  this.translationMap[lang].leftBracket +
+                  '\n'
+              )
+            )
             trycatch.push(leftBracket)
           }
-          const tryContent = this.transformToCode(subTree.tryChild, indentLevel + 1, lang) // try Content
+          const tryContent = this.transformToCode(
+            subTree.tryChild,
+            indentLevel + 1,
+            lang
+          ) // try Content
           trycatch = trycatch.concat(tryContent)
 
           if (this.translationMap[lang].rightBracket !== '') {
             const rightBracket = document.createElement('span')
-            rightBracket.appendChild(document.createTextNode(this.addIndentations(indentLevel) + this.translationMap[lang].rightBracket + '\n'))
+            rightBracket.appendChild(
+              document.createTextNode(
+                this.addIndentations(indentLevel) +
+                  this.translationMap[lang].rightBracket +
+                  '\n'
+              )
+            )
             trycatch.push(rightBracket)
           }
 
-          const catchBetween = newElement('span', ['keyword'])
-          catchBetween.appendChild(document.createTextNode(this.addIndentations(indentLevel) + this.translationMap[lang].TryCatchNode.between))
-          // only insert space if a parameter is set for the catch block
-          if (text.innerText !== '' && (lang.includes('Python'))) {
-            catchBetween.appendChild(document.createTextNode(' '))
-          }
-          catchBetween.appendChild(text)
-          trycatch.push(catchBetween)
-          const catchBetweenPost = newElement('span', ['keyword'])
-          catchBetweenPost.appendChild(document.createTextNode(this.translationMap[lang].TryCatchNode.post))
-          trycatch.push(catchBetweenPost)
-          const catchContent = this.transformToCode(subTree.catchChild, indentLevel + 1, lang) // catch content
-          if (this.translationMap[lang].leftBracket !== '') {
-            const leftBracket = document.createElement('span')
-            leftBracket.appendChild(document.createTextNode(this.addIndentations(indentLevel) + this.translationMap[lang].leftBracket + '\n'))
-            trycatch.push(leftBracket)
-          }
-          trycatch = trycatch.concat(catchContent)
-          if (this.translationMap[lang].rightBracket !== '') {
-            const rightBracket = document.createElement('span')
-            rightBracket.appendChild(document.createTextNode(this.addIndentations(indentLevel) + this.translationMap[lang].rightBracket + '\n'))
-            trycatch.push(rightBracket)
-          }
-          return trycatch.concat(this.transformToCode(subTree.followElement, indentLevel, lang))
+          subTree.catches.forEach((catchNode) => {
+            const catchBetween = newElement('span', ['keyword'])
+            catchBetween.appendChild(
+              document.createTextNode(
+                this.addIndentations(indentLevel) +
+                  this.translationMap[lang].TryCatchNode.between
+              )
+            )
+            // only insert space if a parameter is set for the catch block
+            if (
+              catchNode.text &&
+              catchNode.text !== '' &&
+              lang.includes('Python')
+            ) {
+              catchBetween.appendChild(document.createTextNode(' '))
+            }
+            // catchBetween.appendChild(text)
+            catchBetween.appendChild(document.createTextNode(catchNode.text))
+            trycatch.push(catchBetween)
+            const catchBetweenPost = newElement('span', ['keyword'])
+            catchBetweenPost.appendChild(
+              document.createTextNode(
+                this.translationMap[lang].TryCatchNode.post
+              )
+            )
+            trycatch.push(catchBetweenPost)
+            const catchContent = this.transformToCode(
+              catchNode,
+              indentLevel + 1,
+              lang
+            ) // catch content
+            if (this.translationMap[lang].leftBracket !== '') {
+              const leftBracket = document.createElement('span')
+              leftBracket.appendChild(
+                document.createTextNode(
+                  this.addIndentations(indentLevel) +
+                    this.translationMap[lang].leftBracket +
+                    '\n'
+                )
+              )
+              trycatch.push(leftBracket)
+            }
+            trycatch = trycatch.concat(catchContent)
+            if (this.translationMap[lang].rightBracket !== '') {
+              const rightBracket = document.createElement('span')
+              rightBracket.appendChild(
+                document.createTextNode(
+                  this.addIndentations(indentLevel) +
+                    this.translationMap[lang].rightBracket +
+                    '\n'
+                )
+              )
+              trycatch.push(rightBracket)
+            }
+          })
+          return trycatch.concat(
+            this.transformToCode(subTree.followElement, indentLevel, lang)
+          )
         }
-        case 'CountLoopNode':
-        {
+        case 'CountLoopNode': {
           const loopHeaderPre = document.createElement('span')
           loopHeaderPre.classList.add('keyword')
-          loopHeaderPre.appendChild(document.createTextNode(this.addIndentations(indentLevel) + this.translationMap[lang].CountLoopNode.pre))
+          loopHeaderPre.appendChild(
+            document.createTextNode(
+              this.addIndentations(indentLevel) +
+                this.translationMap[lang].CountLoopNode.pre
+            )
+          )
           elemSpan.appendChild(loopHeaderPre)
           elemSpan.appendChild(text)
           const loopHeaderPost = document.createElement('span')
           loopHeaderPost.classList.add('keyword')
-          loopHeaderPost.appendChild(document.createTextNode(this.translationMap[lang].CountLoopNode.post))
+          loopHeaderPost.appendChild(
+            document.createTextNode(
+              this.translationMap[lang].CountLoopNode.post
+            )
+          )
           elemSpan.appendChild(loopHeaderPost)
           let loop = [elemSpan]
           if (this.translationMap[lang].leftBracket !== '') {
             const leftBracket = document.createElement('span')
-            leftBracket.appendChild(document.createTextNode(this.addIndentations(indentLevel) + this.translationMap[lang].leftBracket + '\n'))
+            leftBracket.appendChild(
+              document.createTextNode(
+                this.addIndentations(indentLevel) +
+                  this.translationMap[lang].leftBracket +
+                  '\n'
+              )
+            )
             loop.push(leftBracket)
           }
-          loop = loop.concat(this.transformToCode(subTree.child, indentLevel + 1, lang))
+          loop = loop.concat(
+            this.transformToCode(subTree.child, indentLevel + 1, lang)
+          )
           if (this.translationMap[lang].rightBracket !== '') {
             const rightBracket = document.createElement('span')
-            rightBracket.appendChild(document.createTextNode(this.addIndentations(indentLevel) + this.translationMap[lang].rightBracket + '\n'))
+            rightBracket.appendChild(
+              document.createTextNode(
+                this.addIndentations(indentLevel) +
+                  this.translationMap[lang].rightBracket +
+                  '\n'
+              )
+            )
             loop.push(rightBracket)
           }
-          return loop.concat(this.transformToCode(subTree.followElement, indentLevel, lang))
+          return loop.concat(
+            this.transformToCode(subTree.followElement, indentLevel, lang)
+          )
         }
-        case 'HeadLoopNode':
-        {
+        case 'HeadLoopNode': {
           const loopHeaderPre = document.createElement('span')
           loopHeaderPre.classList.add('keyword')
-          loopHeaderPre.appendChild(document.createTextNode(this.addIndentations(indentLevel) + this.translationMap[lang].HeadLoopNode.pre))
+          loopHeaderPre.appendChild(
+            document.createTextNode(
+              this.addIndentations(indentLevel) +
+                this.translationMap[lang].HeadLoopNode.pre
+            )
+          )
           elemSpan.appendChild(loopHeaderPre)
           elemSpan.appendChild(text)
           const loopHeaderPost = document.createElement('span')
           loopHeaderPost.classList.add('keyword')
-          loopHeaderPost.appendChild(document.createTextNode(this.translationMap[lang].HeadLoopNode.post))
+          loopHeaderPost.appendChild(
+            document.createTextNode(this.translationMap[lang].HeadLoopNode.post)
+          )
           elemSpan.appendChild(loopHeaderPost)
           let loop = [elemSpan]
           if (this.translationMap[lang].leftBracket !== '') {
             const leftBracket = document.createElement('span')
-            leftBracket.appendChild(document.createTextNode(this.addIndentations(indentLevel) + this.translationMap[lang].leftBracket + '\n'))
+            leftBracket.appendChild(
+              document.createTextNode(
+                this.addIndentations(indentLevel) +
+                  this.translationMap[lang].leftBracket +
+                  '\n'
+              )
+            )
             loop.push(leftBracket)
           }
-          loop = loop.concat(this.transformToCode(subTree.child, indentLevel + 1, lang))
+          loop = loop.concat(
+            this.transformToCode(subTree.child, indentLevel + 1, lang)
+          )
           if (this.translationMap[lang].rightBracket !== '') {
             const rightBracket = document.createElement('span')
-            rightBracket.appendChild(document.createTextNode(this.addIndentations(indentLevel) + this.translationMap[lang].rightBracket + '\n'))
+            rightBracket.appendChild(
+              document.createTextNode(
+                this.addIndentations(indentLevel) +
+                  this.translationMap[lang].rightBracket +
+                  '\n'
+              )
+            )
             loop.push(rightBracket)
           }
-          return loop.concat(this.transformToCode(subTree.followElement, indentLevel, lang))
+          return loop.concat(
+            this.transformToCode(subTree.followElement, indentLevel, lang)
+          )
         }
-        case 'FootLoopNode':
-        {
+        case 'FootLoopNode': {
           const loopContent = document.createElement('span')
           loopContent.classList.add('keyword')
-          loopContent.appendChild(document.createTextNode(this.addIndentations(indentLevel) + this.translationMap[lang].FootLoopNode.prepre))
+          loopContent.appendChild(
+            document.createTextNode(
+              this.addIndentations(indentLevel) +
+                this.translationMap[lang].FootLoopNode.prepre
+            )
+          )
           elemSpan.appendChild(loopContent)
           let loop = [elemSpan]
           if (this.translationMap[lang].leftBracket !== '') {
             const leftBracket = document.createElement('span')
-            leftBracket.appendChild(document.createTextNode(this.addIndentations(indentLevel) + this.translationMap[lang].leftBracket + '\n'))
+            leftBracket.appendChild(
+              document.createTextNode(
+                this.addIndentations(indentLevel) +
+                  this.translationMap[lang].leftBracket +
+                  '\n'
+              )
+            )
             loop.push(leftBracket)
           }
-          const child = this.transformToCode(subTree.child, indentLevel + 1, lang)
+          const child = this.transformToCode(
+            subTree.child,
+            indentLevel + 1,
+            lang
+          )
           loop = loop.concat(child)
           if (this.translationMap[lang].rightBracket !== '') {
             const rightBracket = document.createElement('span')
-            rightBracket.appendChild(document.createTextNode(this.addIndentations(indentLevel) + this.translationMap[lang].rightBracket + '\n'))
+            rightBracket.appendChild(
+              document.createTextNode(
+                this.addIndentations(indentLevel) +
+                  this.translationMap[lang].rightBracket +
+                  '\n'
+              )
+            )
             loop.push(rightBracket)
           }
           const subContent = document.createElement('span')
@@ -840,12 +1079,19 @@ export class CodeView {
           elemSpan.id = ''
           const subContentPre = document.createElement('span')
           subContentPre.classList.add('keyword')
-          subContentPre.appendChild(document.createTextNode(this.addIndentations(indentLevel) + this.translationMap[lang].FootLoopNode.pre))
+          subContentPre.appendChild(
+            document.createTextNode(
+              this.addIndentations(indentLevel) +
+                this.translationMap[lang].FootLoopNode.pre
+            )
+          )
           subContent.appendChild(subContentPre)
           subContent.appendChild(text)
           const subContentPost = document.createElement('span')
           subContentPost.classList.add('keyword')
-          subContentPost.appendChild(document.createTextNode(this.translationMap[lang].FootLoopNode.post))
+          subContentPost.appendChild(
+            document.createTextNode(this.translationMap[lang].FootLoopNode.post)
+          )
           subContent.appendChild(subContentPost)
           subContent.addEventListener('mouseover', function () {
             const node = document.getElementById(subTree.id)
@@ -857,18 +1103,28 @@ export class CodeView {
           })
           loop.push(subContent)
 
-          return loop.concat(this.transformToCode(subTree.followElement, indentLevel, lang))
+          return loop.concat(
+            this.transformToCode(subTree.followElement, indentLevel, lang)
+          )
         }
-        case 'FunctionNode':
-        {
+        case 'FunctionNode': {
           const functionContent = document.createElement('span')
           functionContent.classList.add('keyword')
-          functionContent.appendChild(document.createTextNode(this.addIndentations(indentLevel) + this.translationMap[lang].FunctionNode.pre))
+          functionContent.appendChild(
+            document.createTextNode(
+              this.addIndentations(indentLevel) +
+                this.translationMap[lang].FunctionNode.pre
+            )
+          )
           elemSpan.appendChild(functionContent)
           elemSpan.appendChild(text)
           const funcHeaderBetween = document.createElement('span')
           funcHeaderBetween.classList.add('keyword')
-          funcHeaderBetween.appendChild(document.createTextNode(this.translationMap[lang].FunctionNode.between))
+          funcHeaderBetween.appendChild(
+            document.createTextNode(
+              this.translationMap[lang].FunctionNode.between
+            )
+          )
           elemSpan.appendChild(funcHeaderBetween)
 
           // add parameters
@@ -881,41 +1137,67 @@ export class CodeView {
             const paramName = this.createHighlightedSpan(par.parName)
             paramName.classList.add('hand')
             // mapping the stored positions (0, 3, 6, ...) to new positions (0, 2, 4, ...)
-            paramName.addEventListener('click', () => this.presenter.switchEditState(subTree.id, (par.pos / 3 * 2)))
+            paramName.addEventListener('click', () =>
+              this.presenter.switchEditState(subTree.id, (par.pos / 3) * 2)
+            )
             elemSpan.appendChild(paramName)
             parCount += 1
           }
 
           const funcHeaderPost = document.createElement('span')
           funcHeaderPost.classList.add('keyword')
-          funcHeaderPost.appendChild(document.createTextNode(this.translationMap[lang].FunctionNode.post))
+          funcHeaderPost.appendChild(
+            document.createTextNode(this.translationMap[lang].FunctionNode.post)
+          )
           elemSpan.appendChild(funcHeaderPost)
           let loop = [elemSpan]
           if (this.translationMap[lang].leftBracket !== '') {
             const leftBracket = document.createElement('span')
-            leftBracket.appendChild(document.createTextNode(this.addIndentations(indentLevel) + this.translationMap[lang].leftBracket + '\n'))
+            leftBracket.appendChild(
+              document.createTextNode(
+                this.addIndentations(indentLevel) +
+                  this.translationMap[lang].leftBracket +
+                  '\n'
+              )
+            )
             loop.push(leftBracket)
           }
-          loop = loop.concat(this.transformToCode(subTree.child, indentLevel + 1, lang))
+          loop = loop.concat(
+            this.transformToCode(subTree.child, indentLevel + 1, lang)
+          )
           if (this.translationMap[lang].rightBracket !== '') {
             const rightBracket = document.createElement('span')
-            rightBracket.appendChild(document.createTextNode(this.addIndentations(indentLevel) + this.translationMap[lang].rightBracket + '\n'))
+            rightBracket.appendChild(
+              document.createTextNode(
+                this.addIndentations(indentLevel) +
+                  this.translationMap[lang].rightBracket +
+                  '\n'
+              )
+            )
             loop.push(rightBracket)
           }
-          return loop.concat(this.transformToCode(subTree.followElement, indentLevel, lang))
+          return loop.concat(
+            this.transformToCode(subTree.followElement, indentLevel, lang)
+          )
         }
-        case 'CaseNode':
-        {
+        case 'CaseNode': {
           if (!this.translationMap[lang].pseudoSwitch) {
             const caseHeadPre = document.createElement('span')
             caseHeadPre.classList.add('keyword')
-            caseHeadPre.appendChild(document.createTextNode(this.addIndentations(indentLevel) + this.translationMap[lang].CaseNode.pre))
+            caseHeadPre.appendChild(
+              document.createTextNode(
+                this.addIndentations(indentLevel) +
+                  this.translationMap[lang].CaseNode.pre
+              )
+            )
             elemSpan.appendChild(caseHeadPre)
             elemSpan.appendChild(text)
 
             const caseHeadPost = document.createElement('span')
             caseHeadPost.classList.add('keyword')
-            caseHeadPost.appendChild(document.createTextNode(this.translationMap[lang].CaseNode.post))
+            caseHeadPost.appendChild(
+              document.createTextNode(this.translationMap[lang].CaseNode.post)
+            )
             elemSpan.appendChild(caseHeadPost)
           }
           let cases = [elemSpan]
@@ -924,17 +1206,29 @@ export class CodeView {
           }
           if (this.translationMap[lang].leftBracket !== '') {
             const leftBracket = document.createElement('span')
-            leftBracket.appendChild(document.createTextNode(this.addIndentations(indentLevel) + this.translationMap[lang].leftBracket + '\n'))
+            leftBracket.appendChild(
+              document.createTextNode(
+                this.addIndentations(indentLevel) +
+                  this.translationMap[lang].leftBracket +
+                  '\n'
+              )
+            )
             cases.push(leftBracket)
           }
           for (const element of subTree.cases) {
             if (this.translationMap[lang].pseudoSwitch) {
               const switchVarSpan = this.createHighlightedSpan(subTree.text)
               switchVarSpan.classList.add('hand')
-              switchVarSpan.addEventListener('click', () => this.presenter.switchEditState(subTree.id))
-              cases = cases.concat(this.transformToCode(element, indentLevel, lang, switchVarSpan))
+              switchVarSpan.addEventListener('click', () =>
+                this.presenter.switchEditState(subTree.id)
+              )
+              cases = cases.concat(
+                this.transformToCode(element, indentLevel, lang, switchVarSpan)
+              )
             } else {
-              cases = cases.concat(this.transformToCode(element, indentLevel + 1, lang))
+              cases = cases.concat(
+                this.transformToCode(element, indentLevel + 1, lang)
+              )
             }
           }
           if (this.translationMap[lang].pseudoSwitch) {
@@ -945,9 +1239,21 @@ export class CodeView {
             defaultCase.classList.add('keyword')
             defaultCase.id = subTree.defaultNode.id + '-codeLine'
             if (this.translationMap[lang].pseudoSwitch) {
-              defaultCase.appendChild(document.createTextNode(this.addIndentations(indentLevel) + this.translationMap[lang].InsertCase.preDefault + this.translationMap[lang].InsertCase.post))
+              defaultCase.appendChild(
+                document.createTextNode(
+                  this.addIndentations(indentLevel) +
+                    this.translationMap[lang].InsertCase.preDefault +
+                    this.translationMap[lang].InsertCase.post
+                )
+              )
             } else {
-              defaultCase.appendChild(document.createTextNode(this.addIndentations(indentLevel + 1) + this.translationMap[lang].InsertCase.preDefault + this.translationMap[lang].InsertCase.post))
+              defaultCase.appendChild(
+                document.createTextNode(
+                  this.addIndentations(indentLevel + 1) +
+                    this.translationMap[lang].InsertCase.preDefault +
+                    this.translationMap[lang].InsertCase.post
+                )
+              )
             }
             defaultCase.addEventListener('mouseover', function () {
               const node = document.getElementById(subTree.defaultNode.id)
@@ -959,29 +1265,61 @@ export class CodeView {
             })
             cases.push(defaultCase)
             if (this.translationMap[lang].pseudoSwitch) {
-              cases = cases.concat(this.transformToCode(subTree.defaultNode.followElement, indentLevel + 1, lang))
+              cases = cases.concat(
+                this.transformToCode(
+                  subTree.defaultNode.followElement,
+                  indentLevel + 1,
+                  lang
+                )
+              )
             } else {
-              cases = cases.concat(this.transformToCode(subTree.defaultNode.followElement, indentLevel + 2, lang))
+              cases = cases.concat(
+                this.transformToCode(
+                  subTree.defaultNode.followElement,
+                  indentLevel + 2,
+                  lang
+                )
+              )
             }
-            if (!this.translationMap[lang].pseudoSwitch && (lang === 'C#' || lang === 'Java')) {
+            if (
+              !this.translationMap[lang].pseudoSwitch &&
+              (lang === 'C#' || lang === 'Java')
+            ) {
               const endContent = document.createElement('span')
               endContent.classList.add('keyword')
-              endContent.appendChild(document.createTextNode(this.addIndentations(indentLevel + 2) + this.translationMap[lang].InsertCase.postpost))
+              endContent.appendChild(
+                document.createTextNode(
+                  this.addIndentations(indentLevel + 2) +
+                    this.translationMap[lang].InsertCase.postpost
+                )
+              )
               cases.push(endContent)
             }
           }
           if (this.translationMap[lang].rightBracket !== '') {
             const rightBracket = document.createElement('span')
-            rightBracket.appendChild(document.createTextNode(this.addIndentations(indentLevel) + this.translationMap[lang].rightBracket + '\n'))
+            rightBracket.appendChild(
+              document.createTextNode(
+                this.addIndentations(indentLevel) +
+                  this.translationMap[lang].rightBracket +
+                  '\n'
+              )
+            )
             cases.push(rightBracket)
           }
-          return cases.concat(this.transformToCode(subTree.followElement, indentLevel, lang))
+          return cases.concat(
+            this.transformToCode(subTree.followElement, indentLevel, lang)
+          )
         }
-        case 'InsertCase':
-        {
+        case 'InsertCase': {
           const casePre = document.createElement('span')
           casePre.classList.add('keyword')
-          casePre.appendChild(document.createTextNode(this.addIndentations(indentLevel) + this.translationMap[lang].InsertCase.preNormal))
+          casePre.appendChild(
+            document.createTextNode(
+              this.addIndentations(indentLevel) +
+                this.translationMap[lang].InsertCase.preNormal
+            )
+          )
           elemSpan.appendChild(casePre)
           if (switchVar) {
             elemSpan.appendChild(switchVar)
@@ -992,15 +1330,24 @@ export class CodeView {
           elemSpan.appendChild(text)
           const casePost = document.createElement('span')
           casePost.classList.add('keyword')
-          casePost.appendChild(document.createTextNode(this.translationMap[lang].InsertCase.post))
+          casePost.appendChild(
+            document.createTextNode(this.translationMap[lang].InsertCase.post)
+          )
           elemSpan.appendChild(casePost)
           let content = [elemSpan]
-          content = content.concat(this.transformToCode(subTree.followElement, indentLevel + 1, lang))
+          content = content.concat(
+            this.transformToCode(subTree.followElement, indentLevel + 1, lang)
+          )
 
           if (!this.translationMap[lang].pseudoSwitch) {
             const endContent = document.createElement('span')
             endContent.classList.add('keyword')
-            endContent.appendChild(document.createTextNode(this.addIndentations(indentLevel + 1) + this.translationMap[lang].InsertCase.postpost))
+            endContent.appendChild(
+              document.createTextNode(
+                this.addIndentations(indentLevel + 1) +
+                  this.translationMap[lang].InsertCase.postpost
+              )
+            )
             content.push(endContent)
           }
           return content
@@ -1010,8 +1357,8 @@ export class CodeView {
   }
 
   /**
-     * Get the currently selected code language
-     */
+   * Get the currently selected code language
+   */
   prepareTransforming () {
     const lang = document.getElementById('SourcecodeSelect').value
     // start the transformation
@@ -1019,10 +1366,10 @@ export class CodeView {
   }
 
   /**
-     * Toggle the state of the sourcecode display button
-     *
-     * @param   buttonId   id of the sourcecode display toggle button
-     */
+   * Toggle the state of the sourcecode display button
+   *
+   * @param   buttonId   id of the sourcecode display toggle button
+   */
   displaySourcecode (buttonClass) {
     const fields = document.getElementsByClassName(buttonClass)
     if (this.presenter.getSourcecodeDisplay()) {

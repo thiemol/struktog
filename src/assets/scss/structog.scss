@@ -294,6 +294,12 @@ strong {
   margin: 0.2em 0;
 }
 
+.divider-text {
+  text-align: center;
+  margin-top: 1px;
+  font-size: 1em;
+}
+
 .borderWidth {
   flex: 0 0 3px;
 }
@@ -331,6 +337,24 @@ strong {
   }
 }
 
+.glimming {
+  // color: #f1c40f;
+  // font-weight: bold;
+  animation: pulse 1.5s 10;
+}
+
+@keyframes pulse {
+  0% {
+    text-shadow: 0 0 8px rgba(241, 196, 15, 0.6);
+  }
+  50% {
+    text-shadow: 0 0 20px rgba(241, 196, 15, 1);
+  }
+  100% {
+    text-shadow: 0 0 8px rgba(241, 196, 15, 0.6);
+  }
+}
+
 #structogram {
-  border-right: 1px solid black
+  border-right: 1px solid black;
 }

@@ -947,7 +947,17 @@ export class ImportExport {
         const linkElement = document.createElement('a')
         linkElement.setAttribute('href', dataUrl)
         // define filename
-        const exportFileDefaultName = 'struktog_' + new Date(Date.now()).toJSON().substring(0, 10) + '.png'
+        const now = new Date()
+        let hours = now.getHours()
+        let minutes = now.getMinutes()
+
+        hours = hours < 10 ? '0' + hours : hours
+        minutes = minutes < 10 ? '0' + minutes : minutes
+
+        const timeString = hours + '-' + minutes
+        // get Struktogramm Name
+        const structoName = document.getElementById('structoName').innerHTML
+        const exportFileDefaultName = structoName + '-' + new Date(Date.now()).toJSON().substring(0, 10) + '-' + timeString + '.png'
         linkElement.setAttribute('download', exportFileDefaultName)
         linkElement.click()
       })

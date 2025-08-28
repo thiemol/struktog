@@ -22,7 +22,11 @@ import { Presenter } from './presenter/main'
 import { Structogram } from './views/structogram'
 import { CodeView } from './views/code'
 import { ImportExport } from './views/importExport'
-import { generateFooter, generateHtmltree } from './helpers/generator'
+import {
+  generateFooter,
+  generateHtmltree,
+  highlight
+} from './helpers/generator'
 
 import './assets/scss/structog.scss'
 
@@ -64,7 +68,7 @@ window.onload = function () {
   )
   presenter.addView(importExport)
 
-  // generateInfoButton(document.getElementById('optionButtons'))
-
   presenter.init()
+
+  highlight()
 }

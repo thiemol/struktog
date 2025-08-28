@@ -89,6 +89,23 @@ export function generateHtmltree () {
   divider.classList.add('divider')
   document.body.appendChild(divider)
 
+  const dividerText = document.createElement('div')
+  dividerText.classList.add('divider-text')
+  dividerText.innerHTML = 'unbenannt'
+  dividerText.classList.add('tooltip', 'tooltip-top', 'hand')
+  dividerText.setAttribute('data-tooltip', 'Benenne dein Struktogramm.')
+  dividerText.addEventListener('click', () => {
+    let structoName = window.prompt(
+      'Bitte gib einen Namen für dein Struktogramm ein:'
+    )
+    if (structoName === null || structoName.trim() === ' ') {
+      structoName = 'unbenannt'
+    }
+    dividerText.innerHTML = structoName
+  })
+  dividerText.setAttribute('id', 'structoName')
+  document.body.appendChild(dividerText)
+
   // main
   const main = document.createElement('main')
   document.body.appendChild(main)
@@ -143,7 +160,7 @@ export function generateHtmltree () {
 
 /**
  * Generate HTML tree for footer
-**/
+ **/
 export function generateFooter () {
   // footer
   const footer = document.createElement('footer')
@@ -171,28 +188,27 @@ export function generateFooter () {
   }
 
   const sourceLink = document.createElement('div')
-  sourceLink.classList.add(
-    'hand'
-  )
+  sourceLink.classList.add('hand', 'tooltip', 'tooltip-top')
   sourceLink.appendChild(document.createTextNode('Source code'))
-  sourceLink.setAttribute('href', 'https://gitlab.com/dev-ddi/cs-school-tools/struktog')
+  sourceLink.setAttribute(
+    'href',
+    'https://gitlab.com/dev-ddi/cs-school-tools/struktog'
+  )
   sourceLink.setAttribute('data-tooltip', 'Gitlab Repository')
   sourceLink.addEventListener('click', () => {
-    window.open(
-      'https://gitlab.com/dev-ddi/cs-school-tools/struktog',
-      '_blank'
-    )
+    window.open('https://gitlab.com/dev-ddi/cs-school-tools/struktog', '_blank')
   })
 
   const maintainer = document.createElement('div')
   maintainer.appendChild(document.createTextNode('Maintainer Thiemo Leonhardt'))
 
   const contributorLink = document.createElement('div')
-  contributorLink.classList.add(
-    'hand'
-  )
+  contributorLink.classList.add('hand', 'tooltip', 'tooltip-top')
   contributorLink.appendChild(document.createTextNode('Contributors'))
-  contributorLink.setAttribute('href', 'https://gitlab.com/dev-ddi/cs-school-tools/struktog/-/blob/master/CONTRIBUTORS.md')
+  contributorLink.setAttribute(
+    'href',
+    'https://gitlab.com/dev-ddi/cs-school-tools/struktog/-/blob/master/CONTRIBUTORS.md'
+  )
   contributorLink.setAttribute('data-tooltip', 'Contributors')
   contributorLink.addEventListener('click', () => {
     window.open(
@@ -202,20 +218,28 @@ export function generateFooter () {
   })
 
   const hash = document.createElement('div')
+  hash.setAttribute('id', 'whats-new-link')
+  hash.classList.add('hand', 'tooltip', 'tooltip-top')
   hash.appendChild(document.createTextNode(__COMMIT_HASH__))
+  hash.setAttribute(
+    'href',
+    'https://gitlab.com/dev-ddi/cs-school-tools/struktog/-/blob/master/VERSIONS.md'
+  )
+  hash.setAttribute('data-tooltip', 'Whats New?')
+  hash.addEventListener('click', () => {
+    window.open(
+      'https://gitlab.com/dev-ddi/cs-school-tools/struktog/-/blob/master/VERSIONS.md',
+      '_blank'
+    )
+  })
 
   const impressumLink = document.createElement('div')
-  impressumLink.classList.add(
-    'hand'
-  )
+  impressumLink.classList.add('hand', 'tooltip', 'tooltip-top')
   impressumLink.appendChild(document.createTextNode('Impressum'))
   impressumLink.setAttribute('href', 'https://ddi.education/impressum')
   impressumLink.setAttribute('data-tooltip', 'Impressum')
   impressumLink.addEventListener('click', () => {
-    window.open(
-      'https://ddi.education/impressum/',
-      '_blank'
-    )
+    window.open('https://ddi.education/impressum/', '_blank')
   })
 
   footerDiv.appendChild(footerSpan)
@@ -278,11 +302,22 @@ export function generateInfoButton (domNode) {
   )
   infoButtonDiv.setAttribute('data-tooltip', 'Gitlab Repository')
   infoButtonDiv.addEventListener('click', () => {
-    window.open(
-      'https://gitlab.com/dev-ddi/cs-school-tools/struktog',
-      '_blank'
-    )
+    window.open('https://gitlab.com/dev-ddi/cs-school-tools/struktog', '_blank')
   })
 
   domNode.appendChild(infoButtonDiv)
+}
+
+export function highlight () {
+  // Rollout-Datum des Releases eintragen
+  const releaseDate = new Date('2025-08-25')
+  const now = new Date()
+
+  // 30 Tage später berechnen
+  const expiryDate = new Date(releaseDate)
+  expiryDate.setDate(expiryDate.getDate() + 30)
+
+  if (now <= expiryDate) {
+    document.getElementById('whats-new-link').classList.add('glimming')
+  }
 }

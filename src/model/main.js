@@ -146,7 +146,7 @@ class Model {
               text
             )
             return subTree
-          case 'TryCatchNode':
+          case 'TryCatchNode': {
             subTree.tryChild = this.findAndAlterElement(
               uid,
               subTree.tryChild,
@@ -154,13 +154,27 @@ class Model {
               false,
               text
             )
-            subTree.catchChild = this.findAndAlterElement(
-              uid,
-              subTree.catchChild,
-              alterFunction,
-              false,
-              text
-            )
+            const nodes = []
+            for (const element of subTree.catches) {
+              const val = this.findAndAlterElement(
+                uid,
+                element,
+                alterFunction,
+                false,
+                text
+              )
+              if (!(val === null)) {
+                nodes.push(val)
+              }
+            }
+            subTree.catches = nodes
+            // subTree.catchChild = this.findAndAlterElement(
+            //   uid,
+            //   subTree.catchChild,
+            //   alterFunction,
+            //   false,
+            //   text
+            // )
             subTree.followElement = this.findAndAlterElement(
               uid,
               subTree.followElement,
@@ -169,6 +183,7 @@ class Model {
               text
             )
             return subTree
+          }
           case 'CaseNode': {
             const nodes = []
             for (const element of subTree.cases) {
@@ -231,8 +246,8 @@ class Model {
    * @return   subTree         altered subTree object (without removed element)
    */
   removeNode (subTree, hasRealParent, text) {
-    // InsertCases are just completly removed, they do not have follow elements
-    if (subTree.type === 'InsertCase') {
+    // InsertCases and CatchNodes are just completely removed, they do not have follow elements
+    if (subTree.type === 'InsertCase' || subTree.specialType === 'CatchNode') {
       return null
     }
     // remove a node, but check if the parent is a container and a placeholder must be inserted
@@ -274,6 +289,7 @@ class Model {
         subTree.parameters.push({ pos: words[0], parName: words[1] })
       }
     } else {
+      console.log(subTree)
       subTree.text = text
     }
 
@@ -350,6 +366,32 @@ class Model {
   }
 
   /**
+   * Insert a new empty catch element
+   *
+   * @param    subTree         part of the tree with all children of current element
+   * @param    hasRealParent   not used in this function
+   * @param    text            not used in this function
+   * @return   subTree         altered subTree object (with inserted case element)
+   */
+  insertNewCatch (subTree, hasRealParent, text) {
+    // ToDo adapt for catch blocks
+    // check for max number of cases, duo to rendering issues
+    console.log(subTree)
+    // return true
+    if (subTree.catches.length < 20) {
+      // add a new case
+      subTree.catches.push({
+        id: guidGenerator(),
+        type: 'InsertNode',
+        text: 'undefiniert',
+        specialType: 'CatchNode',
+        followElement: { type: 'Placeholder' }
+      })
+    }
+    return subTree
+  }
+
+  /**
    * Recursive function to get a real copy of an element by his id
    *
    * @param    id              id of the element, which to find
@@ -357,11 +399,14 @@ class Model {
    * @return   subTree         copy of the subTree object
    */
   getElementInTree (uid, subTree) {
+    // console.log(subTree, uid)
     // stop recursion if the end of a sub tree is reached
     if (subTree === null || subTree.type === 'Placeholder') {
+      console.log('not found')
       return null
     } else {
       if (subTree.id === uid) {
+        console.log('found')
         // return a real copy
         return JSON.parse(JSON.stringify(subTree))
       } else {
@@ -403,14 +448,16 @@ class Model {
 
           case 'TryCatchNode': {
             // follow both children first, then the follow node
-            let node = this.getElementInTree(uid, subTree.tryChild)
+            const node = this.getElementInTree(uid, subTree.tryChild)
             if (node === null) {
-              node = this.getElementInTree(uid, subTree.catchChild)
-              if (node === null) {
-                return this.getElementInTree(uid, subTree.followElement)
-              } else {
-                return node
+              // follow all catch cases
+              for (const element of subTree.catches) {
+                const catchNode = this.getElementInTree(uid, element)
+                if (catchNode != null) {
+                  return catchNode
+                }
               }
+              return this.getElementInTree(uid, subTree.followElement)
             } else {
               return node
             }
