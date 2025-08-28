@@ -92,7 +92,7 @@ export function generateHtmltree () {
   const dividerText = document.createElement('div')
   dividerText.classList.add('divider-text')
   dividerText.innerHTML = 'unbenannt'
-  dividerText.classList.add('tooltip', 'tooltip-bottom', 'hand')
+  dividerText.classList.add('tooltip', 'tooltip-top', 'hand')
   dividerText.setAttribute('data-tooltip', 'Benenne dein Struktogramm.')
   dividerText.addEventListener('click', () => {
     let structoName = window.prompt(
