@@ -1,9 +1,17 @@
+# Versions
+
 v1.3.0
+
+- additional catch-Blocks (#31)
+- Struktogramm name field and export by name (#30)
+
+v1.3.0
+
 - refactor Import Export
 - GUI Adjustment
 - add try-catch element to png-export
 - change Licence to aGPL 3
-- several bugfixes 
+- several bugfixes
 
 v1.2.1
 
@@ -19,7 +27,8 @@ v1.2.0
 - new config params for the new elements
 
 v1.1.2
--add zip Download to release
+
+- add zip Download to release
 
 v1.1.1
 
