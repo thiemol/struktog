@@ -67,7 +67,7 @@ ontags:
     - echo "$DEPLOY_KEY" | tr -d '\r' | ssh-add -
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
-    - scp -o stricthostkeychecking=no -r ./release/${CI_PROJECT_NAME}-${CI_COMMIT_TAG}.tar.gz deploy@5.189.136.208:tools/releases/struktog
+    - scp -o stricthostkeychecking=no -r ./release/${CI_PROJECT_NAME}-${CI_COMMIT_TAG}.tar.gz deploy@5.189.136.208:tools/release/struktog
   only:
     - tags
 
