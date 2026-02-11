@@ -79,3 +79,20 @@ Der fertige Build wird in dem Unterordner './build ' abgelegt.
 ```bash
 yarn run build
 ```
+
+## Tests
+
+Die UI-Tests werden mit Selenium gegen den lokalen Build ausgefuehrt.
+
+```bash
+npm test
+```
+
+`npm test` baut zuerst das Projekt und startet dann `test/buttontest.js`.
+
+### Optionale Umgebungsvariablen
+
+- `STRUKTOG_MAX_DEPTH` steuert die Verschachtelungstiefe (Standard: `2`)
+- `STRUKTOG_FAST_NESTED=true` aktiviert einen schnelleren Nested-Modus
+- `STRUKTOG_VERBOSE=true` zeigt detaillierte Testschritte statt kompakter Summary
+- `STRUKTOG_TEST_URL` ueberschreibt die zu testende URL (Standard: lokales `build/index.html`)
