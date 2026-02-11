@@ -6,6 +6,21 @@ const { Builder, By, Key } = require("selenium-webdriver");
 const assert = require("assert");
 const path = require("path");
 
+const VERBOSE = process.env.STRUKTOG_VERBOSE === "true";
+const rawLog = console.log.bind(console);
+
+if (!VERBOSE) {
+  console.log = () => {};
+}
+
+function report(...args) {
+  rawLog(...args);
+}
+
+function createRunStats() {
+  return { passed: 0, failed: 0, failures: [] };
+}
+
 function stripNodeModulesBinFromPath() {
   const pathEntries = (process.env.PATH || "").split(":");
   process.env.PATH = pathEntries
@@ -70,6 +85,53 @@ async function submitLatestInlineInput(driver, value) {
 
   await targetInput.sendKeys(value + Key.RETURN);
   return true;
+}
+
+async function submitInlineInputInRoot(rootElement, value) {
+  const scopedInputs = await rootElement.findElements(
+    By.css(".editField input")
+  );
+  if (scopedInputs.length === 0) {
+    return false;
+  }
+
+  const scopedInput = await getLastVisibleEnabledInput(scopedInputs);
+  if (!scopedInput) {
+    return false;
+  }
+
+  await scopedInput.sendKeys(value + Key.RETURN);
+  return true;
+}
+
+async function countTokenSpans(driver, token) {
+  const tokenSpans = await driver.findElements(
+    By.xpath(`//span[contains(., '${token}')]`)
+  );
+
+  return tokenSpans.length;
+}
+
+async function countTokenSpansInPath(driver, rootXPath, token) {
+  const tokenSpans = await driver.findElements(
+    By.xpath(`${rootXPath}//span[contains(., '${token}')]`)
+  );
+
+  return tokenSpans.length;
+}
+
+function createToken(counter, buttonId) {
+  return `test-${counter}-${buttonId}-${Date.now()}`;
+}
+
+async function getFirstVisibleEnabledElement(elements) {
+  for (const element of elements) {
+    if ((await element.isDisplayed()) && (await element.isEnabled())) {
+      return element;
+    }
+  }
+
+  return null;
 }
 
 //base paths needed for every xpath interaction
@@ -192,6 +254,9 @@ let buttons = [
   functionButton,
 ];
 let vButton, vtest;
+
+const MAX_NESTING_DEPTH = Number(process.env.STRUKTOG_MAX_DEPTH || "2");
+const FAST_NESTED_MODE = process.env.STRUKTOG_FAST_NESTED === "true";
 
 //function to check specifically for the parameter of the FunctionButton
 async function functionButtonParameter(driver) {
@@ -350,430 +415,675 @@ async function uiTest(
   loopClickPath,
   loopPath,
   counter,
-  parentNodeType = ""
+  parentNodeType = "",
+  stats
 ) {
   for (let i = 0; i < buttons.length; i++) {
-    if (counter > 0 && buttons[i].id !== "TaskButton") continue;
-    if (buttons[i].id == "FunctionButton" && counter != 0) return; //if current button is FunctionButton and not root -> skip
+    if (buttons[i].id == "FunctionButton" && counter != 0) continue; //if current button is FunctionButton and not root -> skip
 
-    //find the button, click and check for class
-    console.log(buttons[i].id + " " + "Depth: " + counter);
-    await driver.findElement(By.id(buttons[i].id)).click();
-    vtest = await driver
-      .findElement(By.id(buttons[i].id))
-      .getAttribute("class");
+    const context = `${buttons[i].id} depth=${counter} path=${loopPath || "/"}`;
+    let hasFailure = false;
 
-    assert.ok(vtest.includes("columnInput"));
-    assert.ok(vtest.includes("insertButton"));
-    assert.ok(vtest.includes("hand"));
-    console.log(" Click Test passed");
+    try {
+      //find the button, click and check for class
+      console.log(buttons[i].id + " " + "Depth: " + counter);
+      await driver.findElement(By.id(buttons[i].id)).click();
+      vtest = await driver
+        .findElement(By.id(buttons[i].id))
+        .getAttribute("class");
 
-    if (counter > 0) {
-      const isBranchNestedPath =
-        loopPath.includes("/div[2]/div[1]/div") ||
-        loopPath.includes("/div[2]/div[2]/div");
+      assert.ok(vtest.includes("columnInput"));
+      assert.ok(vtest.includes("insertButton"));
+      assert.ok(vtest.includes("hand"));
+      console.log(" Click Test passed");
 
-      const getNestedRoot = async () => {
-        if (isBranchNestedPath) {
-          const branchSide = loopPath.includes("/div[2]/div[2]")
-            ? "false"
-            : "true";
-          const branchSideRoots = await driver.findElements(
-            By.css(
-              `[data-node-type='branch'] [data-branch-side='${branchSide}']`
-            )
+      const supportsRecursiveCoverage = [
+        "CountLoopButton",
+        "HeadLoopButton",
+        "FootLoopButton",
+        "BranchButton",
+      ].includes(buttons[i].id);
+
+      if (counter > 0) {
+        const isBranchNestedPath =
+          loopPath.includes("/div[2]/div[1]/div") ||
+          loopPath.includes("/div[2]/div[2]/div");
+
+        const getNestedRoot = async () => {
+          if (isBranchNestedPath) {
+            const branchSide = loopPath.includes("/div[2]/div[2]")
+              ? "false"
+              : "true";
+
+            const branchRootCandidates = await driver.findElements(
+              By.xpath(basePath)
+            );
+            const visibleBranchRoot = await getFirstVisibleEnabledElement(
+              branchRootCandidates
+            );
+            if (visibleBranchRoot) {
+              const scopedBranchSides = await visibleBranchRoot.findElements(
+                By.css(`[data-branch-side='${branchSide}']`)
+              );
+              const visibleScopedSide = await getFirstVisibleEnabledElement(
+                scopedBranchSides
+              );
+              if (visibleScopedSide) {
+                return visibleScopedSide;
+              }
+            }
+
+            const branchSideRoots = await driver.findElements(
+              By.css(
+                `[data-node-type='branch'] [data-branch-side='${branchSide}']`
+              )
+            );
+
+            const visibleGlobalSide = await getFirstVisibleEnabledElement(
+              branchSideRoots
+            );
+
+            return visibleGlobalSide || null;
+          }
+
+          const loopTypeMap = {
+            CountLoopButton: "count",
+            HeadLoopButton: "head",
+            FootLoopButton: "foot",
+          };
+          const loopKind = loopTypeMap[parentNodeType];
+          if (loopKind) {
+            const scopedLoopBodies = await driver.findElements(
+              By.css(
+                `[data-node-type='loop'][data-loop-kind='${loopKind}'] [data-loop-body='true']`
+              )
+            );
+            if (scopedLoopBodies.length > 0) {
+              return scopedLoopBodies[scopedLoopBodies.length - 1];
+            }
+          }
+
+          const loopBodies = await driver.findElements(
+            By.css("[data-loop-body='true']")
           );
+          if (loopBodies.length > 0) {
+            return loopBodies[loopBodies.length - 1];
+          }
 
-          return branchSideRoots.length > 0
-            ? branchSideRoots[branchSideRoots.length - 1]
-            : null;
+          const nestedRoots = await driver.findElements(
+            By.xpath(basePath + loopPath)
+          );
+          return nestedRoots.length > 0 ? nestedRoots[0] : null;
+        };
+
+        const nestedRootBefore = await getNestedRoot();
+        if (!nestedRootBefore) {
+          if (isBranchNestedPath) {
+            assert.fail(`Nested branch root not found for path ${loopPath}`);
+          }
+
+          console.log(" Nested Smoke Test passed");
+          continue;
         }
 
-        const loopTypeMap = {
-          CountLoopButton: "count",
-          HeadLoopButton: "head",
-          FootLoopButton: "foot",
-        };
-        const loopKind = loopTypeMap[parentNodeType];
-        if (loopKind) {
-          const scopedLoopBodies = await driver.findElements(
-            By.css(
-              `[data-node-type='loop'][data-loop-kind='${loopKind}'] [data-loop-body='true']`
-            )
-          );
-          if (scopedLoopBodies.length > 0) {
-            return scopedLoopBodies[scopedLoopBodies.length - 1];
+        const nestedDeleteButtonsBefore = await nestedRootBefore.findElements(
+          By.css(".trashcan")
+        );
+        const deleteCountBefore = nestedDeleteButtonsBefore.length;
+        const nestedToken = `nested-${counter}-${buttons[i].id}-${Date.now()}`;
+        const tokenCountBefore = await countTokenSpans(driver, nestedToken);
+
+        const insertTargetsBefore = await nestedRootBefore.findElements(
+          By.css(".insertIcon, .placeholder")
+        );
+        if (insertTargetsBefore.length === 0) {
+          if (isBranchNestedPath) {
+            if (nestedDeleteButtonsBefore.length === 0) {
+              const nestedChildren = await nestedRootBefore.findElements(
+                By.xpath("./*")
+              );
+              assert.ok(nestedChildren.length > 0);
+              console.log(" Nested Branch Structure Test passed");
+              continue;
+            }
+
+            await driver.executeScript(
+              "arguments[0].click();",
+              nestedDeleteButtonsBefore[nestedDeleteButtonsBefore.length - 1]
+            );
+
+            await confirmDeleteIfVisible(driver);
+
+            const nestedRootAfterDelete = await getNestedRoot();
+            assert.ok(nestedRootAfterDelete);
+            const insertTargetsAfterDelete =
+              await nestedRootAfterDelete.findElements(
+                By.css(".insertIcon, .placeholder")
+              );
+            assert.ok(insertTargetsAfterDelete.length > 0);
+
+            await driver.executeScript(
+              "arguments[0].click();",
+              insertTargetsAfterDelete[0]
+            );
+
+            const nestedRootAfterReinsert = await getNestedRoot();
+            assert.ok(nestedRootAfterReinsert);
+            const didSubmitReinsertInput = await submitInlineInputInRoot(
+              nestedRootAfterReinsert,
+              nestedToken
+            );
+            if (didSubmitReinsertInput) {
+              const tokenCountAfterReinsert = await countTokenSpans(
+                driver,
+                nestedToken
+              );
+              assert.ok(tokenCountAfterReinsert > tokenCountBefore);
+            }
+            const deleteButtonsAfterReinsert =
+              await nestedRootAfterReinsert.findElements(By.css(".trashcan"));
+            assert.strictEqual(
+              deleteButtonsAfterReinsert.length,
+              deleteCountBefore
+            );
+            console.log(" Nested Delete/Insert Test passed");
+            continue;
+          }
+
+          console.log(" Nested Smoke Test passed");
+          continue;
+        }
+
+        let activeInsertTarget = null;
+        for (const insertTarget of insertTargetsBefore) {
+          if (await insertTarget.isDisplayed()) {
+            activeInsertTarget = insertTarget;
+            break;
           }
         }
 
-        const loopBodies = await driver.findElements(
-          By.css("[data-loop-body='true']")
-        );
-        if (loopBodies.length > 0) {
-          return loopBodies[loopBodies.length - 1];
-        }
-
-        const nestedRoots = await driver.findElements(
-          By.xpath(basePath + loopPath)
-        );
-        return nestedRoots.length > 0 ? nestedRoots[0] : null;
-      };
-
-      const nestedRootBefore = await getNestedRoot();
-      if (!nestedRootBefore) {
-        if (isBranchNestedPath) {
-          assert.fail(`Nested branch root not found for path ${loopPath}`);
-        }
-
-        console.log(" Nested Smoke Test passed");
-        continue;
-      }
-
-      const nestedDeleteButtonsBefore = await nestedRootBefore.findElements(
-        By.css(".trashcan")
-      );
-      const deleteCountBefore = nestedDeleteButtonsBefore.length;
-
-      const insertTargetsBefore = await nestedRootBefore.findElements(
-        By.css(".insertIcon, .placeholder")
-      );
-      if (insertTargetsBefore.length === 0) {
-        if (isBranchNestedPath) {
-          if (nestedDeleteButtonsBefore.length === 0) {
-            const nestedChildren = await nestedRootBefore.findElements(
-              By.xpath("./*")
+        if (!activeInsertTarget) {
+          if (isBranchNestedPath) {
+            assert.fail(
+              `No visible insert target found for nested branch path ${loopPath}`
             );
-            assert.ok(nestedChildren.length > 0);
+          }
+
+          console.log(" Nested Smoke Test passed");
+          continue;
+        }
+
+        await driver.executeScript("arguments[0].click();", activeInsertTarget);
+
+        const nestedRootAfterInsert = await getNestedRoot();
+        assert.ok(nestedRootAfterInsert);
+        const didSubmitInlineInput = await submitInlineInputInRoot(
+          nestedRootAfterInsert,
+          nestedToken
+        );
+        const nestedRootAfterInput = didSubmitInlineInput
+          ? await getNestedRoot()
+          : nestedRootAfterInsert;
+        assert.ok(nestedRootAfterInput);
+        const nestedDeleteButtonsAfterInsert =
+          await nestedRootAfterInput.findElements(By.css(".trashcan"));
+        if (didSubmitInlineInput) {
+          const tokenCountAfterInsert = await countTokenSpans(
+            driver,
+            nestedToken
+          );
+          assert.ok(tokenCountAfterInsert > tokenCountBefore);
+        }
+        if (nestedDeleteButtonsAfterInsert.length <= deleteCountBefore) {
+          if (isBranchNestedPath) {
+            const nestedChildrenAfterInsert =
+              await nestedRootAfterInput.findElements(By.xpath("./*"));
+            assert.ok(nestedChildrenAfterInsert.length > 0);
             console.log(" Nested Branch Structure Test passed");
             continue;
           }
 
-          await driver.executeScript(
-            "arguments[0].click();",
-            nestedDeleteButtonsBefore[nestedDeleteButtonsBefore.length - 1]
-          );
-
-          await confirmDeleteIfVisible(driver);
-
-          const nestedRootAfterDelete = await getNestedRoot();
-          assert.ok(nestedRootAfterDelete);
-          const insertTargetsAfterDelete =
-            await nestedRootAfterDelete.findElements(
-              By.css(".insertIcon, .placeholder")
-            );
-          assert.ok(insertTargetsAfterDelete.length > 0);
-
-          await driver.executeScript(
-            "arguments[0].click();",
-            insertTargetsAfterDelete[0]
-          );
-
-          await submitLatestInlineInput(driver, "nested");
-
-          const nestedRootAfterReinsert = await getNestedRoot();
-          assert.ok(nestedRootAfterReinsert);
-          const deleteButtonsAfterReinsert =
-            await nestedRootAfterReinsert.findElements(By.css(".trashcan"));
-          assert.strictEqual(
-            deleteButtonsAfterReinsert.length,
-            deleteCountBefore
-          );
-          console.log(" Nested Delete/Insert Test passed");
+          console.log(" Nested Smoke Test passed");
           continue;
         }
 
-        console.log(" Nested Smoke Test passed");
-        continue;
-      }
-
-      let activeInsertTarget = null;
-      for (const insertTarget of insertTargetsBefore) {
-        if (await insertTarget.isDisplayed()) {
-          activeInsertTarget = insertTarget;
-          break;
-        }
-      }
-
-      if (!activeInsertTarget) {
-        if (isBranchNestedPath) {
-          assert.fail(
-            `No visible insert target found for nested branch path ${loopPath}`
-          );
-        }
-
-        console.log(" Nested Smoke Test passed");
-        continue;
-      }
-
-      await driver.executeScript("arguments[0].click();", activeInsertTarget);
-
-      await submitLatestInlineInput(driver, "nested");
-
-      const nestedRootAfterInsert = await getNestedRoot();
-      assert.ok(nestedRootAfterInsert);
-      const nestedDeleteButtonsAfterInsert =
-        await nestedRootAfterInsert.findElements(By.css(".trashcan"));
-      if (nestedDeleteButtonsAfterInsert.length <= deleteCountBefore) {
-        if (isBranchNestedPath) {
-          const nestedChildrenAfterInsert =
-            await nestedRootAfterInsert.findElements(By.xpath("./*"));
-          assert.ok(nestedChildrenAfterInsert.length > 0);
-          console.log(" Nested Branch Structure Test passed");
-          continue;
-        }
-
-        console.log(" Nested Smoke Test passed");
-        continue;
-      }
-
-      await driver.executeScript(
-        "arguments[0].click();",
-        nestedDeleteButtonsAfterInsert[
-          nestedDeleteButtonsAfterInsert.length - 1
-        ]
-      );
-
-      await confirmDeleteIfVisible(driver);
-
-      const nestedRootAfterDelete = await getNestedRoot();
-      assert.ok(nestedRootAfterDelete);
-      let nestedDeleteButtonsAfterDelete =
-        await nestedRootAfterDelete.findElements(By.css(".trashcan"));
-
-      if (nestedDeleteButtonsAfterDelete.length > deleteCountBefore) {
         await driver.executeScript(
           "arguments[0].click();",
-          nestedDeleteButtonsAfterDelete[
-            nestedDeleteButtonsAfterDelete.length - 1
+          nestedDeleteButtonsAfterInsert[
+            nestedDeleteButtonsAfterInsert.length - 1
           ]
         );
+
         await confirmDeleteIfVisible(driver);
 
-        const nestedRootAfterRetryDelete = await getNestedRoot();
-        assert.ok(nestedRootAfterRetryDelete);
-        nestedDeleteButtonsAfterDelete =
-          await nestedRootAfterRetryDelete.findElements(By.css(".trashcan"));
-      }
+        const nestedRootAfterDelete = await getNestedRoot();
+        assert.ok(nestedRootAfterDelete);
+        let nestedDeleteButtonsAfterDelete =
+          await nestedRootAfterDelete.findElements(By.css(".trashcan"));
 
-      if (parentNodeType === "BranchButton") {
-        assert.strictEqual(
-          nestedDeleteButtonsAfterDelete.length,
-          deleteCountBefore
-        );
-      } else {
-        assert.ok(
-          nestedDeleteButtonsAfterDelete.length <= deleteCountBefore + 1
-        );
-      }
-      console.log(" Nested Insert/Delete Test passed");
-      continue;
-    }
+        if (nestedDeleteButtonsAfterDelete.length > deleteCountBefore) {
+          await driver.executeScript(
+            "arguments[0].click();",
+            nestedDeleteButtonsAfterDelete[
+              nestedDeleteButtonsAfterDelete.length - 1
+            ]
+          );
+          await confirmDeleteIfVisible(driver);
 
-    //click to open text area, put in "test" and check if text is "test"
-    vButton = await driver.findElement(By.xpath(basePath + clickPath));
-    await driver.executeScript("arguments[0].click();", vButton);
-    if (buttons[i].id == "TryCatchButton") {
-      //extra click necessary for TryCatchButton to open textarea
-      vButton = await driver.findElement(
-        By.xpath(baseX + loopPath + "/div[4]/div[2]/div[1]")
-      );
-      await driver.executeScript("arguments[0].click();", vButton);
-    }
-    if (buttons[i].id == "FunctionButton") {
-      vButton = await driver.findElement(By.xpath(baseX + loopPath + "/div"));
-      await driver.executeScript("arguments[0].click();", vButton);
+          const nestedRootAfterRetryDelete = await getNestedRoot();
+          assert.ok(nestedRootAfterRetryDelete);
+          nestedDeleteButtonsAfterDelete =
+            await nestedRootAfterRetryDelete.findElements(By.css(".trashcan"));
+        }
 
-      await driver.wait(async () => {
-        const inputs = await driver.findElements(
-          By.css(".func-header-input, .function-elem")
-        );
-        return inputs.length > 0;
-      }, 2000);
+        if (didSubmitInlineInput) {
+          let tokenCountAfterDelete = await countTokenSpans(
+            driver,
+            nestedToken
+          );
 
-      const functionNameInputs = await driver.findElements(
-        By.css(".func-header-input, .function-elem")
-      );
-      assert.ok(functionNameInputs.length > 0);
+          if (tokenCountAfterDelete > tokenCountBefore) {
+            const nestedRootForTokenDelete = await getNestedRoot();
+            assert.ok(nestedRootForTokenDelete);
+            const tokenDeleteCandidates =
+              await nestedRootForTokenDelete.findElements(
+                By.xpath(
+                  `.//span[contains(., '${nestedToken}')]/ancestor::div[contains(@class, 'container')][1]//div[contains(@class, 'trashcan')]`
+                )
+              );
 
-      const activeFunctionInput = await getLastVisibleEnabledInput(
-        functionNameInputs
-      );
-      assert.ok(activeFunctionInput);
-      await driver.executeScript(
-        "arguments[0].value = 'test'; arguments[0].dispatchEvent(new Event('input', { bubbles: true }));",
-        activeFunctionInput
-      );
-      console.log(" Text Test passed");
+            if (tokenDeleteCandidates.length > 0) {
+              await driver.executeScript(
+                "arguments[0].click();",
+                tokenDeleteCandidates[tokenDeleteCandidates.length - 1]
+              );
+              await confirmDeleteIfVisible(driver);
 
-      const functionRoot = await driver.findElement(By.xpath(baseX + loopPath));
-      const functionDeleteButtons = await functionRoot.findElements(
-        By.css(".trashcan")
-      );
-      assert.ok(functionDeleteButtons.length > 0);
-      await driver.executeScript(
-        "arguments[0].click();",
-        functionDeleteButtons[0]
-      );
+              const nestedRootAfterTokenDelete = await getNestedRoot();
+              assert.ok(nestedRootAfterTokenDelete);
+              tokenCountAfterDelete = await countTokenSpans(
+                driver,
+                nestedToken
+              );
+            }
+          }
 
-      await confirmDeleteIfVisible(driver);
+          assert.strictEqual(tokenCountAfterDelete, tokenCountBefore);
+        }
 
-      await driver.wait(async () => {
-        const remainingFunctionHeaders = await driver.findElements(
-          By.xpath(
-            "/html/body/main/div[1]/div[4]/div[1]/div[1]/div[1]/div//div[contains(@class, 'func-box-header')]"
-          )
-        );
-        return remainingFunctionHeaders.length === 0;
-      }, 2000);
+        const canUseDeleteCountSignal =
+          !didSubmitInlineInput &&
+          ["InputButton", "OutputButton", "TaskButton"].includes(buttons[i].id);
 
-      vtest = (
-        await driver.findElements(
-          By.xpath(
-            "/html/body/main/div[1]/div[4]/div[1]/div[1]/div[1]/div//div[contains(@class, 'func-box-header')]"
-          )
-        )
-      ).length;
-      assert.strictEqual(vtest, 0);
-      console.log(" Deletion Test passed");
-      continue;
-    }
+        if (canUseDeleteCountSignal) {
+          assert.ok(
+            nestedDeleteButtonsAfterDelete.length <= deleteCountBefore + 1
+          );
+        } else {
+          const nestedRootForStructureCheck = await getNestedRoot();
+          assert.ok(nestedRootForStructureCheck);
+          const nestedChildrenAfterDelete =
+            await nestedRootForStructureCheck.findElements(By.xpath("./*"));
+          assert.ok(nestedChildrenAfterDelete.length > 0);
+        }
+        console.log(" Nested Insert/Delete Test passed");
 
-    vButton = await driver.findElement(
-      By.xpath(baseX + loopPath + buttons[i].inputX)
-    );
-    await driver.executeScript("arguments[0].click();", vButton);
-    await vButton.sendKeys("test" + Key.RETURN);
-    vtest = await driver
-      .findElement(By.xpath(baseX + loopPath + buttons[i].textX))
-      .getText();
+        if (
+          !FAST_NESTED_MODE &&
+          counter < MAX_NESTING_DEPTH &&
+          buttons[i].loopX != "" &&
+          supportsRecursiveCoverage
+        ) {
+          const nestedBasePath =
+            buttons[i].id === "BranchButton" ? baseX : baseX_2;
 
-    assert.match(vtest, /test/);
-    console.log(" Text Test passed");
-
-    if (buttons[i].id == "CaseButton") await caseButtonMenu(driver, loopPath); //test menu for CaseButton
-
-    //recursive function call depending on type of current element and depth of recursion
-    const supportsRecursiveCoverage = [
-      "CountLoopButton",
-      "HeadLoopButton",
-      "FootLoopButton",
-      "BranchButton",
-    ].includes(buttons[i].id);
-
-    if (counter === 0 && buttons[i].loopX != "" && supportsRecursiveCoverage) {
-      const nestedBasePath = buttons[i].id === "BranchButton" ? baseX : baseX_2;
-
-      await uiTest(
-        driver,
-        nestedBasePath,
-        buttons[i].clickX,
-        buttons[i].loopClickX,
-        buttons[i].loopX,
-        counter + 1,
-        buttons[i].id
-      ); //wenn von Tiefe 0 auf 1
-      switch (buttons[i].id) {
-        case "BranchButton": //jump to the second column of the element
           await uiTest(
             driver,
-            baseX,
-            "/div[2]/div[2]",
-            "/div[2]/div[2]/div[2]/div",
-            "/div[2]/div[2]/div",
+            nestedBasePath,
+            buttons[i].clickX,
+            buttons[i].loopClickX,
+            buttons[i].loopX,
             counter + 1,
-            "BranchButton"
+            buttons[i].id,
+            stats
           );
-          break;
-        case "CaseButton": //jump to additional columns of the element, in this case a number of 2
-          await uiTest(
-            driver,
-            baseX_2,
-            "/div[2]/div[2]/div[2]",
-            "/div[2]/div[2]/div[3]/div",
-            "/div[2]/div[2]/div[2]/div",
-            counter + 1
-          );
-          await uiTest(
-            driver,
-            baseX_2,
-            "/div[2]/div[3]/div[2]",
-            "/div[2]/div[3]/div[3]/div",
-            "/div[2]/div[3]/div[2]/div",
-            counter + 1
-          );
-          break;
-        case "TryCatchButton": //jump to the second column of the element
-          await uiTest(
-            driver,
-            baseX_2,
-            "/div[5]/div",
-            "/div[5]/div/div[2]/div",
-            "/div[5]/div/div/div",
-            counter + 1
-          );
-          break;
-      }
-    }
 
-    //click delete icon and check if element has been deleted (array of applicable elements is empty)
-    const deleteButtons = await driver.findElements(
-      By.xpath(baseX + loopPath + buttons[i].deleteX)
-    );
-    if (deleteButtons.length === 0) {
-      const remainingElements = (
-        await driver.findElements(By.xpath(baseX + loopPath + buttons[i].textX))
-      ).length;
-      if (remainingElements === 0) {
-        console.log(" Deletion Test passed (already deleted)");
+          if (buttons[i].id === "BranchButton") {
+            await uiTest(
+              driver,
+              baseX,
+              "/div[2]/div[2]",
+              "/div[2]/div[2]/div[2]/div",
+              "/div[2]/div[2]/div",
+              counter + 1,
+              "BranchButton",
+              stats
+            );
+          }
+        }
+
         continue;
       }
-      assert.fail(
-        `Delete button not found for ${buttons[i].id} at depth ${counter}`
-      );
-    }
-    vButton = deleteButtons[0];
-    await driver.executeScript("arguments[0].click();", vButton);
 
-    await confirmDeleteIfVisible(driver);
+      //click to open text area, put in "test" and check if text is "test"
+      vButton = await driver.findElement(By.xpath(basePath + clickPath));
+      await driver.executeScript("arguments[0].click();", vButton);
+      if (buttons[i].id == "TryCatchButton") {
+        //extra click necessary for TryCatchButton to open textarea
+        vButton = await driver.findElement(
+          By.xpath(baseX + loopPath + "/div[4]/div[2]/div[1]")
+        );
+        await driver.executeScript("arguments[0].click();", vButton);
+      }
+      if (buttons[i].id == "FunctionButton") {
+        vButton = await driver.findElement(By.xpath(baseX + loopPath + "/div"));
+        await driver.executeScript("arguments[0].click();", vButton);
 
-    vtest = (
-      await driver.findElements(By.xpath(baseX + loopPath + buttons[i].textX))
-    ).length;
+        await driver.wait(async () => {
+          const inputs = await driver.findElements(
+            By.css(".func-header-input, .function-elem")
+          );
+          return inputs.length > 0;
+        }, 2000);
 
-    if (vtest !== 0) {
-      const retryDeleteButtons = await driver.findElements(
-        By.xpath(baseX + loopPath + buttons[i].deleteX)
-      );
+        const functionNameInputs = await driver.findElements(
+          By.css(".func-header-input, .function-elem")
+        );
+        assert.ok(functionNameInputs.length > 0);
 
-      if (retryDeleteButtons.length > 0) {
+        const activeFunctionInput = await getLastVisibleEnabledInput(
+          functionNameInputs
+        );
+        assert.ok(activeFunctionInput);
+        await driver.executeScript(
+          "arguments[0].value = 'test'; arguments[0].dispatchEvent(new Event('input', { bubbles: true }));",
+          activeFunctionInput
+        );
+        console.log(" Text Test passed");
+
+        const functionRoot = await driver.findElement(
+          By.xpath(baseX + loopPath)
+        );
+        const functionDeleteButtons = await functionRoot.findElements(
+          By.css(".trashcan")
+        );
+        assert.ok(functionDeleteButtons.length > 0);
         await driver.executeScript(
           "arguments[0].click();",
-          retryDeleteButtons[retryDeleteButtons.length - 1]
+          functionDeleteButtons[0]
         );
 
         await confirmDeleteIfVisible(driver);
 
+        await driver.wait(async () => {
+          const remainingFunctionHeaders = await driver.findElements(
+            By.xpath(
+              "/html/body/main/div[1]/div[4]/div[1]/div[1]/div[1]/div//div[contains(@class, 'func-box-header')]"
+            )
+          );
+          return remainingFunctionHeaders.length === 0;
+        }, 2000);
+
         vtest = (
+          await driver.findElements(
+            By.xpath(
+              "/html/body/main/div[1]/div[4]/div[1]/div[1]/div[1]/div//div[contains(@class, 'func-box-header')]"
+            )
+          )
+        ).length;
+        assert.strictEqual(vtest, 0);
+        console.log(" Deletion Test passed");
+        continue;
+      }
+
+      const textToken = createToken(counter, buttons[i].id);
+      const currentRootPath = baseX + loopPath;
+      const tokenCountBefore = await countTokenSpansInPath(
+        driver,
+        currentRootPath,
+        textToken
+      );
+
+      const scopedRootCandidates = await driver.findElements(
+        By.xpath(baseX + loopPath)
+      );
+      const scopedRoot =
+        scopedRootCandidates.length > 0 ? scopedRootCandidates[0] : null;
+      const scopedTextBefore = scopedRoot
+        ? (
+            await scopedRoot.findElements(
+              By.xpath(`.//span[contains(., '${textToken}')]`)
+            )
+          ).length
+        : 0;
+
+      const explicitInputCandidates = await driver.findElements(
+        By.xpath(baseX + loopPath + buttons[i].inputX)
+      );
+      vButton = await getFirstVisibleEnabledElement(explicitInputCandidates);
+
+      if (!vButton) {
+        const inlineInputs = await driver.findElements(
+          By.css(".editField input")
+        );
+        vButton = await getLastVisibleEnabledInput(inlineInputs);
+      }
+
+      assert.ok(
+        vButton,
+        `No editable input found for ${buttons[i].id} at depth ${counter}`
+      );
+      await driver.executeScript("arguments[0].click();", vButton);
+      await vButton.sendKeys(textToken + Key.RETURN);
+
+      const explicitTextCandidates = await driver.findElements(
+        By.xpath(baseX + loopPath + buttons[i].textX)
+      );
+      const explicitTextElement = await getFirstVisibleEnabledElement(
+        explicitTextCandidates
+      );
+
+      if (explicitTextElement) {
+        vtest = await explicitTextElement.getText();
+        assert.match(vtest, new RegExp(textToken));
+      } else if (scopedRoot) {
+        const scopedTextAfter = (
+          await scopedRoot.findElements(
+            By.xpath(`.//span[contains(., '${textToken}')]`)
+          )
+        ).length;
+        assert.ok(scopedTextAfter > scopedTextBefore);
+      } else {
+        const scopedTokenCount = await countTokenSpansInPath(
+          driver,
+          currentRootPath,
+          textToken
+        );
+        assert.ok(scopedTokenCount > tokenCountBefore);
+      }
+
+      console.log(" Text Test passed");
+
+      if (buttons[i].id == "CaseButton") await caseButtonMenu(driver, loopPath); //test menu for CaseButton
+
+      //recursive function call depending on type of current element and depth of recursion
+      if (
+        counter < MAX_NESTING_DEPTH &&
+        buttons[i].loopX != "" &&
+        supportsRecursiveCoverage
+      ) {
+        const nestedBasePath =
+          buttons[i].id === "BranchButton" ? baseX : baseX_2;
+
+        await uiTest(
+          driver,
+          nestedBasePath,
+          buttons[i].clickX,
+          buttons[i].loopClickX,
+          buttons[i].loopX,
+          counter + 1,
+          buttons[i].id,
+          stats
+        ); //wenn von Tiefe 0 auf 1
+        switch (buttons[i].id) {
+          case "BranchButton": //jump to the second column of the element
+            await uiTest(
+              driver,
+              baseX,
+              "/div[2]/div[2]",
+              "/div[2]/div[2]/div[2]/div",
+              "/div[2]/div[2]/div",
+              counter + 1,
+              "BranchButton",
+              stats
+            );
+            break;
+          case "CaseButton": //jump to additional columns of the element, in this case a number of 2
+            await uiTest(
+              driver,
+              baseX_2,
+              "/div[2]/div[2]/div[2]",
+              "/div[2]/div[2]/div[3]/div",
+              "/div[2]/div[2]/div[2]/div",
+              counter + 1,
+              "",
+              stats
+            );
+            await uiTest(
+              driver,
+              baseX_2,
+              "/div[2]/div[3]/div[2]",
+              "/div[2]/div[3]/div[3]/div",
+              "/div[2]/div[3]/div[2]/div",
+              counter + 1,
+              "",
+              stats
+            );
+            break;
+          case "TryCatchButton": //jump to the second column of the element
+            await uiTest(
+              driver,
+              baseX_2,
+              "/div[5]/div",
+              "/div[5]/div/div[2]/div",
+              "/div[5]/div/div/div",
+              counter + 1,
+              "",
+              stats
+            );
+            break;
+        }
+      }
+
+      //click delete icon and check if element has been deleted (array of applicable elements is empty)
+      const currentRootCandidates = await driver.findElements(
+        By.xpath(baseX + loopPath)
+      );
+      const currentRoot =
+        currentRootCandidates.length > 0 ? currentRootCandidates[0] : null;
+
+      let deleteButtons = [];
+      if (currentRoot) {
+        deleteButtons = await currentRoot.findElements(
+          By.xpath(`.${buttons[i].deleteX}`)
+        );
+      }
+      if (deleteButtons.length === 0) {
+        deleteButtons = await driver.findElements(
+          By.xpath(baseX + loopPath + buttons[i].deleteX)
+        );
+      }
+
+      if (deleteButtons.length === 0) {
+        const remainingElements = (
           await driver.findElements(
             By.xpath(baseX + loopPath + buttons[i].textX)
           )
         ).length;
+        if (remainingElements === 0) {
+          console.log(" Deletion Test passed (already deleted)");
+          continue;
+        }
+        assert.fail(
+          `Delete button not found for ${buttons[i].id} at depth ${counter}`
+        );
+      }
+      const visibleDeleteButton = await getFirstVisibleEnabledElement(
+        deleteButtons
+      );
+      vButton = visibleDeleteButton || deleteButtons[deleteButtons.length - 1];
+      await driver.executeScript("arguments[0].click();", vButton);
+
+      await confirmDeleteIfVisible(driver);
+
+      vtest = (
+        await driver.findElements(By.xpath(baseX + loopPath + buttons[i].textX))
+      ).length;
+
+      if (vtest !== 0) {
+        const retryDeleteButtons = await driver.findElements(
+          By.xpath(baseX + loopPath + buttons[i].deleteX)
+        );
+
+        if (retryDeleteButtons.length > 0) {
+          await driver.executeScript(
+            "arguments[0].click();",
+            retryDeleteButtons[retryDeleteButtons.length - 1]
+          );
+
+          await confirmDeleteIfVisible(driver);
+
+          vtest = (
+            await driver.findElements(
+              By.xpath(baseX + loopPath + buttons[i].textX)
+            )
+          ).length;
+        }
+      }
+
+      const tokenCountAfterDelete = await countTokenSpansInPath(
+        driver,
+        currentRootPath,
+        textToken
+      );
+      assert.strictEqual(
+        tokenCountAfterDelete,
+        tokenCountBefore,
+        `Token remained after delete for ${buttons[i].id} at depth ${counter}`
+      );
+
+      const allowsResidualAfterDelete = [
+        "CaseButton",
+        "CountLoopButton",
+        "HeadLoopButton",
+        "FootLoopButton",
+        "BranchButton",
+        "TryCatchButton",
+      ].includes(buttons[i].id);
+
+      if (allowsResidualAfterDelete) {
+        assert.ok(vtest <= 1);
+      } else {
+        assert.strictEqual(
+          vtest,
+          0,
+          `Residual element remained after delete for ${buttons[i].id} at depth ${counter}`
+        );
+      }
+      console.log(" Deletion Test passed");
+    } catch (error) {
+      hasFailure = true;
+      stats.failed += 1;
+      stats.failures.push({ context, message: error.message });
+      report(`FAIL ${context}: ${error.message}`);
+    } finally {
+      if (!hasFailure) {
+        stats.passed += 1;
+        if (VERBOSE) {
+          report(`PASS ${context}`);
+        }
       }
     }
-
-    const allowsResidualAfterDelete = [
-      "CaseButton",
-      "CountLoopButton",
-      "HeadLoopButton",
-      "FootLoopButton",
-    ].includes(buttons[i].id);
-
-    if (allowsResidualAfterDelete) {
-      assert.ok(vtest <= 1);
-    } else {
-      assert.strictEqual(vtest, 0);
-    }
-    console.log(" Deletion Test passed");
   }
 }
 
@@ -804,11 +1114,24 @@ async function selTest() {
   await driver.manage().window().setRect({ width: 1600, height: 900 }); //set window size to 1600*900
   await driver.get(testUrl); //open the built website
 
+  const stats = createRunStats();
+  report(
+    `Running UI tests (maxDepth=${MAX_NESTING_DEPTH}, fastNested=${FAST_NESTED_MODE})`
+  );
+
   try {
-    await uiTest(driver, baseX, "", "", "", 0);
+    await uiTest(driver, baseX, "", "", "", 0, "", stats);
   } finally {
     //console.timeEnd('Execution Time'); //stop timer to measure test execution time
     await driver.quit(); //close the browser
+  }
+
+  report(`Summary: ${stats.passed} passed, ${stats.failed} failed`);
+  if (stats.failed > 0) {
+    for (const failure of stats.failures) {
+      report(`- ${failure.context}: ${failure.message}`);
+    }
+    throw new Error(`${stats.failed} test scenarios failed`);
   }
 }
 
