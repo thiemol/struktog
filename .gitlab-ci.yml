@@ -6,7 +6,7 @@ stages:
   - ontags
 
 packen:
-  image: node:hydrogen
+  image: node:jod
   stage: build
   script:
     - PATH="./node_modules/.bin:$PATH"
@@ -28,7 +28,7 @@ packen:
     - tags
 
 packen_dev:
-  image: node:hydrogen
+  image: node:jod
   stage: builddev
   script:
     - PATH="./node_modules/.bin:$PATH"
