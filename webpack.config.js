@@ -5,6 +5,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const WebpackShellPluginNext = require('webpack-shell-plugin-next')
 const CopyPlugin = require('copy-webpack-plugin')
+const { GenerateSW } = require('workbox-webpack-plugin')
 const gameRoot = process.cwd()
 const Webpack = require('webpack')
 
@@ -77,7 +78,8 @@ const config = {
       chunkFilename: '[name].css'
     }),
     new HtmlWebpackPlugin({
-      title: 'Struktog.',
+      title:
+        'Struktog – Struktogramme unterrichten & erstellen | ddi.education',
       template: './src/index.html',
       meta: {
         viewport: 'width=device-width, initial-scale=1, user-scalable=no',
@@ -138,6 +140,25 @@ module.exports = (env, argv) => {
   } else {
     // Production-Sourcemaps (falls benötigt)
     config.devtool = 'source-map'
+
+    config.plugins.push(
+      new GenerateSW({
+        swDest: 'sw.js',
+        clientsClaim: true,
+        skipWaiting: true,
+        cleanupOutdatedCaches: true,
+        navigateFallback: '/index.html',
+        runtimeCaching: [
+          {
+            urlPattern: /\/assets\/examples\/.*\.json$/,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'example-json-cache'
+            }
+          }
+        ]
+      })
+    )
   }
 
   return config
