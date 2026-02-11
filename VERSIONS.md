@@ -1,6 +1,6 @@
 # Versions
 
-v1.3.0
+v1.3.1
 
 - additional catch-Blocks (#31)
 - Struktogramm name field and export by name (#30)
