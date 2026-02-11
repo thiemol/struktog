@@ -96,3 +96,13 @@ npm test
 - `STRUKTOG_FAST_NESTED=true` aktiviert einen schnelleren Nested-Modus
 - `STRUKTOG_VERBOSE=true` zeigt detaillierte Testschritte statt kompakter Summary
 - `STRUKTOG_TEST_URL` ueberschreibt die zu testende URL (Standard: lokales `build/index.html`)
+
+## Offline-Nutzung
+
+Im Produktionsbuild wird automatisch ein Service Worker erstellt und registriert.
+Dadurch kann die Webanwendung nach dem ersten Laden auch ohne Internetverbindung weiter genutzt werden.
+
+Hinweise:
+
+- Service Worker werden nur in sicheren Kontexten verwendet (`https://` oder `localhost`).
+- Nach Updates kann ein hartes Neuladen noetig sein, damit neue Assets direkt aktiv sind.
