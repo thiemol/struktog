@@ -34,7 +34,7 @@ packen_dev:
     - PATH="./node_modules/.bin:$PATH"
     - npm install yarn
     - yarn
-    - yarn run dev
+    - yarn run build
   artifacts:
     paths:
       - ./build
