@@ -15,60 +15,83 @@
  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import './assets/favicons/favicons'
-import { config } from './config.js'
-import { model } from './model/main'
-import { Presenter } from './presenter/main'
-import { Structogram } from './views/structogram'
-import { CodeView } from './views/code'
-import { ImportExport } from './views/importExport'
+import "./assets/favicons/favicons";
+import { config } from "./config.js";
+import { model } from "./model/main";
+import { Presenter } from "./presenter/main";
+import { Structogram } from "./views/structogram";
+import { CodeView } from "./views/code";
+import { ImportExport } from "./views/importExport";
 import {
   generateFooter,
   generateHtmltree,
-  highlight
-} from './helpers/generator'
+  highlight,
+} from "./helpers/generator";
 
-import './assets/scss/structog.scss'
+import "./assets/scss/structog.scss";
+
+function registerServiceWorker() {
+  if (!("serviceWorker" in navigator)) {
+    return;
+  }
+
+  const isLocalhost =
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1";
+  const isSecureContext = window.location.protocol === "https:" || isLocalhost;
+
+  if (!isSecureContext) {
+    return;
+  }
+
+  navigator.serviceWorker.register("./sw.js").catch((error) => {
+    console.error("Service worker registration failed:", error);
+  });
+}
 
 window.onload = function () {
   // manipulate the localStorage before loading the presenter
-  if (typeof Storage !== 'undefined') {
-    const url = new URL(window.location.href)
-    const externJson = url.searchParams.get('url')
+  if (typeof Storage !== "undefined") {
+    const url = new URL(window.location.href);
+    const externJson = url.searchParams.get("url");
     if (externJson !== null) {
       fetch(externJson)
         .then((response) => response.json())
         .then((json) => {
-          console.log(json)
-          presenter.readUrl(json)
-        })
+          console.log(json);
+          presenter.readUrl(json);
+        });
     }
-    const configId = url.searchParams.get('config')
-    config.loadConfig(configId)
+    const configId = url.searchParams.get("config");
+    config.loadConfig(configId);
   }
 
-  generateHtmltree()
-  generateFooter()
+  generateHtmltree();
+  generateFooter();
   // create presenter object
-  const presenter = new Presenter(model)
+  const presenter = new Presenter(model);
   // TODO: this should not be necessary, but some functions depend on moveId and nextInsertElement
-  model.setPresenter(presenter)
+  model.setPresenter(presenter);
 
   // create our view objects
   const structogram = new Structogram(
     presenter,
-    document.getElementById('editorDisplay')
-  )
-  presenter.addView(structogram)
-  const code = new CodeView(presenter, document.getElementById('editorDisplay'))
-  presenter.addView(code)
+    document.getElementById("editorDisplay")
+  );
+  presenter.addView(structogram);
+  const code = new CodeView(
+    presenter,
+    document.getElementById("editorDisplay")
+  );
+  presenter.addView(code);
   const importExport = new ImportExport(
     presenter,
-    document.getElementById('Export')
-  )
-  presenter.addView(importExport)
+    document.getElementById("Export")
+  );
+  presenter.addView(importExport);
 
-  presenter.init()
+  presenter.init();
 
-  highlight()
-}
+  highlight();
+  registerServiceWorker();
+};

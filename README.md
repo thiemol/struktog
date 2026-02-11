@@ -1,3 +1,13 @@
+# Struktog
+
+Original open-source JavaScript tool for creating structograms
+in computer science education.
+
+🌐 Official website: https://ddi.education/struktog
+📦 Original repository: https://gitlab.com/dev-ddi/cs-school-tools/struktog/
+
+Note: There are forks of this project on other platforms. This repository is the original and officially maintained version.
+
 # Struktogrammeditor
 
 Freies offenes Webprogramm zur Erstellung von Struktogrammen sowie zur Umwandlung dessen in Code (Python, PHP, Java).
@@ -79,3 +89,30 @@ Der fertige Build wird in dem Unterordner './build ' abgelegt.
 ```bash
 yarn run build
 ```
+
+## Tests
+
+Die UI-Tests werden mit Selenium gegen den lokalen Build ausgefuehrt.
+
+```bash
+npm test
+```
+
+`npm test` baut zuerst das Projekt und startet dann `test/buttontest.js`.
+
+### Optionale Umgebungsvariablen
+
+- `STRUKTOG_MAX_DEPTH` steuert die Verschachtelungstiefe (Standard: `2`)
+- `STRUKTOG_FAST_NESTED=true` aktiviert einen schnelleren Nested-Modus
+- `STRUKTOG_VERBOSE=true` zeigt detaillierte Testschritte statt kompakter Summary
+- `STRUKTOG_TEST_URL` ueberschreibt die zu testende URL (Standard: lokales `build/index.html`)
+
+## Offline-Nutzung
+
+Im Produktionsbuild wird automatisch ein Service Worker erstellt und registriert.
+Dadurch kann die Webanwendung nach dem ersten Laden auch ohne Internetverbindung weiter genutzt werden.
+
+Hinweise:
+
+- Service Worker werden nur in sicheren Kontexten verwendet (`https://` oder `localhost`).
+- Nach Updates kann ein hartes Neuladen noetig sein, damit neue Assets direkt aktiv sind.
