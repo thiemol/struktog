@@ -1,3 +1,13 @@
+# Struktog
+
+Original open-source JavaScript tool for creating structograms
+in computer science education.
+
+🌐 Official website: https://ddi.education/struktog
+📦 Original repository: https://gitlab.com/dev-ddi/cs-school-tools/struktog/
+
+Note: There are forks of this project on other platforms. This repository is the original and officially maintained version.
+
 # Struktogrammeditor
 
 Freies offenes Webprogramm zur Erstellung von Struktogrammen sowie zur Umwandlung dessen in Code (Python, PHP, Java).
