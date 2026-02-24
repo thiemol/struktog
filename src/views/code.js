@@ -425,12 +425,12 @@ export class CodeView {
     const sourcecodeDisplay = document.createElement("div");
     sourcecodeDisplay.classList.add("fixFullWidth", "margin-top-small");
     const sourcecodeHeader = document.createElement("div");
-    sourcecodeHeader.classList.add("columnAuto", "container");
+    sourcecodeHeader.classList.add("columnAuto", "sourcecodeHeaderRow");
     const sourcecodeTitle = document.createElement("strong");
-    sourcecodeTitle.classList.add("center");
+    sourcecodeTitle.classList.add("sourcecodeLabel");
     sourcecodeTitle.appendChild(document.createTextNode("Übersetzen in:"));
     const sourcecodeForm = document.createElement("div");
-    sourcecodeForm.classList.add("center");
+    sourcecodeForm.classList.add("sourcecodeSelectWrap");
     const sourcecodeSelect = document.createElement("select");
     sourcecodeSelect.classList.add("form-select");
     sourcecodeSelect.id = "SourcecodeSelect";
@@ -451,14 +451,13 @@ export class CodeView {
     const sourcecodeCopy = document.createElement("div");
     sourcecodeCopy.setAttribute("data-tooltip", "Kopiere Code");
     sourcecodeCopy.classList.add(
-      "center",
+      "sourcecodeCopyButton",
       "copyIcon",
       "struktoOption",
-      "sourcecodeHeader",
       "hand",
       "tooltip"
     );
-    sourcecode.addEventListener("click", function (event) {
+    sourcecodeCopy.addEventListener("click", function (event) {
       navigator.clipboard.writeText(localStorage.getItem("struktog_code"));
     });
 
