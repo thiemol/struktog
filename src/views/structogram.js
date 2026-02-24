@@ -24,6 +24,18 @@ export class Structogram {
     this.presenter = presenter;
     this.domRoot = domRoot;
     this.size = 7;
+    this.insertShortcuts = {
+      Digit1: "InputButton",
+      Digit2: "OutputButton",
+      Digit3: "TaskButton",
+      Digit4: "CountLoopButton",
+      Digit5: "HeadLoopButton",
+      Digit6: "FootLoopButton",
+      Digit7: "BranchButton",
+      Digit8: "CaseButton",
+      Digit9: "TryCatchButton",
+      Digit0: "FunctionButton",
+    };
     this.buttonList = [
       "InputNode",
       "OutputNode",
@@ -37,7 +49,54 @@ export class Structogram {
       "FunctionNode",
     ];
 
+    this.registerInsertShortcuts();
     this.preRender();
+  }
+
+  registerInsertShortcuts() {
+    document.addEventListener("keydown", (event) =>
+      this.handleInsertShortcut(event)
+    );
+  }
+
+  handleInsertShortcut(event) {
+    if (!event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
+      return;
+    }
+
+    const activeElement = document.activeElement;
+    if (
+      activeElement &&
+      (activeElement.tagName === "INPUT" ||
+        activeElement.tagName === "TEXTAREA" ||
+        activeElement.isContentEditable)
+    ) {
+      return;
+    }
+
+    const modal = document.getElementById("IEModal");
+    if (modal && modal.classList.contains("active")) {
+      return;
+    }
+
+    const buttonId = this.insertShortcuts[event.code];
+    if (!buttonId || !document.getElementById(buttonId)) {
+      return;
+    }
+
+    event.preventDefault();
+    this.presenter.insertNode(buttonId, event);
+  }
+
+  getShortcutLabel(buttonId) {
+    for (const [shortcutKey, mappedButtonId] of Object.entries(
+      this.insertShortcuts
+    )) {
+      if (mappedButtonId === buttonId) {
+        return "Alt+" + shortcutKey.slice(-1);
+      }
+    }
+    return "";
   }
 
   preRender() {
@@ -173,9 +232,20 @@ export class Structogram {
 
   createButton(button) {
     const div = document.createElement("div");
-    div.classList.add("columnInput", "insertButton", "hand");
+    div.classList.add(
+      "columnInput",
+      "insertButton",
+      "hand",
+      "tooltip",
+      "tooltip-bottom"
+    );
     div.style.backgroundColor = config.get()[button].color;
     div.id = config.get()[button].id;
+    const shortcutLabel = this.getShortcutLabel(div.id);
+    const tooltipText = shortcutLabel
+      ? config.get()[button].text + " (" + shortcutLabel + ")"
+      : config.get()[button].text;
+    div.setAttribute("data-tooltip", tooltipText);
     div.draggable = "true";
     div.addEventListener("click", (event) =>
       this.presenter.insertNode(config.get()[button].id, event)
