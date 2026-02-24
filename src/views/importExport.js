@@ -84,28 +84,6 @@ export class ImportExport {
     );
     document.getElementById("optionButtons").appendChild(exportDiv);
 
-    // add PayPal donation button
-    const donateDiv = document.createElement("form");
-    donateDiv.action = "https://www.paypal.com/donate";
-    donateDiv.method = "post";
-    donateDiv.target = "_blank";
-    const inputHidden = document.createElement("input");
-    inputHidden.type = "hidden";
-    inputHidden.name = "hosted_button_id";
-    inputHidden.value = "5ZRTXH9NUJG5U";
-    donateDiv.appendChild(inputHidden);
-    const inputImage = document.createElement("input");
-    inputImage.type = "submit";
-    inputImage.value = "Spenden";
-    inputImage.style =
-      "background-color: #ffcc00; border: none; color: #000000; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 6px; cursor: pointer; border-radius: 8px; padding: 8px 16px;";
-    inputImage.border = "0";
-    inputImage.name = "submit";
-    inputImage.title = "Spenden für den Struktogramm-Editor";
-    inputImage.alt = "Spenden für den Struktogramm-Editor";
-    donateDiv.appendChild(inputImage);
-    document.getElementById("optionButtons").appendChild(donateDiv);
-
     // ugly fix for HTMLToImage package
     // first creation of the image misses the lines in the image
     htmlToImage

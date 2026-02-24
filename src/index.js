@@ -69,6 +69,29 @@ window.onload = function () {
 
   generateHtmltree();
   generateFooter();
+
+  const footerSpan = document.querySelector("footer .column span");
+  if (footerSpan) {
+    const donateLink = document.createElement("div");
+    donateLink.classList.add(
+      "hand",
+      "tooltip",
+      "tooltip-top",
+      "footerDonateLink"
+    );
+    donateLink.appendChild(document.createTextNode("Spenden"));
+    donateLink.setAttribute("data-tooltip", "Unterstuetze Struktog");
+    donateLink.addEventListener("click", () => {
+      window.open(
+        "https://www.paypal.com/donate?hosted_button_id=5ZRTXH9NUJG5U",
+        "_blank"
+      );
+    });
+
+    footerSpan.appendChild(document.createTextNode("|"));
+    footerSpan.appendChild(donateLink);
+  }
+
   // create presenter object
   const presenter = new Presenter(model);
   // TODO: this should not be necessary, but some functions depend on moveId and nextInsertElement
