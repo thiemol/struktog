@@ -41,6 +41,25 @@ Für Python mit Funktionsblock (https://dditools.inf.tu-dresden.de/struktog/?con
 {domain}/?config=python_func
 ```
 
+Weitere Profile:
+
+```bash
+{domain}/?config=standard
+{domain}/?config=all
+{domain}/?config=c
+{domain}/?config=beginner
+```
+
+## Import und Export
+
+Beim Speichern wird eine JSON-Datei erzeugt.
+
+- Neuere Exporte enthalten `formatVersion`, `meta`, `settings` und `tree`.
+- Beim Laden werden diese Einstellungen (Profil, sichtbare Elemente, Sprache, Quellcode-Sichtbarkeit, Shortcuts) automatisch wiederhergestellt.
+- Aeltere Exportdateien, die nur den Baum (`tree`) enthalten, bleiben weiterhin kompatibel und koennen unveraendert eingelesen werden.
+
+Der Bildexport erzeugt weiterhin eine PNG-Datei der aktuellen Darstellung.
+
 ### Beispiel Aufgaben
 
 Aufgaben können über eine übergebene URL geladen werden. Der Server auf dem die Beispiele hinterlegt werden, muss die entsprechende CORS Richtlinie freigeben, um CROSS ORIGIN zu erlauben. Alternativ können die Beispielaufgaben im Ordner 'src/assets/examples/' hinterlegt und dann direkt geladen werden.

@@ -60,6 +60,10 @@ export class Structogram {
   }
 
   handleInsertShortcut(event) {
+    if (!this.presenter.getShortcutsEnabled()) {
+      return;
+    }
+
     if (!event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
       return;
     }
@@ -111,6 +115,7 @@ export class Structogram {
     divInsert.appendChild(divHeader);
 
     const divButtons = document.createElement("div");
+    divButtons.id = "insertButtons";
     divButtons.classList.add("container", "justify-center");
     for (const item of this.buttonList) {
       if (config.get()[item].use) {
@@ -264,7 +269,25 @@ export class Structogram {
     return div;
   }
 
+  refreshInsertButtons() {
+    const divButtons = document.getElementById("insertButtons");
+    if (!divButtons) {
+      return;
+    }
+
+    while (divButtons.hasChildNodes()) {
+      divButtons.removeChild(divButtons.lastChild);
+    }
+
+    for (const item of this.buttonList) {
+      if (config.get()[item].use) {
+        divButtons.appendChild(this.createButton(item));
+      }
+    }
+  }
+
   render(tree) {
+    this.refreshInsertButtons();
     // remove content
     while (this.domRoot.hasChildNodes()) {
       this.domRoot.removeChild(this.domRoot.lastChild);

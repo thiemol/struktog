@@ -14,88 +14,103 @@
  You should have received a copy of the GNU Affero General Public License
  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import * as htmlToImage from 'html-to-image'
+import * as htmlToImage from "html-to-image";
+import { config } from "../config";
 export class ImportExport {
-  constructor (presenter, domRoot) {
-    this.presenter = presenter
-    this.domRoot = domRoot
-    this.printHeight = 32
+  constructor(presenter, domRoot) {
+    this.presenter = presenter;
+    this.domRoot = domRoot;
+    this.printHeight = 32;
 
-    this.preRender()
+    this.preRender();
   }
 
-  render (model) { }
+  render(model) {}
 
-  preRender () {
-    const importDiv = document.createElement('div')
+  preRender() {
+    const settingsDiv = document.createElement("div");
+    settingsDiv.classList.add(
+      "options-element",
+      "settingsToolbarIcon",
+      "tooltip",
+      "tooltip-bottom",
+      "hand"
+    );
+    settingsDiv.setAttribute("data-tooltip", "Einstellungen");
+    settingsDiv.addEventListener("click", () => this.openSettingsDialog());
+    document.getElementById("optionButtons").appendChild(settingsDiv);
+
+    const importDiv = document.createElement("div");
     importDiv.classList.add(
-      'options-element',
-      'uploadIcon',
-      'tooltip',
-      'tooltip-bottom',
-      'hand'
-    )
-    importDiv.setAttribute('data-tooltip', 'Laden')
-    const importInput = document.createElement('input')
-    importInput.setAttribute('type', 'file')
-    importInput.addEventListener('change', (e) => this.presenter.readFile(e))
-    importDiv.addEventListener('click', () => importInput.click())
-    document.getElementById('optionButtons').appendChild(importDiv)
+      "options-element",
+      "uploadIcon",
+      "tooltip",
+      "tooltip-bottom",
+      "hand"
+    );
+    importDiv.setAttribute("data-tooltip", "Laden");
+    const importInput = document.createElement("input");
+    importInput.setAttribute("type", "file");
+    importInput.addEventListener("change", (e) => this.presenter.readFile(e));
+    importDiv.addEventListener("click", () => importInput.click());
+    document.getElementById("optionButtons").appendChild(importDiv);
 
-    const saveDiv = document.createElement('div')
+    const saveDiv = document.createElement("div");
     saveDiv.classList.add(
-      'options-element',
-      'saveIcon',
-      'tooltip',
-      'tooltip-bottom',
-      'hand'
-    )
-    saveDiv.setAttribute('data-tooltip', 'Speichern')
-    saveDiv.addEventListener('click', () => this.presenter.saveDialog())
-    document.getElementById('optionButtons').appendChild(saveDiv)
+      "options-element",
+      "saveIcon",
+      "tooltip",
+      "tooltip-bottom",
+      "hand"
+    );
+    saveDiv.setAttribute("data-tooltip", "Speichern");
+    saveDiv.addEventListener("click", () => this.presenter.saveDialog());
+    document.getElementById("optionButtons").appendChild(saveDiv);
 
     // right now only png export exists, in the future a dialog should be opened
-    const exportDiv = document.createElement('div')
+    const exportDiv = document.createElement("div");
     exportDiv.classList.add(
-      'options-element',
-      'exportIcon',
-      'tooltip',
-      'tooltip-bottom',
-      'hand'
-    )
-    exportDiv.setAttribute('data-tooltip', 'Bildexport')
-    exportDiv.addEventListener('click', () =>
-      this.exportAsPngWithPackage()
+      "options-element",
+      "exportIcon",
+      "tooltip",
+      "tooltip-bottom",
+      "hand"
+    );
+    exportDiv.setAttribute("data-tooltip", "Bildexport");
+    exportDiv.addEventListener(
+      "click",
+      () => this.exportAsPngWithPackage()
       // this.exportAsPng(this.presenter.getModelTree())
-    )
-    document.getElementById('optionButtons').appendChild(exportDiv)
+    );
+    document.getElementById("optionButtons").appendChild(exportDiv);
 
     // add PayPal donation button
-    const donateDiv = document.createElement('form')
-    donateDiv.action = 'https://www.paypal.com/donate'
-    donateDiv.method = 'post'
-    donateDiv.target = '_blank'
-    const inputHidden = document.createElement('input')
-    inputHidden.type = 'hidden'
-    inputHidden.name = 'hosted_button_id'
-    inputHidden.value = '5ZRTXH9NUJG5U'
-    donateDiv.appendChild(inputHidden)
-    const inputImage = document.createElement('input')
-    inputImage.type = 'submit'
-    inputImage.value = 'Spenden'
-    inputImage.style = 'background-color: #ffcc00; border: none; color: #000000; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 6px; cursor: pointer; border-radius: 8px; padding: 8px 16px;'
-    inputImage.border = '0'
-    inputImage.name = 'submit'
-    inputImage.title = 'Spenden für den Struktogramm-Editor'
-    inputImage.alt = 'Spenden für den Struktogramm-Editor'
-    donateDiv.appendChild(inputImage)
-    document.getElementById('optionButtons').appendChild(donateDiv)
+    const donateDiv = document.createElement("form");
+    donateDiv.action = "https://www.paypal.com/donate";
+    donateDiv.method = "post";
+    donateDiv.target = "_blank";
+    const inputHidden = document.createElement("input");
+    inputHidden.type = "hidden";
+    inputHidden.name = "hosted_button_id";
+    inputHidden.value = "5ZRTXH9NUJG5U";
+    donateDiv.appendChild(inputHidden);
+    const inputImage = document.createElement("input");
+    inputImage.type = "submit";
+    inputImage.value = "Spenden";
+    inputImage.style =
+      "background-color: #ffcc00; border: none; color: #000000; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 6px; cursor: pointer; border-radius: 8px; padding: 8px 16px;";
+    inputImage.border = "0";
+    inputImage.name = "submit";
+    inputImage.title = "Spenden für den Struktogramm-Editor";
+    inputImage.alt = "Spenden für den Struktogramm-Editor";
+    donateDiv.appendChild(inputImage);
+    document.getElementById("optionButtons").appendChild(donateDiv);
 
     // ugly fix for HTMLToImage package
     // first creation of the image misses the lines in the image
-    htmlToImage.toPng(document.getElementById('structogram'))
-      .then(function (dataUrl) {
-      })
+    htmlToImage
+      .toPng(document.getElementById("structogram"))
+      .then(function (dataUrl) {});
   }
 
   /**
@@ -110,15 +125,15 @@ export class ImportExport {
    * @param    oneLineNodes   number of nodes that are drawn on one line, used to calculate the y position of the next element
    * @return   int            max y positon to which was drawn already, so the parent element knows where to draw the next element
    */
-  renderTreeAsCanvas (subTree, ctx, x, xmax, y, givenStepSize = 1) {
+  renderTreeAsCanvas(subTree, ctx, x, xmax, y, givenStepSize = 1) {
     // uses a recursive structure, termination condition is no definied element to be drawn
     if (subTree === null) {
-      return y
+      return y;
     } else {
-      const defaultMargin = 22
+      const defaultMargin = 22;
       // use for every possible element type a different drawing strategie
       switch (subTree.type) {
-        case 'InsertNode':
+        case "InsertNode":
           return this.renderTreeAsCanvas(
             subTree.followElement,
             ctx,
@@ -126,46 +141,46 @@ export class ImportExport {
             xmax,
             y,
             givenStepSize
-          )
+          );
 
-        case 'Placeholder': {
-          ctx.beginPath()
-          ctx.moveTo(x, y)
-          ctx.lineTo(xmax, y)
-          ctx.moveTo(x, y)
-          ctx.lineTo(x, y + this.printHeight)
-          ctx.moveTo(xmax, y)
-          ctx.lineTo(xmax, y + this.printHeight)
-          ctx.stroke()
-          ctx.beginPath()
-          const centerX = x + (xmax - x) / 2
-          const centerY = y + this.printHeight / 2
-          ctx.arc(centerX, centerY, 8, 0, 2 * Math.PI)
-          ctx.moveTo(centerX - 11, centerY + 11)
-          ctx.lineTo(centerX + 11, centerY - 11)
-          ctx.stroke()
-          return y + this.printHeight
+        case "Placeholder": {
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(xmax, y);
+          ctx.moveTo(x, y);
+          ctx.lineTo(x, y + this.printHeight);
+          ctx.moveTo(xmax, y);
+          ctx.lineTo(xmax, y + this.printHeight);
+          ctx.stroke();
+          ctx.beginPath();
+          const centerX = x + (xmax - x) / 2;
+          const centerY = y + this.printHeight / 2;
+          ctx.arc(centerX, centerY, 8, 0, 2 * Math.PI);
+          ctx.moveTo(centerX - 11, centerY + 11);
+          ctx.lineTo(centerX + 11, centerY - 11);
+          ctx.stroke();
+          return y + this.printHeight;
         }
 
-        case 'InputNode': {
-          const stepSize = this.printHeight * givenStepSize
-          ctx.beginPath()
-          ctx.moveTo(x, y)
-          ctx.lineTo(xmax, y)
-          ctx.moveTo(x, y)
-          ctx.lineTo(x, y + stepSize)
-          ctx.moveTo(xmax, y)
-          ctx.lineTo(xmax, y + stepSize)
-          ctx.stroke()
+        case "InputNode": {
+          const stepSize = this.printHeight * givenStepSize;
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(xmax, y);
+          ctx.moveTo(x, y);
+          ctx.lineTo(x, y + stepSize);
+          ctx.moveTo(xmax, y);
+          ctx.lineTo(xmax, y + stepSize);
+          ctx.stroke();
 
-          ctx.fillStyle = '#fcedce'
-          ctx.rect(x, y, xmax, stepSize)
-          ctx.fill()
+          ctx.fillStyle = "#fcedce";
+          ctx.rect(x, y, xmax, stepSize);
+          ctx.fill();
 
-          ctx.fillStyle = 'black'
-          ctx.beginPath()
-          ctx.fillText('E: ' + subTree.text, x + 15, y + defaultMargin)
-          ctx.stroke()
+          ctx.fillStyle = "black";
+          ctx.beginPath();
+          ctx.fillText("E: " + subTree.text, x + 15, y + defaultMargin);
+          ctx.stroke();
           return this.renderTreeAsCanvas(
             subTree.followElement,
             ctx,
@@ -173,28 +188,28 @@ export class ImportExport {
             xmax,
             y + stepSize,
             givenStepSize
-          )
+          );
         }
 
-        case 'OutputNode': {
-          const stepSize = this.printHeight * givenStepSize
-          ctx.beginPath()
-          ctx.moveTo(x, y)
-          ctx.lineTo(xmax, y)
-          ctx.moveTo(x, y)
-          ctx.lineTo(x, y + stepSize)
-          ctx.moveTo(xmax, y)
-          ctx.lineTo(xmax, y + stepSize)
-          ctx.stroke()
+        case "OutputNode": {
+          const stepSize = this.printHeight * givenStepSize;
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(xmax, y);
+          ctx.moveTo(x, y);
+          ctx.lineTo(x, y + stepSize);
+          ctx.moveTo(xmax, y);
+          ctx.lineTo(xmax, y + stepSize);
+          ctx.stroke();
 
-          ctx.fillStyle = '#fcedce'
-          ctx.rect(x, y, xmax, stepSize)
-          ctx.fill()
+          ctx.fillStyle = "#fcedce";
+          ctx.rect(x, y, xmax, stepSize);
+          ctx.fill();
 
-          ctx.fillStyle = 'black'
-          ctx.beginPath()
-          ctx.fillText('A: ' + subTree.text, x + 15, y + defaultMargin)
-          ctx.stroke()
+          ctx.fillStyle = "black";
+          ctx.beginPath();
+          ctx.fillText("A: " + subTree.text, x + 15, y + defaultMargin);
+          ctx.stroke();
           return this.renderTreeAsCanvas(
             subTree.followElement,
             ctx,
@@ -202,28 +217,28 @@ export class ImportExport {
             xmax,
             y + stepSize,
             givenStepSize
-          )
+          );
         }
 
-        case 'TaskNode': {
-          const stepSize = this.printHeight * givenStepSize
-          ctx.beginPath()
-          ctx.moveTo(x, y)
-          ctx.lineTo(xmax, y)
-          ctx.moveTo(x, y)
-          ctx.lineTo(x, y + stepSize)
-          ctx.moveTo(xmax, y)
-          ctx.lineTo(xmax, y + stepSize)
-          ctx.stroke()
+        case "TaskNode": {
+          const stepSize = this.printHeight * givenStepSize;
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(xmax, y);
+          ctx.moveTo(x, y);
+          ctx.lineTo(x, y + stepSize);
+          ctx.moveTo(xmax, y);
+          ctx.lineTo(xmax, y + stepSize);
+          ctx.stroke();
 
-          ctx.fillStyle = '#fcedce'
-          ctx.rect(x, y, xmax - x, stepSize)
-          ctx.fill()
+          ctx.fillStyle = "#fcedce";
+          ctx.rect(x, y, xmax - x, stepSize);
+          ctx.fill();
 
-          ctx.fillStyle = 'black'
-          ctx.beginPath()
-          ctx.fillText(subTree.text, x + 15, y + defaultMargin)
-          ctx.stroke()
+          ctx.fillStyle = "black";
+          ctx.beginPath();
+          ctx.fillText(subTree.text, x + 15, y + defaultMargin);
+          ctx.stroke();
           return this.renderTreeAsCanvas(
             subTree.followElement,
             ctx,
@@ -231,44 +246,44 @@ export class ImportExport {
             xmax,
             y + stepSize,
             givenStepSize
-          )
+          );
         }
 
-        case 'BranchNode': {
-          ctx.fillStyle = 'rgb(250, 218, 209)'
-          ctx.beginPath() // to end open paths
-          ctx.rect(x, y, xmax - x, 2 * this.printHeight)
-          ctx.fill()
-          ctx.fillStyle = 'black'
-          ctx.stroke()
-          ctx.beginPath()
-          ctx.moveTo(x, y)
-          ctx.lineTo(x + (xmax - x) / 2, y + 2 * this.printHeight)
-          ctx.moveTo(xmax, y)
-          ctx.lineTo(x + (xmax - x) / 2, y + 2 * this.printHeight)
-          ctx.stroke()
+        case "BranchNode": {
+          ctx.fillStyle = "rgb(250, 218, 209)";
+          ctx.beginPath(); // to end open paths
+          ctx.rect(x, y, xmax - x, 2 * this.printHeight);
+          ctx.fill();
+          ctx.fillStyle = "black";
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(x + (xmax - x) / 2, y + 2 * this.printHeight);
+          ctx.moveTo(xmax, y);
+          ctx.lineTo(x + (xmax - x) / 2, y + 2 * this.printHeight);
+          ctx.stroke();
           // center the text
-          const textWidth = ctx.measureText(subTree.text)
-          ctx.beginPath()
+          const textWidth = ctx.measureText(subTree.text);
+          ctx.beginPath();
           ctx.fillText(
             subTree.text,
             x + Math.abs(xmax - x - textWidth.width) / 2,
             y + defaultMargin
-          )
-          ctx.stroke()
-          ctx.beginPath()
-          ctx.fillText('Wahr', x + 15, y + this.printHeight + defaultMargin)
+          );
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.fillText("Wahr", x + 15, y + this.printHeight + defaultMargin);
           ctx.fillText(
-            'Falsch',
-            xmax - 15 - ctx.measureText('Falsch').width,
+            "Falsch",
+            xmax - 15 - ctx.measureText("Falsch").width,
             y + this.printHeight + defaultMargin
-          )
-          ctx.stroke()
-          let trueChildY = 0
-          let falseChildY = 0
+          );
+          ctx.stroke();
+          let trueChildY = 0;
+          let falseChildY = 0;
           // render the child sub trees
-          const trueDepth = this.preCountTreeDepth(subTree.trueChild)
-          const falseDepth = this.preCountTreeDepth(subTree.falseChild)
+          const trueDepth = this.preCountTreeDepth(subTree.trueChild);
+          const falseDepth = this.preCountTreeDepth(subTree.falseChild);
           if (trueDepth > falseDepth) {
             trueChildY = this.renderTreeAsCanvas(
               subTree.trueChild,
@@ -277,15 +292,18 @@ export class ImportExport {
               x + (xmax - x) / 2,
               y + 2 * this.printHeight,
               givenStepSize
-            )
+            );
             falseChildY = this.renderTreeAsCanvas(
               subTree.falseChild,
               ctx,
               x + (xmax - x) / 2,
               xmax,
               y + 2 * this.printHeight,
-              (this.preCountTreeDepth(subTree.trueChild) - this.preCountNonOneLiners(subTree.falseChild)) / this.preCountOneLiners(subTree.falseChild) * givenStepSize
-            )
+              ((this.preCountTreeDepth(subTree.trueChild) -
+                this.preCountNonOneLiners(subTree.falseChild)) /
+                this.preCountOneLiners(subTree.falseChild)) *
+                givenStepSize
+            );
           } else {
             trueChildY = this.renderTreeAsCanvas(
               subTree.trueChild,
@@ -293,8 +311,11 @@ export class ImportExport {
               x,
               x + (xmax - x) / 2,
               y + 2 * this.printHeight,
-              (this.preCountTreeDepth(subTree.falseChild) - this.preCountNonOneLiners(subTree.trueChild)) / this.preCountOneLiners(subTree.trueChild) * givenStepSize
-            )
+              ((this.preCountTreeDepth(subTree.falseChild) -
+                this.preCountNonOneLiners(subTree.trueChild)) /
+                this.preCountOneLiners(subTree.trueChild)) *
+                givenStepSize
+            );
             falseChildY = this.renderTreeAsCanvas(
               subTree.falseChild,
               ctx,
@@ -302,21 +323,21 @@ export class ImportExport {
               xmax,
               y + 2 * this.printHeight,
               givenStepSize
-            )
+            );
           }
 
           // determine which child sub tree is deeper y wise
-          let valueY, followY
+          let valueY, followY;
           if (trueChildY < falseChildY) {
-            valueY = falseChildY
-            followY = trueChildY
+            valueY = falseChildY;
+            followY = trueChildY;
           } else {
-            valueY = trueChildY
-            followY = falseChildY
+            valueY = trueChildY;
+            followY = falseChildY;
           }
 
-          ctx.rect(x, y, xmax - x, valueY - y)
-          ctx.stroke()
+          ctx.rect(x, y, xmax - x, valueY - y);
+          ctx.stroke();
 
           return this.renderTreeAsCanvas(
             subTree.followElement,
@@ -325,11 +346,11 @@ export class ImportExport {
             xmax,
             followY,
             givenStepSize
-          )
+          );
         }
 
-        case 'CountLoopNode':
-        case 'HeadLoopNode': {
+        case "CountLoopNode":
+        case "HeadLoopNode": {
           const childY = this.renderTreeAsCanvas(
             subTree.child,
             ctx,
@@ -337,20 +358,20 @@ export class ImportExport {
             xmax,
             y + this.printHeight,
             givenStepSize
-          )
-          ctx.rect(x, y, xmax - x, childY - y)
-          ctx.stroke()
+          );
+          ctx.rect(x, y, xmax - x, childY - y);
+          ctx.stroke();
 
-          ctx.beginPath()
-          ctx.fillStyle = 'rgb(220, 239, 231)'
-          ctx.rect(x, y, xmax, this.printHeight - 1)
-          ctx.rect(x, y, (xmax - x) / 12 - 1, childY - y)
-          ctx.fill()
+          ctx.beginPath();
+          ctx.fillStyle = "rgb(220, 239, 231)";
+          ctx.rect(x, y, xmax, this.printHeight - 1);
+          ctx.rect(x, y, (xmax - x) / 12 - 1, childY - y);
+          ctx.fill();
 
-          ctx.fillStyle = 'black'
-          ctx.beginPath()
-          ctx.fillText(subTree.text, x + 15, y + defaultMargin)
-          ctx.stroke()
+          ctx.fillStyle = "black";
+          ctx.beginPath();
+          ctx.fillText(subTree.text, x + 15, y + defaultMargin);
+          ctx.stroke();
           return this.renderTreeAsCanvas(
             subTree.followElement,
             ctx,
@@ -358,10 +379,10 @@ export class ImportExport {
             xmax,
             childY,
             givenStepSize
-          )
+          );
         }
 
-        case 'FootLoopNode': {
+        case "FootLoopNode": {
           const childY = this.renderTreeAsCanvas(
             subTree.child,
             ctx,
@@ -369,23 +390,23 @@ export class ImportExport {
             xmax,
             y,
             givenStepSize
-          )
-          ctx.rect(x, y, xmax - x, childY - y + this.printHeight)
-          ctx.stroke()
-          ctx.beginPath()
-          ctx.fillStyle = 'rgb(220, 239, 231)'
-          ctx.rect(x, y, (xmax - x) / 12, childY - y + this.printHeight)
-          ctx.rect(x, childY, xmax, this.printHeight)
-          ctx.fill()
+          );
+          ctx.rect(x, y, xmax - x, childY - y + this.printHeight);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.fillStyle = "rgb(220, 239, 231)";
+          ctx.rect(x, y, (xmax - x) / 12, childY - y + this.printHeight);
+          ctx.rect(x, childY, xmax, this.printHeight);
+          ctx.fill();
 
-          ctx.fillStyle = 'black'
-          ctx.beginPath()
-          ctx.fillText(subTree.text, x + 15, childY + defaultMargin)
-          ctx.stroke()
-          ctx.beginPath()
-          ctx.moveTo(x + (xmax - x) / 12, childY)
-          ctx.lineTo(xmax, childY)
-          ctx.stroke()
+          ctx.fillStyle = "black";
+          ctx.beginPath();
+          ctx.fillText(subTree.text, x + 15, childY + defaultMargin);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(x + (xmax - x) / 12, childY);
+          ctx.lineTo(xmax, childY);
+          ctx.stroke();
           return this.renderTreeAsCanvas(
             subTree.followElement,
             ctx,
@@ -393,60 +414,60 @@ export class ImportExport {
             xmax,
             childY + this.printHeight,
             givenStepSize
-          )
+          );
         }
 
-        case 'CaseNode': {
-          ctx.fillStyle = 'rgb(250, 218, 209)'
-          ctx.beginPath()
-          ctx.rect(x, y, xmax - x, 2 * this.printHeight)
-          ctx.fill()
-          ctx.fillStyle = 'black'
-          let caseCount = subTree.cases.length
+        case "CaseNode": {
+          ctx.fillStyle = "rgb(250, 218, 209)";
+          ctx.beginPath();
+          ctx.rect(x, y, xmax - x, 2 * this.printHeight);
+          ctx.fill();
+          ctx.fillStyle = "black";
+          let caseCount = subTree.cases.length;
           if (subTree.defaultOn) {
-            caseCount = caseCount + 1
+            caseCount = caseCount + 1;
           }
           // calculate the x and y distance between each case
           // yStep ist used for the positioning of the vertical lines on the diagonal line
-          const xStep = (xmax - x) / caseCount
-          const yStep = this.printHeight / subTree.cases.length
-          ctx.stroke()
-          ctx.beginPath()
-          ctx.moveTo(x, y)
+          const xStep = (xmax - x) / caseCount;
+          const yStep = this.printHeight / subTree.cases.length;
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(x, y);
           if (subTree.defaultOn) {
-            ctx.lineTo(xmax - xStep, y + this.printHeight)
-            ctx.lineTo(xmax, y)
-            ctx.moveTo(xmax - xStep, y + this.printHeight)
-            ctx.lineTo(xmax - xStep, y + 2 * this.printHeight)
-            ctx.stroke()
-            const textWidth = ctx.measureText(subTree.text)
-            ctx.beginPath()
+            ctx.lineTo(xmax - xStep, y + this.printHeight);
+            ctx.lineTo(xmax, y);
+            ctx.moveTo(xmax - xStep, y + this.printHeight);
+            ctx.lineTo(xmax - xStep, y + 2 * this.printHeight);
+            ctx.stroke();
+            const textWidth = ctx.measureText(subTree.text);
+            ctx.beginPath();
             ctx.fillText(
               subTree.text,
-              xmax - xStep - textWidth.width * 1.3 / 2,
+              xmax - xStep - (textWidth.width * 1.3) / 2,
               y + defaultMargin * 0.7
-            )
-            ctx.stroke()
+            );
+            ctx.stroke();
           } else {
-            ctx.lineTo(xmax, y + this.printHeight)
-            ctx.stroke()
-            const textWidth = ctx.measureText(subTree.text)
-            ctx.beginPath()
+            ctx.lineTo(xmax, y + this.printHeight);
+            ctx.stroke();
+            const textWidth = ctx.measureText(subTree.text);
+            ctx.beginPath();
             ctx.fillText(
               subTree.text,
               xmax - textWidth.width,
               y + defaultMargin * 0.7
-            )
-            ctx.stroke()
+            );
+            ctx.stroke();
           }
 
-          let xPos = x
+          let xPos = x;
           // determine the deepest tree by the y coordinate
-          const maxDepth = this.preCountTreeDepth(subTree) - 2
-          const maxCase = this.getDeepestCase(subTree)
-          let yFinally = y + 3 * this.printHeight
+          const maxDepth = this.preCountTreeDepth(subTree) - 2;
+          const maxCase = this.getDeepestCase(subTree);
+          let yFinally = y + 3 * this.printHeight;
           for (const element of subTree.cases) {
-            let childY
+            let childY;
             if (maxCase === element) {
               // is the deepest tree
               childY = this.renderTreeAsCanvas(
@@ -456,11 +477,14 @@ export class ImportExport {
                 xPos + xStep,
                 y + this.printHeight,
                 givenStepSize
-              )
+              );
             } else {
               if (maxDepth === this.preCountTreeDepth(element)) {
                 // is not the deepest tree but has the same depth as the deepest tree
-                const newStepSize = (this.preCountTreeDepth(element) * givenStepSize - this.preCountNonOneLiners(element)) / this.preCountOneLiners(element)
+                const newStepSize =
+                  (this.preCountTreeDepth(element) * givenStepSize -
+                    this.preCountNonOneLiners(element)) /
+                  this.preCountOneLiners(element);
                 childY = this.renderTreeAsCanvas(
                   element,
                   ctx,
@@ -468,10 +492,13 @@ export class ImportExport {
                   xPos + xStep,
                   y + this.printHeight,
                   newStepSize
-                )
+                );
               } else {
                 // is not the deepest tree
-                const newStepSize = ((maxDepth - this.preCountNonOneLiners(element)) / this.preCountOneLiners(element) * givenStepSize)
+                const newStepSize =
+                  ((maxDepth - this.preCountNonOneLiners(element)) /
+                    this.preCountOneLiners(element)) *
+                  givenStepSize;
                 childY = this.renderTreeAsCanvas(
                   element,
                   ctx,
@@ -479,16 +506,16 @@ export class ImportExport {
                   xPos + xStep,
                   y + this.printHeight,
                   newStepSize
-                )
+                );
               }
             }
             if (childY > yFinally) {
-              yFinally = childY
+              yFinally = childY;
             }
-            xPos = xPos + xStep
+            xPos = xPos + xStep;
           }
           if (subTree.defaultOn) {
-            let childY
+            let childY;
             if (maxCase === subTree.defaultNode) {
               // is the deepest tree
               childY = this.renderTreeAsCanvas(
@@ -498,11 +525,14 @@ export class ImportExport {
                 xPos + xStep,
                 y + this.printHeight,
                 givenStepSize
-              )
+              );
             } else {
               if (maxDepth === this.preCountTreeDepth(subTree.defaultNode)) {
                 // is not the deepest tree but has the same depth as the deepest tree
-                const newStepSize = (this.preCountTreeDepth(subTree.defaultNode) * givenStepSize - this.preCountNonOneLiners(subTree.defaultNode)) / this.preCountOneLiners(subTree.defaultNode)
+                const newStepSize =
+                  (this.preCountTreeDepth(subTree.defaultNode) * givenStepSize -
+                    this.preCountNonOneLiners(subTree.defaultNode)) /
+                  this.preCountOneLiners(subTree.defaultNode);
                 childY = this.renderTreeAsCanvas(
                   subTree.defaultNode,
                   ctx,
@@ -510,10 +540,13 @@ export class ImportExport {
                   xPos + xStep,
                   y + this.printHeight,
                   newStepSize
-                )
+                );
               } else {
                 // is not the deepest tree
-                const newStepSize = ((maxDepth - this.preCountNonOneLiners(subTree.defaultNode)) / this.preCountOneLiners(subTree.defaultNode) * givenStepSize)
+                const newStepSize =
+                  ((maxDepth - this.preCountNonOneLiners(subTree.defaultNode)) /
+                    this.preCountOneLiners(subTree.defaultNode)) *
+                  givenStepSize;
                 childY = this.renderTreeAsCanvas(
                   subTree.defaultNode,
                   ctx,
@@ -521,19 +554,19 @@ export class ImportExport {
                   xPos + xStep,
                   y + this.printHeight,
                   newStepSize
-                )
+                );
               }
             }
             if (childY > yFinally) {
-              yFinally = childY
+              yFinally = childY;
             }
           }
           // draw the vertical lines
           for (let i = 1; i <= subTree.cases.length; i++) {
-            ctx.beginPath()
-            ctx.moveTo(x + i * xStep, y + i * yStep)
-            ctx.lineTo(x + i * xStep, yFinally)
-            ctx.stroke()
+            ctx.beginPath();
+            ctx.moveTo(x + i * xStep, y + i * yStep);
+            ctx.lineTo(x + i * xStep, yFinally);
+            ctx.stroke();
           }
           return this.renderTreeAsCanvas(
             subTree.followElement,
@@ -542,18 +575,18 @@ export class ImportExport {
             xmax,
             yFinally,
             givenStepSize
-          )
+          );
         }
 
-        case 'InsertCase': {
-          const textWidth = ctx.measureText(subTree.text)
-          ctx.beginPath()
+        case "InsertCase": {
+          const textWidth = ctx.measureText(subTree.text);
+          ctx.beginPath();
           ctx.fillText(
             subTree.text,
             x + Math.abs(xmax - x - textWidth.width) / 2,
             y + defaultMargin
-          )
-          ctx.stroke()
+          );
+          ctx.stroke();
           return this.renderTreeAsCanvas(
             subTree.followElement,
             ctx,
@@ -561,57 +594,57 @@ export class ImportExport {
             xmax,
             y + this.printHeight,
             givenStepSize
-          )
+          );
         }
 
-        case 'FunctionNode': {
+        case "FunctionNode": {
           const childY = this.renderTreeAsCanvas(
             subTree.child,
             ctx,
             x + (xmax - x) / 12,
             xmax,
             y + this.printHeight
-          )
-          ctx.rect(x, y, xmax - x, childY - y)
-          ctx.stroke()
+          );
+          ctx.rect(x, y, xmax - x, childY - y);
+          ctx.stroke();
 
-          ctx.beginPath()
-          ctx.fillStyle = 'white'
-          ctx.rect(x, y, xmax, this.printHeight - 1)
-          ctx.rect(x, y, (xmax - x) / 12 - 1, childY - y + this.printHeight)
-          ctx.rect(x, childY, xmax, this.printHeight - 2)
-          ctx.fill()
+          ctx.beginPath();
+          ctx.fillStyle = "white";
+          ctx.rect(x, y, xmax, this.printHeight - 1);
+          ctx.rect(x, y, (xmax - x) / 12 - 1, childY - y + this.printHeight);
+          ctx.rect(x, childY, xmax, this.printHeight - 2);
+          ctx.fill();
 
-          ctx.fillStyle = 'black'
-          ctx.beginPath()
-          let paramsText = ''
+          ctx.fillStyle = "black";
+          ctx.beginPath();
+          let paramsText = "";
           for (let index = 0; index < subTree.parameters.length; index++) {
             if (
               subTree.parameters.length === 0 ||
               index === subTree.parameters.length - 1
             ) {
-              paramsText += subTree.parameters[index].parName
+              paramsText += subTree.parameters[index].parName;
             } else {
-              paramsText += subTree.parameters[index].parName + ', '
+              paramsText += subTree.parameters[index].parName + ", ";
             }
           }
           ctx.fillText(
-            'function ' + subTree.text + '(' + paramsText + ') {',
+            "function " + subTree.text + "(" + paramsText + ") {",
             x + 15,
             y + defaultMargin
-          )
-          ctx.fillText('}', x + 15, childY + defaultMargin)
-          ctx.stroke()
+          );
+          ctx.fillText("}", x + 15, childY + defaultMargin);
+          ctx.stroke();
           return this.renderTreeAsCanvas(
             subTree.followElement,
             ctx,
             x,
             xmax,
             childY + this.printHeight
-          )
+          );
         }
 
-        case 'TryCatchNode': {
+        case "TryCatchNode": {
           const trychildY = this.renderTreeAsCanvas(
             subTree.tryChild,
             ctx,
@@ -619,7 +652,7 @@ export class ImportExport {
             xmax,
             y + this.printHeight,
             givenStepSize
-          )
+          );
           const catchchildY = this.renderTreeAsCanvas(
             subTree.catchChild,
             ctx,
@@ -627,26 +660,26 @@ export class ImportExport {
             xmax,
             trychildY + this.printHeight,
             givenStepSize
-          )
-          ctx.rect(x, y, xmax - x, catchchildY - y)
-          ctx.stroke()
+          );
+          ctx.rect(x, y, xmax - x, catchchildY - y);
+          ctx.stroke();
 
-          ctx.beginPath()
-          ctx.fillStyle = 'rgb(250, 218, 209)'
-          ctx.rect(x, y, xmax, this.printHeight - 1)
-          ctx.rect(x, trychildY, xmax, this.printHeight - 1)
-          ctx.rect(x, y, (xmax - x) / 12 - 1, catchchildY - y)
-          ctx.fill()
+          ctx.beginPath();
+          ctx.fillStyle = "rgb(250, 218, 209)";
+          ctx.rect(x, y, xmax, this.printHeight - 1);
+          ctx.rect(x, trychildY, xmax, this.printHeight - 1);
+          ctx.rect(x, y, (xmax - x) / 12 - 1, catchchildY - y);
+          ctx.fill();
 
-          ctx.fillStyle = 'black'
-          ctx.beginPath()
-          ctx.fillText('Try', x + 15, y + defaultMargin)
-          ctx.fillText('Catch', x + 15, trychildY + defaultMargin)
-          ctx.stroke()
-          ctx.beginPath()
-          ctx.moveTo(x + (xmax - x) / 12, trychildY)
-          ctx.lineTo(xmax, trychildY)
-          ctx.stroke()
+          ctx.fillStyle = "black";
+          ctx.beginPath();
+          ctx.fillText("Try", x + 15, y + defaultMargin);
+          ctx.fillText("Catch", x + 15, trychildY + defaultMargin);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(x + (xmax - x) / 12, trychildY);
+          ctx.lineTo(xmax, trychildY);
+          ctx.stroke();
 
           return this.renderTreeAsCanvas(
             subTree.followElement,
@@ -655,7 +688,7 @@ export class ImportExport {
             xmax,
             catchchildY,
             givenStepSize
-          )
+          );
         }
       }
     }
@@ -667,67 +700,64 @@ export class ImportExport {
    * @param    subTree   object of the current element / sub tree of the struktogramm
    * @return   int       depth of the current tree element
    */
-  preCountTreeDepth (subTree) {
+  preCountTreeDepth(subTree) {
     if (subTree === null) {
-      return 0
+      return 0;
     } else {
       switch (subTree.type) {
-        case 'FunctionNode':
-        case 'InsertNode':
-        case 'InsertCase':
-          return this.preCountTreeDepth(subTree.followElement)
+        case "FunctionNode":
+        case "InsertNode":
+        case "InsertCase":
+          return this.preCountTreeDepth(subTree.followElement);
 
-        case 'Placeholder': {
-          return 1
+        case "Placeholder": {
+          return 1;
         }
 
-        case 'InputNode':
-        case 'OutputNode':
-        case 'TaskNode': {
-          return 1 + this.preCountTreeDepth(subTree.followElement)
+        case "InputNode":
+        case "OutputNode":
+        case "TaskNode": {
+          return 1 + this.preCountTreeDepth(subTree.followElement);
         }
 
-        case 'BranchNode': {
-          const trueChild = this.preCountTreeDepth(subTree.trueChild)
-          const falseChild = this.preCountTreeDepth(subTree.falseChild)
+        case "BranchNode": {
+          const trueChild = this.preCountTreeDepth(subTree.trueChild);
+          const falseChild = this.preCountTreeDepth(subTree.falseChild);
           if (trueChild < falseChild) {
-            return 2 + falseChild
+            return 2 + falseChild;
           } else {
-            return 2 + trueChild
+            return 2 + trueChild;
           }
         }
 
-        case 'CountLoopNode':
-        case 'HeadLoopNode':
-        case 'FootLoopNode': {
+        case "CountLoopNode":
+        case "HeadLoopNode":
+        case "FootLoopNode": {
           return (
             1 +
             this.preCountTreeDepth(subTree.child) +
             this.preCountTreeDepth(subTree.followElement)
-          )
+          );
         }
 
-        case 'TryCatchNode': {
+        case "TryCatchNode": {
           return (
             2 +
             this.preCountTreeDepth(subTree.tryChild) +
             this.preCountTreeDepth(subTree.catchChild) +
             this.preCountTreeDepth(subTree.followElement)
-          )
+          );
         }
 
-        case 'CaseNode': {
-          const maxList = []
+        case "CaseNode": {
+          const maxList = [];
           for (const element of subTree.cases) {
-            maxList.push(this.preCountTreeDepth(element))
+            maxList.push(this.preCountTreeDepth(element));
           }
           if (subTree.defaultOn) {
-            maxList.push(this.preCountTreeDepth(subTree.defaultNode))
+            maxList.push(this.preCountTreeDepth(subTree.defaultNode));
           }
-          return (
-            2 +
-            Math.max(...maxList)
-          )
+          return 2 + Math.max(...maxList);
         }
       }
     }
@@ -739,28 +769,28 @@ export class ImportExport {
    * @param {*} subTree
    * @returns
    */
-  getDeepestCase (subTree) {
-    const maxList = []
-    const normalNodes = []
+  getDeepestCase(subTree) {
+    const maxList = [];
+    const normalNodes = [];
     for (const element of subTree.cases) {
-      maxList.push(this.preCountTreeDepth(element))
-      normalNodes.push(this.preCountOneLiners(element))
+      maxList.push(this.preCountTreeDepth(element));
+      normalNodes.push(this.preCountOneLiners(element));
     }
     if (subTree.defaultOn) {
-      maxList.push(this.preCountTreeDepth(subTree.defaultNode))
-      normalNodes.push(this.preCountOneLiners(subTree.defaultNode))
+      maxList.push(this.preCountTreeDepth(subTree.defaultNode));
+      normalNodes.push(this.preCountOneLiners(subTree.defaultNode));
     }
-    const maxDeph = Math.max(...maxList)
+    const maxDeph = Math.max(...maxList);
     for (let index = 0; index < maxList.length; index++) {
       if (maxList[index] === maxDeph) {
-        maxList[index] += normalNodes[index]
+        maxList[index] += normalNodes[index];
       }
     }
-    const index = maxList.indexOf(Math.max(...maxList))
+    const index = maxList.indexOf(Math.max(...maxList));
     if (index === maxList.length - 1) {
-      return subTree.defaultNode
+      return subTree.defaultNode;
     } else {
-      return subTree.cases[index]
+      return subTree.cases[index];
     }
   }
 
@@ -770,68 +800,68 @@ export class ImportExport {
    * @param    subTree   object of the current element / sub tree of the struktogramm
    * @return   int       depth of the current tree element
    */
-  preCountNonOneLiners (subTree) {
+  preCountNonOneLiners(subTree) {
     if (subTree === null) {
-      return 0
+      return 0;
     } else {
       switch (subTree.type) {
-        case 'FunctionNode':
-        case 'InsertNode':
-        case 'InsertCase':
-          return this.preCountNonOneLiners(subTree.followElement)
+        case "FunctionNode":
+        case "InsertNode":
+        case "InsertCase":
+          return this.preCountNonOneLiners(subTree.followElement);
 
-        case 'Placeholder': {
-          return 0
+        case "Placeholder": {
+          return 0;
         }
 
-        case 'InputNode':
-        case 'OutputNode':
-        case 'TaskNode': {
-          return this.preCountNonOneLiners(subTree.followElement)
+        case "InputNode":
+        case "OutputNode":
+        case "TaskNode": {
+          return this.preCountNonOneLiners(subTree.followElement);
         }
 
-        case 'BranchNode': {
-          const trueChild = this.preCountNonOneLiners(subTree.trueChild)
-          const falseChild = this.preCountNonOneLiners(subTree.falseChild)
+        case "BranchNode": {
+          const trueChild = this.preCountNonOneLiners(subTree.trueChild);
+          const falseChild = this.preCountNonOneLiners(subTree.falseChild);
           if (trueChild < falseChild) {
-            return 2 + falseChild
+            return 2 + falseChild;
           } else {
-            return 2 + trueChild
+            return 2 + trueChild;
           }
         }
 
-        case 'CountLoopNode':
-        case 'HeadLoopNode':
-        case 'FootLoopNode': {
+        case "CountLoopNode":
+        case "HeadLoopNode":
+        case "FootLoopNode": {
           return (
             1 +
             this.preCountNonOneLiners(subTree.child) +
             this.preCountNonOneLiners(subTree.followElement)
-          )
+          );
         }
 
-        case 'TryCatchNode': {
+        case "TryCatchNode": {
           return (
             2 +
             this.preCountNonOneLiners(subTree.tryChild) +
             this.preCountNonOneLiners(subTree.catchChild) +
             this.preCountNonOneLiners(subTree.followElement)
-          )
+          );
         }
 
-        case 'CaseNode': {
-          const maxList = []
+        case "CaseNode": {
+          const maxList = [];
           for (const element of subTree.cases) {
-            maxList.push(this.preCountNonOneLiners(element))
+            maxList.push(this.preCountNonOneLiners(element));
           }
           if (subTree.defaultOn) {
-            maxList.push(this.preCountNonOneLiners(subTree.defaultNode))
+            maxList.push(this.preCountNonOneLiners(subTree.defaultNode));
           }
           return (
             2 +
             // Math.max(...maxList)
             this.preCountNonOneLiners(this.getDeepestCase(subTree))
-          )
+          );
         }
       }
     }
@@ -843,64 +873,62 @@ export class ImportExport {
    * @param    subTree   object of the current element / sub tree of the struktogramm
    * @return   int       depth of the current tree element
    */
-  preCountOneLiners (subTree) {
+  preCountOneLiners(subTree) {
     if (subTree === null) {
-      return 0
+      return 0;
     } else {
       switch (subTree.type) {
-        case 'FunctionNode':
-        case 'InsertNode':
-        case 'InsertCase':
-          return this.preCountOneLiners(subTree.followElement)
+        case "FunctionNode":
+        case "InsertNode":
+        case "InsertCase":
+          return this.preCountOneLiners(subTree.followElement);
 
-        case 'Placeholder': {
-          return 1
+        case "Placeholder": {
+          return 1;
         }
 
-        case 'InputNode':
-        case 'OutputNode':
-        case 'TaskNode': {
-          return 1 + this.preCountOneLiners(subTree.followElement)
+        case "InputNode":
+        case "OutputNode":
+        case "TaskNode": {
+          return 1 + this.preCountOneLiners(subTree.followElement);
         }
 
-        case 'BranchNode': {
-          const trueChild = this.preCountOneLiners(subTree.trueChild)
-          const falseChild = this.preCountOneLiners(subTree.falseChild)
+        case "BranchNode": {
+          const trueChild = this.preCountOneLiners(subTree.trueChild);
+          const falseChild = this.preCountOneLiners(subTree.falseChild);
           if (trueChild < falseChild) {
-            return falseChild
+            return falseChild;
           } else {
-            return trueChild
+            return trueChild;
           }
         }
 
-        case 'CountLoopNode':
-        case 'HeadLoopNode':
-        case 'FootLoopNode': {
+        case "CountLoopNode":
+        case "HeadLoopNode":
+        case "FootLoopNode": {
           return (
             this.preCountOneLiners(subTree.child) +
             this.preCountOneLiners(subTree.followElement)
-          )
+          );
         }
 
-        case 'TryCatchNode': {
+        case "TryCatchNode": {
           return (
             this.preCountOneLiners(subTree.tryChild) +
             this.preCountOneLiners(subTree.catchChild) +
             this.preCountOneLiners(subTree.followElement)
-          )
+          );
         }
 
-        case 'CaseNode': {
-          const maxList = []
+        case "CaseNode": {
+          const maxList = [];
           for (const element of subTree.cases) {
-            maxList.push(this.preCountOneLiners(element))
+            maxList.push(this.preCountOneLiners(element));
           }
           if (subTree.defaultOn) {
-            maxList.push(this.preCountOneLiners(subTree.defaultNode))
+            maxList.push(this.preCountOneLiners(subTree.defaultNode));
           }
-          return (
-            Math.max(...maxList)
-          )
+          return Math.max(...maxList);
         }
       }
     }
@@ -909,64 +937,257 @@ export class ImportExport {
   /**
    * Create a PNG file of the current model and append a button for downloading
    */
-  exportAsPng (model) {
-    const canvas = document.createElement('canvas')
-    const ctx = canvas.getContext('2d')
+  exportAsPng(model) {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
     const width =
-      document.getElementById('structogram').parentElement.parentElement
-        .clientWidth
-    canvas.width = width
-    canvas.height = document.getElementById('structogram').clientHeight
+      document.getElementById("structogram").parentElement.parentElement
+        .clientWidth;
+    canvas.width = width;
+    canvas.height = document.getElementById("structogram").clientHeight;
 
-    ctx.font = '16px sans-serif'
-    ctx.lineWidth = '1'
+    ctx.font = "16px sans-serif";
+    ctx.lineWidth = "1";
     // render the tree on the canvas
-    const lastY = this.renderTreeAsCanvas(model, ctx, 0, width, 0)
-    ctx.rect(0, 0, width, lastY + 1)
-    ctx.strokeStyle = 'black'
-    ctx.lineWidth = 1
-    ctx.stroke()
+    const lastY = this.renderTreeAsCanvas(model, ctx, 0, width, 0);
+    ctx.rect(0, 0, width, lastY + 1);
+    ctx.strokeStyle = "black";
+    ctx.lineWidth = 1;
+    ctx.stroke();
 
     // define filename
     const exportFileDefaultName =
-      'struktog_' + new Date(Date.now()).toJSON().substring(0, 10) + '.png'
+      "struktog_" + new Date(Date.now()).toJSON().substring(0, 10) + ".png";
 
     // create button / anker element
-    const linkElement = document.createElement('a')
-    linkElement.setAttribute('href', canvas.toDataURL('image/png'))
-    linkElement.setAttribute('download', exportFileDefaultName)
-    linkElement.click()
+    const linkElement = document.createElement("a");
+    linkElement.setAttribute("href", canvas.toDataURL("image/png"));
+    linkElement.setAttribute("download", exportFileDefaultName);
+    linkElement.click();
   }
 
   /**
    * Create a PNG file of the current model with htmtToImage and append a button for downloading
    */
-  exportAsPngWithPackage () {
-    htmlToImage.toPng(document.getElementById('structogram'))
+  exportAsPngWithPackage() {
+    htmlToImage
+      .toPng(document.getElementById("structogram"))
       .then(function (dataUrl) {
-        const linkElement = document.createElement('a')
-        linkElement.setAttribute('href', dataUrl)
+        const linkElement = document.createElement("a");
+        linkElement.setAttribute("href", dataUrl);
         // define filename
-        const now = new Date()
-        let hours = now.getHours()
-        let minutes = now.getMinutes()
+        const now = new Date();
+        let hours = now.getHours();
+        let minutes = now.getMinutes();
 
-        hours = hours < 10 ? '0' + hours : hours
-        minutes = minutes < 10 ? '0' + minutes : minutes
+        hours = hours < 10 ? "0" + hours : hours;
+        minutes = minutes < 10 ? "0" + minutes : minutes;
 
-        const timeString = hours + '-' + minutes
+        const timeString = hours + "-" + minutes;
         // get Struktogramm Name
-        const structoName = document.getElementById('structoName').innerHTML
-        const exportFileDefaultName = structoName + '-' + new Date(Date.now()).toJSON().substring(0, 10) + '-' + timeString + '.png'
-        linkElement.setAttribute('download', exportFileDefaultName)
-        linkElement.click()
+        const structoName = document.getElementById("structoName").innerHTML;
+        const exportFileDefaultName =
+          structoName +
+          "-" +
+          new Date(Date.now()).toJSON().substring(0, 10) +
+          "-" +
+          timeString +
+          ".png";
+        linkElement.setAttribute("download", exportFileDefaultName);
+        linkElement.click();
       })
       .catch(function (error) {
-        console.error('oops, something went wrong!', error)
-      })
+        console.error("oops, something went wrong!", error);
+      });
   }
 
-  resetButtons () { }
-  displaySourcecode () { }
-  setLang () { }
+  clearModal() {
+    const content = document.getElementById("modal-content");
+    const footer = document.getElementById("modal-footer");
+    footer.classList.remove("settingsFooter");
+    while (content.hasChildNodes()) {
+      content.removeChild(content.lastChild);
+    }
+    while (footer.hasChildNodes()) {
+      footer.removeChild(footer.lastChild);
+    }
+    return { content, footer };
+  }
+
+  getLanguageOptions() {
+    const languageOptions = [];
+    const languageSelect = document.getElementById("SourcecodeSelect");
+    if (!languageSelect) {
+      return languageOptions;
+    }
+
+    for (const option of languageSelect.options) {
+      languageOptions.push({
+        value: option.value,
+        text: option.text,
+      });
+    }
+    return languageOptions;
+  }
+
+  renderSettingsElements(domNode, elements) {
+    while (domNode.hasChildNodes()) {
+      domNode.removeChild(domNode.lastChild);
+    }
+
+    for (const element of elements) {
+      const row = document.createElement("label");
+      row.classList.add("settingsCheck");
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = element.use;
+      checkbox.dataset.nodeType = element.key;
+      row.appendChild(checkbox);
+      row.appendChild(document.createTextNode(element.text));
+      domNode.appendChild(row);
+    }
+  }
+
+  openSettingsDialog() {
+    const { content, footer } = this.clearModal();
+    footer.classList.add("settingsFooter");
+    const settings = {
+      profile: this.presenter.getActiveConfigProfile(),
+      elements: this.presenter.getSettingsElements(),
+      language: this.presenter.getCodeLanguage(),
+      displaySourcecode: this.presenter.getSourcecodeDisplay(),
+      shortcutsEnabled: this.presenter.getShortcutsEnabled(),
+    };
+
+    const title = document.createElement("div");
+    title.classList.add("settingsTitle");
+    title.appendChild(document.createTextNode("Einstellungen"));
+    content.appendChild(title);
+
+    const profileContainer = document.createElement("div");
+    profileContainer.classList.add("settingsGroup");
+    const profileLabel = document.createElement("label");
+    profileLabel.appendChild(document.createTextNode("Profil"));
+    profileContainer.appendChild(profileLabel);
+    const profileSelect = document.createElement("select");
+    profileSelect.classList.add("form-select", "settingsSelect");
+    const profiles = Object.keys(config.alternatives)
+      .filter((profile) => profile !== "standard")
+      .sort((a, b) => a.localeCompare(b));
+    profiles.unshift("standard");
+    for (const profile of profiles) {
+      const option = document.createElement("option");
+      option.value = profile;
+      option.appendChild(document.createTextNode(profile));
+      if (profile === settings.profile) {
+        option.selected = true;
+      }
+      profileSelect.appendChild(option);
+    }
+    profileContainer.appendChild(profileSelect);
+    content.appendChild(profileContainer);
+
+    const elementsContainer = document.createElement("div");
+    elementsContainer.classList.add("settingsGroup");
+    const elementsLabel = document.createElement("label");
+    elementsLabel.appendChild(document.createTextNode("Elemente anzeigen"));
+    elementsContainer.appendChild(elementsLabel);
+    const elementsGrid = document.createElement("div");
+    elementsGrid.classList.add("settingsGrid");
+    this.renderSettingsElements(elementsGrid, settings.elements);
+    elementsContainer.appendChild(elementsGrid);
+    content.appendChild(elementsContainer);
+
+    profileSelect.addEventListener("change", () => {
+      const profileConfig = config.alternatives[profileSelect.value];
+      const profileElements = this.presenter
+        .getSettingsElementKeys()
+        .map((key) => ({
+          key,
+          text: profileConfig[key].text,
+          use: profileConfig[key].use,
+        }));
+      this.renderSettingsElements(elementsGrid, profileElements);
+    });
+
+    const languageContainer = document.createElement("div");
+    languageContainer.classList.add("settingsGroup");
+    const languageLabel = document.createElement("label");
+    languageLabel.appendChild(document.createTextNode("Programmiersprache"));
+    languageContainer.appendChild(languageLabel);
+    const languageSelect = document.createElement("select");
+    languageSelect.classList.add("form-select", "settingsSelect");
+    for (const item of this.getLanguageOptions()) {
+      const option = document.createElement("option");
+      option.value = item.value;
+      option.appendChild(document.createTextNode(item.text));
+      if (item.value === settings.language) {
+        option.selected = true;
+      }
+      languageSelect.appendChild(option);
+    }
+    languageContainer.appendChild(languageSelect);
+    content.appendChild(languageContainer);
+
+    const sourcecodeToggle = document.createElement("label");
+    sourcecodeToggle.classList.add("settingsCheck");
+    const sourcecodeCheckbox = document.createElement("input");
+    sourcecodeCheckbox.type = "checkbox";
+    sourcecodeCheckbox.checked = settings.displaySourcecode;
+    sourcecodeToggle.appendChild(sourcecodeCheckbox);
+    sourcecodeToggle.appendChild(document.createTextNode("Quellcode anzeigen"));
+    content.appendChild(sourcecodeToggle);
+
+    const shortcutToggle = document.createElement("label");
+    shortcutToggle.classList.add("settingsCheck");
+    const shortcutCheckbox = document.createElement("input");
+    shortcutCheckbox.type = "checkbox";
+    shortcutCheckbox.checked = settings.shortcutsEnabled;
+    shortcutToggle.appendChild(shortcutCheckbox);
+    shortcutToggle.appendChild(
+      document.createTextNode("Shortcuts (Alt+1..0) aktivieren")
+    );
+    content.appendChild(shortcutToggle);
+
+    const saveButton = document.createElement("div");
+    saveButton.classList.add("modal-buttons", "settingsActionButton", "hand");
+    saveButton.appendChild(document.createTextNode("OK"));
+    saveButton.addEventListener("click", () => {
+      const elementSettings = {};
+      for (const checkbox of elementsGrid.getElementsByTagName("input")) {
+        elementSettings[checkbox.dataset.nodeType] = checkbox.checked;
+      }
+      const hasActiveElement = Object.values(elementSettings).some(
+        (value) => value
+      );
+      if (!hasActiveElement) {
+        window.alert("Bitte mindestens ein Element aktiv lassen.");
+        return;
+      }
+
+      this.presenter.applySettings({
+        profile: profileSelect.value,
+        elements: elementSettings,
+        language: languageSelect.value,
+        displaySourcecode: sourcecodeCheckbox.checked,
+        shortcutsEnabled: shortcutCheckbox.checked,
+      });
+      document.getElementById("IEModal").classList.remove("active");
+    });
+    footer.appendChild(saveButton);
+
+    const cancelButton = document.createElement("div");
+    cancelButton.classList.add("modal-buttons", "settingsActionButton", "hand");
+    cancelButton.appendChild(document.createTextNode("Abbruch"));
+    cancelButton.addEventListener("click", () =>
+      document.getElementById("IEModal").classList.remove("active")
+    );
+    footer.appendChild(cancelButton);
+
+    document.getElementById("IEModal").classList.add("active");
+  }
+
+  resetButtons() {}
+  displaySourcecode() {}
+  setLang() {}
 }

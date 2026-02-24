@@ -1,90 +1,163 @@
 .modal {
-    align-items: center;
-    bottom: 0;
-    display: none;
-    justify-content: center;
-    left: 0;
-    opacity: 0;
-    overflow: hidden;
-    padding: 0.5em;
-    position: fixed;
-    right: 0;
-    top: 0;
+  align-items: center;
+  bottom: 0;
+  display: none;
+  justify-content: center;
+  left: 0;
+  opacity: 0;
+  overflow: hidden;
+  padding: 0.5em;
+  position: fixed;
+  right: 0;
+  top: 0;
 
-    &:target,
-    &.active {
-        display: flex;
-        opacity: 1;
-        z-index: 2;
+  &:target,
+  &.active {
+    display: flex;
+    opacity: 1;
+    z-index: 2;
 
-        .modal-overlay {
-            background: rgba(0,0,0,0.4);
-            bottom: 0;
-            cursor: default;
-            display: block;
-            left: 0;
-            position: absolute;
-            right: 0;
-            top: 0;
-        }
-
-        .modal-container {
-            animation: slide-down .2s ease 1;
-            z-index: 1;
-        }
+    .modal-overlay {
+      background: rgba(0, 0, 0, 0.4);
+      bottom: 0;
+      cursor: default;
+      display: block;
+      left: 0;
+      position: absolute;
+      right: 0;
+      top: 0;
     }
 
-    &.modal-sm {
-        .modal-container {
-            max-width: 10em;
-            padding: 0 1em;
-        }
+    .modal-container {
+      animation: slide-down 0.2s ease 1;
+      z-index: 1;
     }
+  }
+
+  &.modal-sm {
+    .modal-container {
+      max-width: 10em;
+      padding: 0 1em;
+    }
+  }
 }
 
 .modal-container {
-    background: rgb(250, 250, 250);
-    border-radius: 0.1em;
-    display: flex;
-    flex-direction: column;
-    max-height: 75vh;
-    max-width: 25em;
+  background: rgb(250, 250, 250);
+  border-radius: 0.1em;
+  display: flex;
+  flex-direction: column;
+  max-height: 75vh;
+  max-width: 25em;
+  padding: 0 1em;
+  width: 100%;
+
+  &.modal-fullheight {
+    max-height: 100vh;
+  }
+
+  .modal-header {
+    padding: 0.3em 0.3em;
+    .close {
+      height: 1.5em;
+      width: 1.5em;
+      float: right;
+    }
+  }
+
+  .modal-body {
+    overflow-y: auto;
     padding: 0 1em;
-    width: 100%;
+    position: relative;
 
-    &.modal-fullheight {
-        max-height: 100vh;
+    .caseTitle {
+      margin-top: 0.5em;
+      text-align: center;
     }
+  }
 
-    .modal-header {
-        padding: 0.3em 0.3em;
-        .close {
-            height: 1.5em;
-            width: 1.5em;
-            float: right;
-        }
+  .modal-footer {
+    padding: 1em;
+    color: rgb(38, 64, 64);
+
+    .modal-buttons {
+      flex: auto;
+      min-height: 2.5em;
+      margin: 0 2em;
+      text-align: end;
     }
+  }
+}
 
-    .modal-body {
-        overflow-y: auto;
-        padding: 0 1em;
-        position: relative;
+.settingsTitle {
+  margin: 0.2em 0 0.8em;
+  text-align: center;
+  font-weight: bold;
+  color: rgb(38, 64, 64);
+}
 
-        .caseTitle {
-            margin-top: 0.5em;
-            text-align: center;
-        }
-    }
+.settingsGroup {
+  margin-bottom: 0.8em;
 
-    .modal-footer {
-        padding: 1em;
-        color: rgb(38, 64, 64);
+  > label {
+    display: block;
+    margin-bottom: 0.3em;
+    color: rgb(38, 64, 64);
+    font-weight: bold;
+  }
+}
 
-        .modal-buttons {
-            flex: auto;
-            min-height: 2.5em;
-            margin: 0 2em;
-            text-align: end;
-        }
-    }
+.settingsSelect {
+  width: 100%;
+}
+
+.settingsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.3em 0.8em;
+}
+
+@media screen and (max-width: 600px) {
+  .settingsGrid {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+}
+
+.settingsCheck {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  color: rgb(38, 64, 64);
+}
+
+.settingsActionButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 5.2em;
+  padding: 0 0.9em;
+  border: 0.1em solid rgb(38, 64, 64);
+  border-radius: 0.35em;
+  min-height: 1.8em;
+  text-align: center;
+  background: rgb(253, 237, 206);
+  color: rgb(38, 64, 64);
+  font-weight: bold;
+  box-shadow: 0 0.08em 0 rgba(38, 64, 64, 0.25);
+}
+
+.settingsFooter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1em;
+}
+
+.settingsFooter .modal-buttons {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+.settingsActionButton:hover {
+  background: rgb(250, 228, 186);
 }

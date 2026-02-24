@@ -15,91 +15,281 @@
  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { guidGenerator } from '../helpers/generator'
+import { guidGenerator } from "../helpers/generator";
+import { config } from "../config";
 
 export class Presenter {
-  constructor (model) {
-    this.model = model
-    this.insertMode = false
-    this.settingFunctionMode = false // if the user is setting a function block then true
-    this.views = []
-    this.moveId = null
-    this.nextInsertElement = null
-    this.displaySourcecode = false
-    this.undoList = []
-    this.redoList = []
-  }
+  constructor(model) {
+    this.model = model;
+    this.insertMode = false;
+    this.settingFunctionMode = false; // if the user is setting a function block then true
+    this.views = [];
+    this.moveId = null;
+    this.nextInsertElement = null;
+    this.displaySourcecode = false;
+    this.codeLanguage = "--";
+    this.shortcutsEnabled = true;
+    this.activeConfigProfile = "standard";
+    this.undoList = [];
+    this.redoList = [];
 
-  addView (view) {
-    this.views.push(view)
-  }
-
-  getInsertMode () {
-    return this.insertMode
-  }
-
-  getSettingFunctionMode () {
-    return this.settingFunctionMode
-  }
-
-  getModelTree () {
-    return this.model.getTree()
-  }
-
-  getElementByUid (uid) {
-    return this.model.getElementInTree(uid, this.model.getTree())
-  }
-
-  resetButtons () {
-    for (const view of this.views) {
-      view.resetButtons()
+    if (typeof Storage !== "undefined") {
+      if ("displaySourcecode" in localStorage) {
+        this.displaySourcecode = JSON.parse(localStorage.displaySourcecode);
+      }
+      if ("lang" in localStorage) {
+        this.codeLanguage = localStorage.lang;
+      }
+      if ("struktog_settings_shortcuts" in localStorage) {
+        this.shortcutsEnabled = JSON.parse(
+          localStorage.struktog_settings_shortcuts
+        );
+      }
+      if ("struktog_settings_profile" in localStorage) {
+        this.activeConfigProfile = localStorage.struktog_settings_profile;
+      }
     }
   }
 
-  reset () {
+  addView(view) {
+    this.views.push(view);
+  }
+
+  getInsertMode() {
+    return this.insertMode;
+  }
+
+  getSettingFunctionMode() {
+    return this.settingFunctionMode;
+  }
+
+  getModelTree() {
+    return this.model.getTree();
+  }
+
+  getElementByUid(uid) {
+    return this.model.getElementInTree(uid, this.model.getTree());
+  }
+
+  resetButtons() {
+    for (const view of this.views) {
+      view.resetButtons();
+    }
+  }
+
+  reset() {
     // reset the model fields connected to inserting
-    this.insertMode = false
-    this.settingFunctionMode = false
-    this.nextInsertElement = null
-    this.moveId = null
+    this.insertMode = false;
+    this.settingFunctionMode = false;
+    this.nextInsertElement = null;
+    this.moveId = null;
   }
 
-  setSourcecodeDisplay (state) {
-    this.displaySourcecode = state
+  setSourcecodeDisplay(state) {
+    this.displaySourcecode = state;
   }
 
-  getSourcecodeDisplay () {
-    return this.displaySourcecode
+  setSourcecodeDisplayState(state) {
+    const nextState = Boolean(state);
+    if (this.displaySourcecode === nextState) {
+      return;
+    }
+
+    this.displaySourcecode = nextState;
+    this.updateBrowserStore();
+    for (const view of this.views) {
+      if (typeof view.displaySourcecode === "function") {
+        view.displaySourcecode("ToggleSourcecode");
+      }
+    }
+  }
+
+  getSourcecodeDisplay() {
+    return this.displaySourcecode;
+  }
+
+  getCodeLanguage() {
+    return this.codeLanguage;
+  }
+
+  setCodeLanguage(lang) {
+    this.codeLanguage = lang;
+    for (const view of this.views) {
+      if (typeof view.setLang === "function") {
+        view.setLang(lang);
+      }
+    }
+  }
+
+  getShortcutsEnabled() {
+    return this.shortcutsEnabled;
+  }
+
+  setShortcutsEnabled(enabled) {
+    this.shortcutsEnabled = Boolean(enabled);
+  }
+
+  setActiveConfigProfile(profile) {
+    if (profile && profile in config.alternatives) {
+      this.activeConfigProfile = profile;
+    }
+  }
+
+  getActiveConfigProfile() {
+    return this.activeConfigProfile;
+  }
+
+  getSettingsElementKeys() {
+    return [
+      "InputNode",
+      "OutputNode",
+      "TaskNode",
+      "CountLoopNode",
+      "HeadLoopNode",
+      "FootLoopNode",
+      "BranchNode",
+      "CaseNode",
+      "TryCatchNode",
+      "FunctionNode",
+    ];
+  }
+
+  getSettingsElements() {
+    return this.getSettingsElementKeys().map((key) => ({
+      key,
+      text: config.get()[key].text,
+      use: config.get()[key].use,
+    }));
+  }
+
+  getStoredSettings(ignoreProfile = false) {
+    if (typeof Storage === "undefined") {
+      return {};
+    }
+
+    const settings = {};
+    if (!ignoreProfile && "struktog_settings_profile" in localStorage) {
+      settings.profile = localStorage.struktog_settings_profile;
+    }
+    if (!ignoreProfile && "struktog_settings_elements" in localStorage) {
+      settings.elements = JSON.parse(localStorage.struktog_settings_elements);
+    }
+    if ("lang" in localStorage) {
+      settings.language = localStorage.lang;
+    }
+    if ("displaySourcecode" in localStorage) {
+      settings.displaySourcecode = JSON.parse(localStorage.displaySourcecode);
+    }
+    if ("struktog_settings_shortcuts" in localStorage) {
+      settings.shortcutsEnabled = JSON.parse(
+        localStorage.struktog_settings_shortcuts
+      );
+    }
+
+    return settings;
+  }
+
+  persistSettings() {
+    if (typeof Storage === "undefined") {
+      return;
+    }
+
+    const elementSettings = {};
+    for (const key of this.getSettingsElementKeys()) {
+      elementSettings[key] = config.get()[key].use;
+    }
+
+    localStorage.struktog_settings_profile = this.activeConfigProfile;
+    localStorage.struktog_settings_elements = JSON.stringify(elementSettings);
+    localStorage.struktog_settings_shortcuts = JSON.stringify(
+      this.shortcutsEnabled
+    );
+  }
+
+  applySettings(settings, options = {}) {
+    const opts = {
+      persist: true,
+      rerender: true,
+      ...options,
+    };
+
+    if (settings.profile && settings.profile in config.alternatives) {
+      config.loadConfig(settings.profile);
+      this.activeConfigProfile = settings.profile;
+    }
+
+    if (settings.elements) {
+      for (const key of this.getSettingsElementKeys()) {
+        if (key in settings.elements) {
+          config.get()[key].use = Boolean(settings.elements[key]);
+        }
+      }
+    }
+
+    if (Object.prototype.hasOwnProperty.call(settings, "language")) {
+      this.setCodeLanguage(settings.language);
+    }
+
+    if (Object.prototype.hasOwnProperty.call(settings, "displaySourcecode")) {
+      this.setSourcecodeDisplayState(settings.displaySourcecode);
+    }
+
+    if (Object.prototype.hasOwnProperty.call(settings, "shortcutsEnabled")) {
+      this.setShortcutsEnabled(settings.shortcutsEnabled);
+    }
+
+    if (opts.persist) {
+      this.persistSettings();
+      this.updateBrowserStore();
+    }
+
+    if (opts.rerender) {
+      this.renderAllViews();
+      for (const view of this.views) {
+        if (typeof view.displaySourcecode === "function") {
+          view.displaySourcecode("ToggleSourcecode");
+        }
+      }
+    }
+  }
+
+  resetSettingsToDefault() {
+    this.applySettings({
+      profile: "standard",
+      language: "--",
+      displaySourcecode: false,
+      shortcutsEnabled: true,
+    });
   }
 
   /**
    * Update the model stored in the browser store
    */
-  updateBrowserStore () {
+  updateBrowserStore() {
     // check if browser supports web storage
-    if (typeof Storage !== 'undefined') {
+    if (typeof Storage !== "undefined") {
       // update the model as stringified JSON data
-      localStorage.tree = JSON.stringify(this.model.getTree())
-      localStorage.displaySourcecode = this.displaySourcecode
+      localStorage.tree = JSON.stringify(this.model.getTree());
+      localStorage.displaySourcecode = this.displaySourcecode;
     }
   }
 
-  getMoveId () {
-    return this.moveId
+  getMoveId() {
+    return this.moveId;
   }
 
-  getNextInsertElement () {
-    return this.nextInsertElement
+  getNextInsertElement() {
+    return this.nextInsertElement;
   }
 
-  renderAllViews () {
+  renderAllViews() {
     for (const view of this.views) {
-      view.render(this.model.getTree())
+      view.render(this.model.getTree());
     }
   }
 
-  init () {
-    this.renderAllViews()
+  init() {
+    this.renderAllViews();
   }
 
   /**
@@ -107,11 +297,9 @@ export class Presenter {
    *
    * @param   lang   programming language to which the translation happens
    */
-  startTransforming (event) {
-    for (const view of this.views) {
-      view.setLang(event.target.value)
-    }
-    this.renderAllViews()
+  startTransforming(event) {
+    this.setCodeLanguage(event.target.value);
+    this.renderAllViews();
   }
 
   /**
@@ -119,16 +307,8 @@ export class Presenter {
    *
    * @param   buttonId   id of the sourcecode display button
    */
-  alterSourcecodeDisplay (buttonId) {
-    if (this.displaySourcecode) {
-      this.displaySourcecode = false
-    } else {
-      this.displaySourcecode = true
-    }
-    this.updateBrowserStore()
-    for (const view of this.views) {
-      view.displaySourcecode('ToggleSourcecode')
-    }
+  alterSourcecodeDisplay(buttonId) {
+    this.setSourcecodeDisplayState(!this.displaySourcecode);
   }
 
   /**
@@ -136,247 +316,247 @@ export class Presenter {
    *
    * @param   buttonId   id of the selected button
    */
-  insertNode (id, event) {
+  insertNode(id, event) {
     switch (id) {
-      case 'InputButton':
+      case "InputButton":
         this.nextInsertElement = {
           id: guidGenerator(),
-          type: 'InputNode',
-          text: '',
+          type: "InputNode",
+          text: "",
           followElement: {
             id: guidGenerator(),
-            type: 'InsertNode',
-            followElement: null
-          }
-        }
-        break
-      case 'OutputButton':
+            type: "InsertNode",
+            followElement: null,
+          },
+        };
+        break;
+      case "OutputButton":
         this.nextInsertElement = {
           id: guidGenerator(),
-          type: 'OutputNode',
-          text: '',
+          type: "OutputNode",
+          text: "",
           followElement: {
             id: guidGenerator(),
-            type: 'InsertNode',
-            followElement: null
-          }
-        }
-        break
-      case 'TaskButton':
+            type: "InsertNode",
+            followElement: null,
+          },
+        };
+        break;
+      case "TaskButton":
         this.nextInsertElement = {
           id: guidGenerator(),
-          type: 'TaskNode',
-          text: 'Anweisung',
+          type: "TaskNode",
+          text: "Anweisung",
           followElement: {
             id: guidGenerator(),
-            type: 'InsertNode',
-            followElement: null
-          }
-        }
-        break
-      case 'BranchButton':
+            type: "InsertNode",
+            followElement: null,
+          },
+        };
+        break;
+      case "BranchButton":
         this.nextInsertElement = {
           id: guidGenerator(),
-          type: 'BranchNode',
-          text: 'Bedingung',
+          type: "BranchNode",
+          text: "Bedingung",
           followElement: {
             id: guidGenerator(),
-            type: 'InsertNode',
-            followElement: null
+            type: "InsertNode",
+            followElement: null,
           },
           trueChild: {
             id: guidGenerator(),
-            type: 'InsertNode',
-            followElement: { type: 'Placeholder' }
+            type: "InsertNode",
+            followElement: { type: "Placeholder" },
           },
           falseChild: {
             id: guidGenerator(),
-            type: 'InsertNode',
-            followElement: { type: 'Placeholder' }
-          }
-        }
-        break
-      case 'CaseButton':
+            type: "InsertNode",
+            followElement: { type: "Placeholder" },
+          },
+        };
+        break;
+      case "CaseButton":
         this.nextInsertElement = {
           id: guidGenerator(),
-          type: 'CaseNode',
-          text: 'Variable',
+          type: "CaseNode",
+          text: "Variable",
           followElement: {
             id: guidGenerator(),
-            type: 'InsertNode',
-            followElement: null
+            type: "InsertNode",
+            followElement: null,
           },
           defaultOn: true,
           defaultNode: {
             id: guidGenerator(),
-            type: 'InsertCase',
-            text: 'Sonst',
+            type: "InsertCase",
+            text: "Sonst",
             followElement: {
               id: guidGenerator(),
-              type: 'InsertNode',
-              followElement: { type: 'Placeholder' }
-            }
+              type: "InsertNode",
+              followElement: { type: "Placeholder" },
+            },
           },
           cases: [
             {
               id: guidGenerator(),
-              type: 'InsertCase',
-              text: 'Fall',
+              type: "InsertCase",
+              text: "Fall",
               followElement: {
                 id: guidGenerator(),
-                type: 'InsertNode',
-                followElement: { type: 'Placeholder' }
-              }
+                type: "InsertNode",
+                followElement: { type: "Placeholder" },
+              },
             },
             {
               id: guidGenerator(),
-              type: 'InsertCase',
-              text: 'Fall',
+              type: "InsertCase",
+              text: "Fall",
               followElement: {
                 id: guidGenerator(),
-                type: 'InsertNode',
-                followElement: { type: 'Placeholder' }
-              }
-            }
-          ]
-        }
-        break
-      case 'CountLoopButton':
+                type: "InsertNode",
+                followElement: { type: "Placeholder" },
+              },
+            },
+          ],
+        };
+        break;
+      case "CountLoopButton":
         this.nextInsertElement = {
           id: guidGenerator(),
-          type: 'CountLoopNode',
-          text: 'Zählbedingung',
+          type: "CountLoopNode",
+          text: "Zählbedingung",
           followElement: {
             id: guidGenerator(),
-            type: 'InsertNode',
-            followElement: null
+            type: "InsertNode",
+            followElement: null,
           },
           child: {
             id: guidGenerator(),
-            type: 'InsertNode',
-            followElement: { type: 'Placeholder' }
-          }
-        }
-        break
-      case 'HeadLoopButton':
+            type: "InsertNode",
+            followElement: { type: "Placeholder" },
+          },
+        };
+        break;
+      case "HeadLoopButton":
         this.nextInsertElement = {
           id: guidGenerator(),
-          type: 'HeadLoopNode',
-          text: 'Gültigkeitsbedingung',
+          type: "HeadLoopNode",
+          text: "Gültigkeitsbedingung",
           followElement: {
             id: guidGenerator(),
-            type: 'InsertNode',
-            followElement: null
+            type: "InsertNode",
+            followElement: null,
           },
           child: {
             id: guidGenerator(),
-            type: 'InsertNode',
-            followElement: { type: 'Placeholder' }
-          }
-        }
-        break
-      case 'FunctionButton':
+            type: "InsertNode",
+            followElement: { type: "Placeholder" },
+          },
+        };
+        break;
+      case "FunctionButton":
         this.nextInsertElement = {
           id: guidGenerator(),
-          type: 'FunctionNode',
-          text: '',
+          type: "FunctionNode",
+          text: "",
           parameters: [],
           followElement: {
             id: guidGenerator(),
-            type: 'InsertNode',
-            followElement: null
+            type: "InsertNode",
+            followElement: null,
           },
           child: {
             id: guidGenerator(),
-            type: 'InsertNode',
-            followElement: { type: 'Placeholder' }
-          }
-        }
-        this.settingFunctionMode = true
-        break
-      case 'FootLoopButton':
+            type: "InsertNode",
+            followElement: { type: "Placeholder" },
+          },
+        };
+        this.settingFunctionMode = true;
+        break;
+      case "FootLoopButton":
         this.nextInsertElement = {
           id: guidGenerator(),
-          type: 'FootLoopNode',
-          text: 'Gültigkeitsbedingung',
+          type: "FootLoopNode",
+          text: "Gültigkeitsbedingung",
           followElement: {
             id: guidGenerator(),
-            type: 'InsertNode',
-            followElement: null
+            type: "InsertNode",
+            followElement: null,
           },
           child: {
             id: guidGenerator(),
-            type: 'InsertNode',
-            followElement: { type: 'Placeholder' }
-          }
-        }
-        break
-      case 'TryCatchButton':
+            type: "InsertNode",
+            followElement: { type: "Placeholder" },
+          },
+        };
+        break;
+      case "TryCatchButton":
         this.nextInsertElement = {
           id: guidGenerator(),
-          type: 'TryCatchNode',
+          type: "TryCatchNode",
           followElement: {
             id: guidGenerator(),
-            type: 'InsertNode',
-            followElement: null
+            type: "InsertNode",
+            followElement: null,
           },
           tryChild: {
             id: guidGenerator(),
-            type: 'InsertNode',
-            followElement: { type: 'Placeholder' }
+            type: "InsertNode",
+            followElement: { type: "Placeholder" },
           },
           catches: [
             {
               id: guidGenerator(),
-              type: 'InsertNode',
-              specialType: 'CatchNode',
-              text: 'undefiniert',
-              followElement: { type: 'Placeholder' }
-            }
-          ]
-        }
-        break
+              type: "InsertNode",
+              specialType: "CatchNode",
+              text: "undefiniert",
+              followElement: { type: "Placeholder" },
+            },
+          ],
+        };
+        break;
     }
     if (event.dataTransfer !== undefined) {
-      event.dataTransfer.effectAllowed = 'move'
-      event.dataTransfer.setData('text', id)
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text", id);
     }
-    const button = document.getElementById(id)
-    if (button.classList.contains('boldText')) {
-      this.resetButtons()
-      this.reset()
+    const button = document.getElementById(id);
+    if (button.classList.contains("boldText")) {
+      this.resetButtons();
+      this.reset();
     } else {
       // prepare insert by updating the model data
-      this.resetButtons()
-      this.insertMode = true
-      button.classList.add('boldText')
+      this.resetButtons();
+      this.insertMode = true;
+      button.classList.add("boldText");
     }
     // rerender the struktogramm
-    this.renderAllViews()
+    this.renderAllViews();
   }
 
   /**
    * Helper function to correctly abort while using drag and drop
    */
-  resetDrop () {
+  resetDrop() {
     // while drag and dropping an inserting element, the user can drop everywhere
     // if the location is not valid, one step more must be done to abort everything
     if (this.insertMode) {
-      this.reset()
-      this.resetButtons()
-      this.renderAllViews()
+      this.reset();
+      this.resetButtons();
+      this.renderAllViews();
     } else {
-      this.resetButtons()
+      this.resetButtons();
     }
   }
 
-  resetModel () {
-    this.updateUndo()
-    this.model.reset()
-    this.checkUndo()
-    this.updateBrowserStore()
-    this.renderAllViews()
-    document.getElementById('IEModal').classList.remove('active')
+  resetModel() {
+    this.updateUndo();
+    this.model.reset();
+    this.checkUndo();
+    this.updateBrowserStore();
+    this.renderAllViews();
+    document.getElementById("IEModal").classList.remove("active");
   }
 
   /**
@@ -384,20 +564,20 @@ export class Presenter {
    *
    * @param   uid   id of the clicked element in the struktogramm
    */
-  switchDefaultState (uid) {
-    this.updateUndo()
+  switchDefaultState(uid) {
+    this.updateUndo();
     this.model.setTree(
       this.model.findAndAlterElement(
         uid,
         this.model.getTree(),
         this.model.switchDefaultCase,
         false,
-        ''
+        ""
       )
-    )
-    this.checkUndo()
-    this.updateBrowserStore()
-    this.renderAllViews()
+    );
+    this.checkUndo();
+    this.updateBrowserStore();
+    this.renderAllViews();
   }
 
   /**
@@ -405,20 +585,20 @@ export class Presenter {
    *
    * @param   uid   id of the clicked element in the struktogramm
    */
-  addCase (uid) {
-    this.updateUndo()
+  addCase(uid) {
+    this.updateUndo();
     this.model.setTree(
       this.model.findAndAlterElement(
         uid,
         this.model.getTree(),
         this.model.insertNewCase,
         false,
-        ''
+        ""
       )
-    )
-    this.checkUndo()
-    this.updateBrowserStore()
-    this.renderAllViews()
+    );
+    this.checkUndo();
+    this.updateBrowserStore();
+    this.renderAllViews();
   }
 
   /**
@@ -426,20 +606,20 @@ export class Presenter {
    *
    * @param   uid   id of the clicked element in the struktogramm
    */
-  addCatch (uid) {
-    this.updateUndo()
+  addCatch(uid) {
+    this.updateUndo();
     this.model.setTree(
       this.model.findAndAlterElement(
         uid,
         this.model.getTree(),
         this.model.insertNewCatch,
         false,
-        ''
+        ""
       )
-    )
-    this.checkUndo()
-    this.updateBrowserStore()
-    this.renderAllViews()
+    );
+    this.checkUndo();
+    this.updateBrowserStore();
+    this.renderAllViews();
   }
 
   /**
@@ -447,134 +627,136 @@ export class Presenter {
    *
    * @param   uid   id of the clicked element in the struktogramm
    */
-  removeElement (uid) {
-    function _checkEmptyCatches (catches) {
+  removeElement(uid) {
+    function _checkEmptyCatches(catches) {
       // check if all catches are empty
       for (const item of catches) {
-        if (item.followElement.type !== 'Placeholder') {
-          return false
+        if (item.followElement.type !== "Placeholder") {
+          return false;
         }
       }
-      return true
+      return true;
     }
 
-    const deleteElem = this.model.getElementInTree(uid, this.model.getTree())
-    let type = deleteElem.type
-    if (deleteElem.specialType && deleteElem.specialType === 'CatchNode') {
-      type = deleteElem.specialType
+    const deleteElem = this.model.getElementInTree(uid, this.model.getTree());
+    let type = deleteElem.type;
+    if (deleteElem.specialType && deleteElem.specialType === "CatchNode") {
+      type = deleteElem.specialType;
     }
     switch (type) {
-      case 'TaskNode':
-      case 'InputNode':
-      case 'OutputNode':
-        this.removeNodeFromTree(uid)
-        break
-      case 'HeadLoopNode':
-      case 'CountLoopNode':
-      case 'FootLoopNode':
-      case 'FunctionNode':
-        if (deleteElem.child.followElement.type !== 'Placeholder') {
-          this.prepareRemoveQuestion(uid)
+      case "TaskNode":
+      case "InputNode":
+      case "OutputNode":
+        this.removeNodeFromTree(uid);
+        break;
+      case "HeadLoopNode":
+      case "CountLoopNode":
+      case "FootLoopNode":
+      case "FunctionNode":
+        if (deleteElem.child.followElement.type !== "Placeholder") {
+          this.prepareRemoveQuestion(uid);
         } else {
-          this.removeNodeFromTree(uid)
+          this.removeNodeFromTree(uid);
         }
-        break
-      case 'BranchNode':
+        break;
+      case "BranchNode":
         if (
-          deleteElem.trueChild.followElement.type !== 'Placeholder' ||
-          deleteElem.falseChild.followElement.type !== 'Placeholder'
+          deleteElem.trueChild.followElement.type !== "Placeholder" ||
+          deleteElem.falseChild.followElement.type !== "Placeholder"
         ) {
-          this.prepareRemoveQuestion(uid)
+          this.prepareRemoveQuestion(uid);
         } else {
-          this.removeNodeFromTree(uid)
+          this.removeNodeFromTree(uid);
         }
-        break
-      case 'TryCatchNode':
+        break;
+      case "TryCatchNode":
         // loop through all catches
         if (
-          deleteElem.tryChild.followElement.type !== 'Placeholder' ||
+          deleteElem.tryChild.followElement.type !== "Placeholder" ||
           _checkEmptyCatches(deleteElem.catches)
         ) {
-          this.prepareRemoveQuestion(uid)
+          this.prepareRemoveQuestion(uid);
         } else {
-          this.removeNodeFromTree(uid)
+          this.removeNodeFromTree(uid);
         }
-        break
-      case 'CaseNode': {
-        let check = false
+        break;
+      case "CaseNode": {
+        let check = false;
         for (const item of deleteElem.cases) {
-          if (item.followElement.followElement.type !== 'Placeholder') {
-            check = true
+          if (item.followElement.followElement.type !== "Placeholder") {
+            check = true;
           }
         }
         if (
           deleteElem.defaultNode.followElement.followElement.type !==
-          'Placeholder'
+          "Placeholder"
         ) {
-          check = true
+          check = true;
         }
         if (check) {
-          this.prepareRemoveQuestion(uid)
+          this.prepareRemoveQuestion(uid);
         } else {
-          this.removeNodeFromTree(uid)
+          this.removeNodeFromTree(uid);
         }
-        break
+        break;
       }
-      case 'InsertCase':
-      case 'CatchNode':
-        if (deleteElem.followElement.type !== 'Placeholder') {
-          this.prepareRemoveQuestion(uid)
+      case "InsertCase":
+      case "CatchNode":
+        if (deleteElem.followElement.type !== "Placeholder") {
+          this.prepareRemoveQuestion(uid);
         } else {
-          this.removeNodeFromTree(uid)
+          this.removeNodeFromTree(uid);
         }
-        break
+        break;
     }
   }
 
-  prepareRemoveQuestion (uid) {
-    const content = document.getElementById('modal-content')
-    const footer = document.getElementById('modal-footer')
+  prepareRemoveQuestion(uid) {
+    const content = document.getElementById("modal-content");
+    const footer = document.getElementById("modal-footer");
     while (content.hasChildNodes()) {
-      content.removeChild(content.lastChild)
+      content.removeChild(content.lastChild);
     }
     while (footer.hasChildNodes()) {
-      footer.removeChild(footer.lastChild)
+      footer.removeChild(footer.lastChild);
     }
     content.appendChild(
       document.createTextNode(
-        'Dieses Element und alle darin erstellten Blöcke löschen?'
+        "Dieses Element und alle darin erstellten Blöcke löschen?"
       )
-    )
-    const doButton = document.createElement('div')
-    doButton.classList.add('modal-buttons', 'acceptIcon', 'hand')
-    doButton.addEventListener('click', () => this.removeNodeFromTree(uid, true))
-    footer.appendChild(doButton)
-    const cancelButton = document.createElement('div')
-    cancelButton.classList.add('modal-buttons', 'deleteIcon', 'hand')
-    cancelButton.addEventListener('click', () =>
-      document.getElementById('IEModal').classList.remove('active')
-    )
-    footer.appendChild(cancelButton)
+    );
+    const doButton = document.createElement("div");
+    doButton.classList.add("modal-buttons", "acceptIcon", "hand");
+    doButton.addEventListener("click", () =>
+      this.removeNodeFromTree(uid, true)
+    );
+    footer.appendChild(doButton);
+    const cancelButton = document.createElement("div");
+    cancelButton.classList.add("modal-buttons", "deleteIcon", "hand");
+    cancelButton.addEventListener("click", () =>
+      document.getElementById("IEModal").classList.remove("active")
+    );
+    footer.appendChild(cancelButton);
 
-    document.getElementById('IEModal').classList.add('active')
+    document.getElementById("IEModal").classList.add("active");
   }
 
-  removeNodeFromTree (uid, closeModal = false) {
-    this.updateUndo()
+  removeNodeFromTree(uid, closeModal = false) {
+    this.updateUndo();
     this.model.setTree(
       this.model.findAndAlterElement(
         uid,
         this.model.getTree(),
         this.model.removeNode,
         false,
-        ''
+        ""
       )
-    )
-    this.checkUndo()
-    this.updateBrowserStore()
-    this.renderAllViews()
+    );
+    this.checkUndo();
+    this.updateBrowserStore();
+    this.renderAllViews();
     if (closeModal) {
-      document.getElementById('IEModal').classList.remove('active')
+      document.getElementById("IEModal").classList.remove("active");
     }
   }
 
@@ -583,42 +765,42 @@ export class Presenter {
    *
    * @param delPos   pos of the param in the dom list
    */
-  removeParamFromParameters (delPos) {
-    let editedTree = this.model.getTree()
+  removeParamFromParameters(delPos) {
+    let editedTree = this.model.getTree();
     // search for the function box tree
-    const followingElements = []
-    while (editedTree.type !== 'FunctionNode') {
-      followingElements.push(editedTree)
-      editedTree = editedTree.followElement
+    const followingElements = [];
+    while (editedTree.type !== "FunctionNode") {
+      followingElements.push(editedTree);
+      editedTree = editedTree.followElement;
     }
 
     // find the respective parameter to remove it from the model
-    const params = editedTree.parameters
+    const params = editedTree.parameters;
     for (const param of params) {
-      const actPos = parseInt(param.pos)
+      const actPos = parseInt(param.pos);
       if (actPos === delPos) {
-        let listIndex = actPos / 3 // convert the element position in the dom into the position in the array
-        params.splice(listIndex, 1)
+        let listIndex = actPos / 3; // convert the element position in the dom into the position in the array
+        params.splice(listIndex, 1);
 
         // update all pos-values of the following param elements
         while (listIndex < params.length) {
-          params[listIndex].pos -= 3
-          listIndex += 1
+          params[listIndex].pos -= 3;
+          listIndex += 1;
         }
-        editedTree.parameters = params
+        editedTree.parameters = params;
 
         // set up the whole tree
-        let index = followingElements.length - 1
+        let index = followingElements.length - 1;
         while (index > -1) {
-          const subTree = followingElements[index]
-          subTree.followElement = editedTree
-          editedTree = subTree
-          index -= 1
+          const subTree = followingElements[index];
+          subTree.followElement = editedTree;
+          editedTree = subTree;
+          index -= 1;
         }
-        this.model.setTree(editedTree)
-        this.updateBrowserStore()
-        this.renderAllViews()
-        return
+        this.model.setTree(editedTree);
+        this.updateBrowserStore();
+        this.renderAllViews();
+        return;
       }
     }
   }
@@ -628,22 +810,22 @@ export class Presenter {
    *
    * @param   uid   id of the clicked element in the struktogramm
    */
-  moveElement (uid) {
+  moveElement(uid) {
     // prepare data
-    this.moveId = uid
-    this.insertMode = true
+    this.moveId = uid;
+    this.insertMode = true;
     this.nextInsertElement = this.model.getElementInTree(
       uid,
       this.model.getTree()
-    )
-    this.nextInsertElement.followElement.followElement = null
+    );
+    this.nextInsertElement.followElement.followElement = null;
     // rerender
-    this.renderAllViews()
+    this.renderAllViews();
   }
 
   // textType: only used for the distinction of function name and function parameters
-  editElement (uid, textValue, textType = '') {
-    this.updateUndo()
+  editElement(uid, textValue, textType = "") {
+    this.updateUndo();
     this.model.setTree(
       this.model.findAndAlterElement(
         uid,
@@ -652,10 +834,10 @@ export class Presenter {
         false,
         textType + textValue
       )
-    )
-    this.checkUndo()
-    this.updateBrowserStore()
-    this.renderAllViews()
+    );
+    this.checkUndo();
+    this.updateBrowserStore();
+    this.renderAllViews();
   }
 
   /**
@@ -663,10 +845,10 @@ export class Presenter {
    *
    * @param   uid   id of the clicked InsertNode in the struktogramm
    */
-  appendElement (uid) {
-    this.updateUndo()
+  appendElement(uid) {
+    this.updateUndo();
     // remove old node, when moving is used
-    const moveState = this.moveId
+    const moveState = this.moveId;
     if (moveState) {
       this.model.setTree(
         this.model.findAndAlterElement(
@@ -674,36 +856,36 @@ export class Presenter {
           this.model.getTree(),
           this.model.removeNode,
           false,
-          ''
+          ""
         )
-      )
+      );
     }
     // insert the new node, on moving, its the removed
-    const elemId = this.nextInsertElement.id
-    console.log(this.nextInsertElement)
+    const elemId = this.nextInsertElement.id;
+    console.log(this.nextInsertElement);
     this.model.setTree(
       this.model.findAndAlterElement(
         uid,
         this.model.getTree(),
         this.model.insertElement,
         false,
-        ''
+        ""
       )
-    )
+    );
     // reset the buttons if moving occurred
     if (moveState) {
       // TODO
-      this.resetButtons()
+      this.resetButtons();
     }
     // rerender
-    this.reset()
-    this.checkUndo()
-    this.updateBrowserStore()
-    this.renderAllViews()
+    this.reset();
+    this.checkUndo();
+    this.updateBrowserStore();
+    this.renderAllViews();
     // on new inserted elements start the editing mode of the element
     // start no editing mode for try catch blocks
-    if (!moveState && this.getElementByUid(elemId).type !== 'TryCatchNode') {
-      this.switchEditState(elemId)
+    if (!moveState && this.getElementByUid(elemId).type !== "TryCatchNode") {
+      this.switchEditState(elemId);
     }
   }
 
@@ -713,199 +895,283 @@ export class Presenter {
    * @param   uid         id of the desired element in the struktogramm
    * @param   paramIndex  index (position) of the function parameter
    */
-  switchEditState (uid, paramIndex = null) {
-    let elem = document.getElementById(uid)
-    console.log(elem)
+  switchEditState(uid, paramIndex = null) {
+    let elem = document.getElementById(uid);
+    console.log(elem);
 
     // element is a function node
     if (
       elem.children[0].children.length &&
-      elem.children[0].children[0].classList.contains('func-box-header')
+      elem.children[0].children[0].classList.contains("func-box-header")
     ) {
-      let funcTextNode = null
+      let funcTextNode = null;
       // click function name
       if (paramIndex === null) {
-        funcTextNode = elem.children[0].children[0].children[1].children[0]
+        funcTextNode = elem.children[0].children[0].children[1].children[0];
         // trigger click event to show input field
       } else {
         funcTextNode =
           elem.children[0].children[0].children[2].children[paramIndex]
-            .children[0]
+            .children[0];
       }
       if (funcTextNode) {
-        funcTextNode.click()
+        funcTextNode.click();
       }
     } else {
       // get the input field and display it
       // work around for FootLoopNodes, duo to HTML structure, the last element has to be found and edited
-      if (elem.getElementsByClassName('input-group editField ' + uid).length) {
-        if (elem.childNodes[0].classList.contains('tryCatchNode')) {
-          elem = elem.getElementsByClassName('input-group editField ' + uid)[1]
+      if (elem.getElementsByClassName("input-group editField " + uid).length) {
+        if (elem.childNodes[0].classList.contains("tryCatchNode")) {
+          elem = elem.getElementsByClassName("input-group editField " + uid)[1];
         } else {
-          elem = elem.getElementsByClassName('input-group editField ' + uid)[0]
+          elem = elem.getElementsByClassName("input-group editField " + uid)[0];
         }
       } else {
         // in try catch block the input field of the catch block has not to be the first input field (if the try block has child nodes)
-        if (elem.children[0].classList.contains('tryCatchNode')) {
+        if (elem.children[0].classList.contains("tryCatchNode")) {
           elem =
-            elem.getElementsByClassName('tryCatchNode')[1].children[1]
-              .children[1]
+            elem.getElementsByClassName("tryCatchNode")[1].children[1]
+              .children[1];
         } else {
-          elem = elem.getElementsByClassName('input-group editField')[0]
+          elem = elem.getElementsByClassName("input-group editField")[0];
         }
       }
-      elem.previousSibling.style.display = 'none'
-      elem.style.display = 'inline-flex'
+      elem.previousSibling.style.display = "none";
+      elem.style.display = "inline-flex";
       // automatic set focus on the input
-      elem.getElementsByTagName('input')[0].select()
+      elem.getElementsByTagName("input")[0].select();
     }
   }
 
-  getStringifiedTree () {
-    return JSON.stringify(this.model.getTree())
+  getStringifiedTree() {
+    return JSON.stringify(this.model.getTree());
   }
 
-  saveDialog () {
+  getCurrentSettingsSnapshot() {
+    const elements = {};
+    for (const key of this.getSettingsElementKeys()) {
+      elements[key] = config.get()[key].use;
+    }
+
+    return {
+      profile: this.getActiveConfigProfile(),
+      elements,
+      language: this.getCodeLanguage(),
+      displaySourcecode: this.getSourcecodeDisplay(),
+      shortcutsEnabled: this.getShortcutsEnabled(),
+    };
+  }
+
+  normalizeImportedData(data) {
+    if (!data || typeof data !== "object") {
+      return null;
+    }
+
+    if ("tree" in data && data.tree && typeof data.tree === "object") {
+      return {
+        tree: data.tree,
+        settings:
+          "settings" in data && typeof data.settings === "object"
+            ? data.settings
+            : null,
+        meta:
+          "meta" in data && typeof data.meta === "object" ? data.meta : null,
+      };
+    }
+
+    if ("type" in data) {
+      return {
+        tree: data,
+        settings: null,
+        meta: null,
+      };
+    }
+
+    return null;
+  }
+
+  applyImportedData(data, fallbackName = null) {
+    const importedData = this.normalizeImportedData(data);
+    if (!importedData) {
+      return false;
+    }
+
+    const structoNameFromMeta =
+      importedData.meta && typeof importedData.meta.structoName === "string"
+        ? importedData.meta.structoName
+        : null;
+    const structoName = structoNameFromMeta || fallbackName;
+    if (structoName) {
+      document.getElementById("structoName").innerHTML = structoName;
+    }
+
+    this.updateUndo();
+    this.model.setTree(importedData.tree);
+
+    if (importedData.settings) {
+      this.applySettings(importedData.settings, {
+        persist: true,
+        rerender: false,
+      });
+    }
+
+    this.checkUndo();
+    this.renderAllViews();
+    this.updateBrowserStore();
+    return true;
+  }
+
+  saveDialog() {
+    const structoName = document.getElementById("structoName").innerHTML;
+    const exportPayload = {
+      formatVersion: 2,
+      meta: {
+        exportedAt: new Date().toISOString(),
+        structoName,
+      },
+      settings: this.getCurrentSettingsSnapshot(),
+      tree: this.model.getTree(),
+    };
+
     // define the data url to start a download on click
     const dataUri =
-      'data:application/json;charset=utf-8,' +
-      encodeURIComponent(this.getStringifiedTree())
+      "data:application/json;charset=utf-8," +
+      encodeURIComponent(JSON.stringify(exportPayload));
     // create filename with current date in the name
-    const now = new Date()
-    let hours = now.getHours()
-    let minutes = now.getMinutes()
+    const now = new Date();
+    let hours = now.getHours();
+    let minutes = now.getMinutes();
 
-    hours = hours < 10 ? '0' + hours : hours
-    minutes = minutes < 10 ? '0' + minutes : minutes
+    hours = hours < 10 ? "0" + hours : hours;
+    minutes = minutes < 10 ? "0" + minutes : minutes;
 
-    const timeString = hours + '-' + minutes
-    // get Struktogramm Name
-    const structoName = document.getElementById('structoName').innerHTML
+    const timeString = hours + "-" + minutes;
     const exportFileDefaultName =
       structoName +
-      '-' +
+      "-" +
       new Date(Date.now()).toJSON().substring(0, 10) +
-      '-' +
+      "-" +
       timeString +
-      '.json'
+      ".json";
     // generate the download button element and append it to the node
-    const linkElement = document.createElement('a')
-    linkElement.setAttribute('href', dataUri)
-    linkElement.setAttribute('download', exportFileDefaultName)
-    linkElement.click()
+    const linkElement = document.createElement("a");
+    linkElement.setAttribute("href", dataUri);
+    linkElement.setAttribute("download", exportFileDefaultName);
+    linkElement.click();
   }
 
   /**
    * Read input from a JSON file and replace the current model
    */
-  readFile (event) {
-    const file = event.target.files[0]
+  readFile(event) {
+    const file = event.target.files[0];
     if (!file) {
-      return
+      return;
     }
-    let fileName = file.name
-    const dashIndex = fileName.indexOf('-')
+    let fileName = file.name;
+    const dashIndex = fileName.indexOf("-");
     if (dashIndex !== -1) {
-      fileName = fileName.substring(0, dashIndex)
+      fileName = fileName.substring(0, dashIndex);
     }
-    document.getElementById('structoName').innerHTML = fileName
-
     // create a FileReader instance
-    const reader = new FileReader()
+    const reader = new FileReader();
     // read file and parse JSON, then update model
     reader.onload = (event) => {
-      const newModel = JSON.parse(event.target.result)
-      this.updateUndo()
-      this.model.setTree(newModel)
-      this.checkUndo()
-      this.renderAllViews()
-      this.updateBrowserStore()
-      console.log(event)
-    }
+      let parsedData;
+      try {
+        parsedData = JSON.parse(event.target.result);
+      } catch (error) {
+        window.alert("Datei konnte nicht gelesen werden: ungültiges JSON.");
+        return;
+      }
+
+      const isImported = this.applyImportedData(parsedData, fileName);
+      if (!isImported) {
+        window.alert(
+          "Datei konnte nicht importiert werden: unbekanntes Format."
+        );
+      }
+    };
     // start the reading process
-    reader.readAsText(event.target.files[0])
+    reader.readAsText(event.target.files[0]);
   }
 
   /**
    * Read input from a JSON file and replace the current model
    */
-  readUrl (file) {
-    this.updateUndo()
-    this.model.setTree(file)
-    this.checkUndo()
-    this.renderAllViews()
-    this.updateBrowserStore()
+  readUrl(file) {
+    this.applyImportedData(file);
   }
 
-  updateUndo () {
-    this.undoList.push(this.getStringifiedTree())
+  updateUndo() {
+    this.undoList.push(this.getStringifiedTree());
     for (const item of document.getElementsByClassName(
-      'UndoIconButtonOverlay'
+      "UndoIconButtonOverlay"
     )) {
-      item.classList.remove('disableIcon')
+      item.classList.remove("disableIcon");
     }
-    this.redoList = []
+    this.redoList = [];
     for (const item of document.getElementsByClassName(
-      'RedoIconButtonOverlay'
+      "RedoIconButtonOverlay"
     )) {
-      item.classList.add('disableIcon')
+      item.classList.add("disableIcon");
     }
   }
 
-  undo () {
+  undo() {
     if (this.undoList.length) {
-      this.redoList.unshift(this.getStringifiedTree())
-      this.model.setTree(JSON.parse(this.undoList[this.undoList.length - 1]))
-      this.undoList.pop()
+      this.redoList.unshift(this.getStringifiedTree());
+      this.model.setTree(JSON.parse(this.undoList[this.undoList.length - 1]));
+      this.undoList.pop();
       if (this.undoList === 0) {
         for (const item of document.getElementsByClassName(
-          'UndoIconButtonOverlay'
+          "UndoIconButtonOverlay"
         )) {
-          item.classList.add('disableIcon')
+          item.classList.add("disableIcon");
         }
       }
       for (const item of document.getElementsByClassName(
-        'RedoIconButtonOverlay'
+        "RedoIconButtonOverlay"
       )) {
-        item.classList.remove('disableIcon')
+        item.classList.remove("disableIcon");
       }
-      this.renderAllViews()
-      this.updateBrowserStore()
+      this.renderAllViews();
+      this.updateBrowserStore();
     }
   }
 
-  checkUndo () {
+  checkUndo() {
     if (this.undoList[this.undoList.length - 1] === this.getStringifiedTree()) {
-      this.undoList.pop()
+      this.undoList.pop();
       if (this.undoList === 0) {
         for (const item of document.getElementsByClassName(
-          'UndoIconButtonOverlay'
+          "UndoIconButtonOverlay"
         )) {
-          item.classList.add('disableIcon')
+          item.classList.add("disableIcon");
         }
       }
     }
   }
 
-  redo () {
+  redo() {
     if (this.redoList.length) {
-      this.undoList.push(this.getStringifiedTree())
-      this.model.setTree(JSON.parse(this.redoList[0]))
-      this.redoList.shift()
+      this.undoList.push(this.getStringifiedTree());
+      this.model.setTree(JSON.parse(this.redoList[0]));
+      this.redoList.shift();
       if (this.redoList.length === 0) {
         for (const item of document.getElementsByClassName(
-          'RedoIconButtonOverlay'
+          "RedoIconButtonOverlay"
         )) {
-          item.classList.add('disableIcon')
+          item.classList.add("disableIcon");
         }
       }
       for (const item of document.getElementsByClassName(
-        'UndoIconButtonOverlay'
+        "UndoIconButtonOverlay"
       )) {
-        item.classList.remove('disableIcon')
+        item.classList.remove("disableIcon");
       }
-      this.renderAllViews()
-      this.updateBrowserStore()
+      this.renderAllViews();
+      this.updateBrowserStore();
     }
   }
 }

@@ -50,6 +50,7 @@ function registerServiceWorker() {
 }
 
 window.onload = function () {
+  let configId = null;
   // manipulate the localStorage before loading the presenter
   if (typeof Storage !== "undefined") {
     const url = new URL(window.location.href);
@@ -62,7 +63,7 @@ window.onload = function () {
           presenter.readUrl(json);
         });
     }
-    const configId = url.searchParams.get("config");
+    configId = url.searchParams.get("config");
     config.loadConfig(configId);
   }
 
@@ -89,6 +90,15 @@ window.onload = function () {
     document.getElementById("Export")
   );
   presenter.addView(importExport);
+
+  const hasConfigOverride = Boolean(configId);
+  if (hasConfigOverride) {
+    presenter.setActiveConfigProfile(configId);
+  }
+  presenter.applySettings(presenter.getStoredSettings(hasConfigOverride), {
+    persist: false,
+    rerender: false,
+  });
 
   presenter.init();
 
