@@ -321,7 +321,8 @@ export class Structogram {
     fieldSize,
     placeHolder,
     uid,
-    content = null
+    content = null,
+    headerEditType = "funcname"
   ) {
     // add text from input field as span-element to the header-div
     const textNodeSpan = document.createElement("span");
@@ -419,7 +420,11 @@ export class Structogram {
       inputAccept.addEventListener("click", () => {
         // update function name and function parameters in the model tree
         if (divContainer.classList.contains("func-box-header")) {
-          this.presenter.editElement(uid, inputElement.value, "funcname|");
+          this.presenter.editElement(
+            uid,
+            inputElement.value,
+            headerEditType + "|"
+          );
         } else {
           this.presenter.editElement(
             uid,
@@ -450,7 +455,11 @@ export class Structogram {
 
           // update function name and function parameters in the model tree
           if (divContainer.classList.contains("func-box-header")) {
-            this.presenter.editElement(uid, inputElement.value, "funcname|");
+            this.presenter.editElement(
+              uid,
+              inputElement.value,
+              headerEditType + "|"
+            );
           } else {
             this.presenter.editElement(
               uid,
@@ -522,7 +531,7 @@ export class Structogram {
    * @param    funcParams         variable names of the function parameters
    * Return a function header with function name and parameters for editing
    */
-  renderFunctionBox(uid, content, funcParams) {
+  renderFunctionBox(uid, content, funcParams, returnType = "") {
     // field attributes... ff: function name... fp: parameter name
     // size is field length
     const ffSize = 15;
@@ -572,22 +581,17 @@ export class Structogram {
     );
     addParamBtn.style.marginTop = "auto";
     addParamBtn.style.marginBottom = "auto";
+    addParamBtn.type = "button";
     addParamBtn.setAttribute("data-tooltip", "Parameter hinzufügen");
-    addParamBtn.addEventListener("click", () => {
+    addParamBtn.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
       addParamBtn.remove();
-      const countParam =
-        document.getElementsByClassName("function-elem").length - 1;
+      const countParam = paramDiv.querySelectorAll(".function-elem").length;
       this.renderParam(countParam, paramDiv, spacingSize, fpSize, uid);
-    });
-
-    // show adding-parameters-button when hovering
-    functionBoxHeaderDiv.addEventListener("mouseover", () => {
       paramDiv.appendChild(addParamBtn);
     });
-
-    functionBoxHeaderDiv.addEventListener("mouseleave", () => {
-      addParamBtn.remove();
-    });
+    paramDiv.appendChild(addParamBtn);
 
     // add all box header elements
     functionBoxHeaderDiv.appendChild(document.createTextNode("function"));
@@ -605,6 +609,20 @@ export class Structogram {
     functionBoxHeaderDiv.appendChild(document.createTextNode("("));
     functionBoxHeaderDiv.appendChild(paramDiv);
     functionBoxHeaderDiv.appendChild(document.createTextNode(")"));
+    functionBoxHeaderDiv.appendChild(this.createSpacing(spacingSize));
+    functionBoxHeaderDiv.appendChild(document.createTextNode("->"));
+    functionBoxHeaderDiv.appendChild(this.createSpacing(spacingSize));
+    functionBoxHeaderDiv.appendChild(
+      this.createFunctionHeaderTextEl(
+        functionBoxHeaderDiv,
+        9,
+        fpSize,
+        "Rueckgabetyp",
+        uid,
+        returnType,
+        "returntype"
+      )
+    );
     functionBoxHeaderDiv.appendChild(this.createSpacing(spacingSize));
     functionBoxHeaderDiv.appendChild(document.createTextNode("{"));
     const spacer = document.createElement("div");
@@ -1068,7 +1086,8 @@ export class Structogram {
           const divFunctionHeader = this.renderFunctionBox(
             subTree.id,
             subTree.text,
-            subTree.parameters
+            subTree.parameters,
+            subTree.returnType || ""
           );
 
           const divHead = document.createElement("div");

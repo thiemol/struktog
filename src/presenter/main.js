@@ -461,6 +461,7 @@ export class Presenter {
           type: "FunctionNode",
           text: "",
           parameters: [],
+          returnType: "",
           followElement: {
             id: guidGenerator(),
             type: "InsertNode",

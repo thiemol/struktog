@@ -1112,12 +1112,18 @@ export class CodeView {
           );
         }
         case "FunctionNode": {
+          let functionPre = this.translationMap[lang].FunctionNode.pre;
+          const typedLanguages = ["Java", "C#", "C++", "C"];
+          const returnType = (subTree.returnType || "").trim();
+          if (typedLanguages.includes(lang) && returnType !== "") {
+            functionPre = functionPre.replace(/void\s+$/, returnType + " ");
+          }
+
           const functionContent = document.createElement("span");
           functionContent.classList.add("keyword");
           functionContent.appendChild(
             document.createTextNode(
-              this.addIndentations(indentLevel) +
-                this.translationMap[lang].FunctionNode.pre
+              this.addIndentations(indentLevel) + functionPre
             )
           );
           elemSpan.appendChild(functionContent);

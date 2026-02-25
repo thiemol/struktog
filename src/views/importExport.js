@@ -606,8 +606,16 @@ export class ImportExport {
               paramsText += subTree.parameters[index].parName + ", ";
             }
           }
+          const returnType = (subTree.returnType || "").trim();
+          const returnTypeText = returnType === "" ? "" : " -> " + returnType;
           ctx.fillText(
-            "function " + subTree.text + "(" + paramsText + ") {",
+            "function " +
+              subTree.text +
+              "(" +
+              paramsText +
+              ")" +
+              returnTypeText +
+              " {",
             x + 15,
             y + defaultMargin
           );
