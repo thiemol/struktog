@@ -22,6 +22,7 @@ import { Presenter } from "./presenter/main";
 import { Structogram } from "./views/structogram";
 import { CodeView } from "./views/code";
 import { ImportExport } from "./views/importExport";
+import { WebTour } from "./views/webtour";
 import {
   generateFooter,
   generateHtmltree,
@@ -113,6 +114,9 @@ window.onload = function () {
     document.getElementById("Export")
   );
   presenter.addView(importExport);
+
+  const webTour = new WebTour();
+  webTour.bindTrigger("#tourInfoButton");
 
   const hasConfigOverride = Boolean(configId);
   if (hasConfigOverride) {

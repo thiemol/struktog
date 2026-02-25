@@ -28,6 +28,18 @@ export class ImportExport {
   render(model) {}
 
   preRender() {
+    const infoDiv = document.createElement("div");
+    infoDiv.classList.add(
+      "options-element",
+      "infoIcon",
+      "tooltip",
+      "tooltip-bottom",
+      "hand"
+    );
+    infoDiv.id = "tourInfoButton";
+    infoDiv.setAttribute("data-tooltip", "Tour starten");
+    document.getElementById("optionButtons").appendChild(infoDiv);
+
     const settingsDiv = document.createElement("div");
     settingsDiv.classList.add(
       "options-element",
