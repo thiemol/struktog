@@ -85,11 +85,18 @@ export function generateHtmltree() {
   const divOptions = document.createElement("div");
   divOptions.classList.add("options-container");
   divOptions.setAttribute("id", "optionButtons");
+  const divOptionsGroup = document.createElement("div");
+  divOptionsGroup.classList.add("optionButtonsGroup");
+  divOptionsGroup.setAttribute("id", "optionButtonsGroup");
+  divOptions.appendChild(divOptionsGroup);
   section2.appendChild(divOptions);
 
   const divider = document.createElement("div");
   divider.classList.add("divider");
   document.body.appendChild(divider);
+
+  const structoNameContainer = document.createElement("div");
+  structoNameContainer.classList.add("structoNameContainer");
 
   const dividerText = document.createElement("div");
   dividerText.classList.add("divider-text");
@@ -104,7 +111,8 @@ export function generateHtmltree() {
     dividerText.innerHTML = structoName;
   });
   dividerText.setAttribute("id", "structoName");
-  document.body.appendChild(dividerText);
+  structoNameContainer.appendChild(dividerText);
+  document.body.appendChild(structoNameContainer);
 
   // main
   const main = document.createElement("main");

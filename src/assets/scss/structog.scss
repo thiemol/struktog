@@ -1,10 +1,10 @@
-@import "structogram";
-@import "importExport";
-@import "cases";
-@import "code";
-@import "svg";
+@import 'structogram';
+@import 'importExport';
+@import 'cases';
+@import 'code';
+@import 'svg';
 
-$font-stack: "Verdana", Geneva, sans-serif;
+$font-stack: 'Verdana', Geneva, sans-serif;
 
 header {
   margin-top: 0.5em;
@@ -23,6 +23,10 @@ body {
   main {
     flex: 1;
   }
+}
+
+:root {
+  --ui-group-bg: rgba(0, 0, 0, 0.1);
 }
 
 footer {
@@ -147,16 +151,26 @@ strong {
 }
 
 .options-container {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
+  display: block;
+  text-align: right;
+  width: 100%;
+}
+
+.optionButtonsGroup {
+  display: inline-flex;
   align-items: center;
-  justify-content: right;
+  gap: 1.58em;
+  padding: 0.18em 0.3em;
+  border-radius: 0.45em;
+  background: var(--ui-group-bg);
+  margin-right: 1em;
 }
 
 .options-element {
+  display: inline-block;
+  width: 3em;
   height: 3em;
-  flex-basis: 5em;
+  vertical-align: middle;
 }
 
 .hand {
@@ -181,8 +195,11 @@ strong {
 .columnEditorCode {
   margin: 0.2em;
   padding-top: 1em;
+  padding-left: 0.35em;
+  padding-right: 0.35em;
   flex-grow: 0;
   width: 100%;
+  background: var(--ui-group-bg);
 }
 
 @media screen and (min-width: 480px) {
@@ -337,6 +354,15 @@ strong {
   font-size: 1em;
 }
 
+.structoNameContainer {
+  margin: 0.1em auto 0;
+  padding: 0.12em 0.45em;
+  border-radius: 0.45em;
+  background: var(--ui-group-bg);
+  width: fit-content;
+  max-width: calc(100vw - 1em);
+}
+
 .borderWidth {
   flex: 0 0 3px;
 }
@@ -394,4 +420,21 @@ strong {
 
 #structogram {
   border-right: 1px solid black;
+}
+
+#insertButtons {
+  padding: 0;
+}
+
+#struktoOptions1,
+#struktoOptions2 {
+  padding: 0.2em;
+  background: var(--ui-group-bg);
+}
+
+@media screen and (max-width: 600px) {
+  .optionButtonsGroup,
+  .structoNameContainer {
+    border-radius: 0.35em;
+  }
 }

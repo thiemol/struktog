@@ -161,6 +161,7 @@ export class Structogram {
     divWorkingArea.classList.add("columnAuto");
     divWorkingArea.id = "structogram";
 
+    divEditorContent.appendChild(divEditorHeadline);
     divEditorContent.appendChild(divEditorContentSplitTop);
     divEditorContentSplitTop.appendChild(divWorkingArea);
     divEditorContentSplitTop.appendChild(divFixRightBorder);
@@ -171,7 +172,6 @@ export class Structogram {
 
     this.domRoot.appendChild(divInsert);
     this.domRoot.appendChild(editorOptions);
-    this.domRoot.appendChild(divEditorHeadline);
     this.domRoot.appendChild(divEditorContent);
 
     const codeAndOptions = document.createElement("div");

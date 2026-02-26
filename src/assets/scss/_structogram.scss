@@ -217,12 +217,14 @@ $main-background-color: rgba(128, 212, 255, 0.5);
   height: 2em;
   flex: auto;
   justify-content: flex-end;
+  gap: 0.5em;
 }
 
 .struktoOptions2 {
   display: none !important;
   height: 2em;
   padding-top: 0.3em;
+  gap: 0.5em;
 }
 
 @media screen and (min-width: 1200px) {
@@ -237,7 +239,7 @@ $main-background-color: rgba(128, 212, 255, 0.5);
 
 .struktoOption {
   width: 2em;
-  margin-right: 0.5em;
+  margin-right: 0;
 }
 
 .disableIcon {

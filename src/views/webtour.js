@@ -35,7 +35,7 @@ export class WebTour {
         text: t("webtour.textElementOptions"),
       },
       {
-        selector: "#optionButtons",
+        selector: "#optionButtonsGroup",
         title: t("webtour.titleFileSettings"),
         text: t("webtour.textFileSettings"),
       },

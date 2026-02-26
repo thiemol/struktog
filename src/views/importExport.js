@@ -34,6 +34,10 @@ export class ImportExport {
   render(model) {}
 
   preRender() {
+    const optionsTarget =
+      document.getElementById("optionButtonsGroup") ||
+      document.getElementById("optionButtons");
+
     const infoDiv = document.createElement("div");
     infoDiv.classList.add(
       "options-element",
@@ -44,7 +48,7 @@ export class ImportExport {
     );
     infoDiv.id = "tourInfoButton";
     infoDiv.setAttribute("data-tooltip", t("importExport.startTour"));
-    document.getElementById("optionButtons").appendChild(infoDiv);
+    optionsTarget.appendChild(infoDiv);
 
     const settingsDiv = document.createElement("div");
     settingsDiv.classList.add(
@@ -56,7 +60,7 @@ export class ImportExport {
     );
     settingsDiv.setAttribute("data-tooltip", t("importExport.settings"));
     settingsDiv.addEventListener("click", () => this.openSettingsDialog());
-    document.getElementById("optionButtons").appendChild(settingsDiv);
+    optionsTarget.appendChild(settingsDiv);
 
     const importDiv = document.createElement("div");
     importDiv.classList.add(
@@ -71,7 +75,7 @@ export class ImportExport {
     importInput.setAttribute("type", "file");
     importInput.addEventListener("change", (e) => this.presenter.readFile(e));
     importDiv.addEventListener("click", () => importInput.click());
-    document.getElementById("optionButtons").appendChild(importDiv);
+    optionsTarget.appendChild(importDiv);
 
     const saveDiv = document.createElement("div");
     saveDiv.classList.add(
@@ -83,7 +87,7 @@ export class ImportExport {
     );
     saveDiv.setAttribute("data-tooltip", t("importExport.save"));
     saveDiv.addEventListener("click", () => this.presenter.saveDialog());
-    document.getElementById("optionButtons").appendChild(saveDiv);
+    optionsTarget.appendChild(saveDiv);
 
     // right now only png export exists, in the future a dialog should be opened
     const exportDiv = document.createElement("div");
@@ -100,7 +104,7 @@ export class ImportExport {
       () => this.exportAsPngWithPackage()
       // this.exportAsPng(this.presenter.getModelTree())
     );
-    document.getElementById("optionButtons").appendChild(exportDiv);
+    optionsTarget.appendChild(exportDiv);
 
     // ugly fix for HTMLToImage package
     // first creation of the image misses the lines in the image
