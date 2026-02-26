@@ -1,5 +1,14 @@
 # Versions
 
+v1.3.2
+
+- multilingual UI support (de, en, fr, es) with browser-language fallback and explicit settings override (#33)
+- custom element color settings tab with persistence and import/export integration (#34)
+- extended and improved web tour flow, including structogram naming guidance (#2)
+- settings/profile and JSON v2 compatibility improvements, plus optional function return type handling (#23)
+- insert shortcuts and UI refinements (#19)
+- documentation refresh (README restructure and contributors update)
+
 v1.3.1
 
 - additional catch-Blocks (#31)
