@@ -3,3 +3,4 @@ build
 /src/assets/scss/_svg.scss
 .vscode
 nohup.out
+OPENCODE_SESSION.md

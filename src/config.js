@@ -15,345 +15,588 @@
  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 class Config {
-  constructor () {
+  constructor() {
     this.data = {
       InsertNode: {
-        color: 'rgb(255,255,243)'
+        color: "rgb(255,255,243)",
       },
       Placeholder: {
-        color: 'rgb(255,255,243)'
+        color: "rgb(255,255,243)",
       },
       InsertCase: {
-        color: 'rgb(250, 218, 209)'
+        color: "rgb(250, 218, 209)",
       },
       InputNode: {
         use: true,
-        id: 'InputButton',
-        text: 'Eingabe-Feld',
-        icon: 'taskIcon',
-        color: 'rgb(253, 237, 206)'
+        id: "InputButton",
+        text: "Eingabe-Feld",
+        icon: "taskIcon",
+        color: "rgb(253, 237, 206)",
       },
       OutputNode: {
         use: true,
-        id: 'OutputButton',
-        text: 'Ausgabe-Feld',
-        icon: 'taskIcon',
-        color: 'rgb(253, 237, 206)'
+        id: "OutputButton",
+        text: "Ausgabe-Feld",
+        icon: "taskIcon",
+        color: "rgb(253, 237, 206)",
       },
       TaskNode: {
         use: true,
-        id: 'TaskButton',
-        text: 'Anweisung',
-        icon: 'taskIcon',
-        color: 'rgb(253, 237, 206)'
+        id: "TaskButton",
+        text: "Anweisung",
+        icon: "taskStatementIcon",
+        color: "rgb(253, 237, 206)",
       },
       CountLoopNode: {
         use: true,
-        id: 'CountLoopButton',
-        text: 'Zählergesteuerte Schleife',
-        icon: 'countLoopIcon',
-        color: 'rgb(220, 239, 231)'
+        id: "CountLoopButton",
+        text: "Zählergesteuerte Schleife",
+        icon: "countLoopIcon",
+        color: "rgb(220, 239, 231)",
       },
       HeadLoopNode: {
         use: true,
-        id: 'HeadLoopButton',
-        text: 'Kopfgesteuerte Schleife',
-        icon: 'countLoopIcon',
-        color: 'rgb(220, 239, 231)'
+        id: "HeadLoopButton",
+        text: "Kopfgesteuerte Schleife",
+        icon: "countLoopIcon",
+        color: "rgb(220, 239, 231)",
       },
       FootLoopNode: {
         use: true,
-        id: 'FootLoopButton',
-        text: 'Fußgesteuerte Schleife',
-        icon: 'footLoopIcon',
-        color: 'rgb(220, 239, 231)'
+        id: "FootLoopButton",
+        text: "Fußgesteuerte Schleife",
+        icon: "footLoopIcon",
+        color: "rgb(220, 239, 231)",
       },
       BranchNode: {
         use: true,
-        id: 'BranchButton',
-        text: 'Verzweigung',
-        icon: 'branchIcon',
-        color: 'rgb(250, 218, 209)'
+        id: "BranchButton",
+        text: "Verzweigung",
+        icon: "branchIcon",
+        color: "rgb(250, 218, 209)",
       },
       CaseNode: {
         use: true,
-        id: 'CaseButton',
-        text: 'Fallunterscheidung',
-        icon: 'caseIcon',
-        color: 'rgb(250, 218, 209)'
+        id: "CaseButton",
+        text: "Fallunterscheidung",
+        icon: "caseIcon",
+        color: "rgb(250, 218, 209)",
       },
       FunctionNode: {
         use: true,
-        id: 'FunctionButton',
-        text: 'Funktionsblock',
-        icon: 'funcIcon',
-        color: 'rgb(255, 255, 255)'
+        id: "FunctionButton",
+        text: "Funktionsblock",
+        icon: "funcIcon",
+        color: "rgb(255, 255, 255)",
       },
       TryCatchNode: {
         use: true,
-        id: 'TryCatchButton',
-        text: 'Try-Catch-Block',
-        icon: 'tryCatchIcon',
-        color: 'rgb(250, 218, 209)'
-      }
-    }
+        id: "TryCatchButton",
+        text: "Try-Catch-Block",
+        icon: "tryCatchIcon",
+        color: "rgb(250, 218, 209)",
+      },
+    };
 
     this.alternatives = {
       python: {
         InsertNode: {
-          color: 'rgb(255,255,243)'
+          color: "rgb(255,255,243)",
         },
         Placeholder: {
-          color: 'rgb(255,255,243)'
+          color: "rgb(255,255,243)",
         },
         InsertCase: {
-          color: 'rgb(250, 218, 209)'
+          color: "rgb(250, 218, 209)",
         },
         InputNode: {
           use: true,
-          id: 'InputButton',
-          text: 'Eingabe-Feld',
-          icon: 'taskIcon',
-          color: 'rgb(253, 237, 206)'
+          id: "InputButton",
+          text: "Eingabe-Feld",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)",
         },
         OutputNode: {
           use: true,
-          id: 'OutputButton',
-          text: 'Ausgabe-Feld',
-          icon: 'taskIcon',
-          color: 'rgb(253, 237, 206)'
+          id: "OutputButton",
+          text: "Ausgabe-Feld",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)",
         },
         TaskNode: {
           use: true,
-          id: 'TaskButton',
-          text: 'Anweisung',
-          icon: 'taskIcon',
-          color: 'rgb(253, 237, 206)'
+          id: "TaskButton",
+          text: "Anweisung",
+          icon: "taskStatementIcon",
+          color: "rgb(253, 237, 206)",
         },
         CountLoopNode: {
           use: false,
-          id: 'CountLoopButton',
-          text: 'Zählergesteuerte Schleife',
-          icon: 'countLoopIcon',
-          color: 'rgb(220, 239, 231)'
+          id: "CountLoopButton",
+          text: "Zählergesteuerte Schleife",
+          icon: "countLoopIcon",
+          color: "rgb(220, 239, 231)",
         },
         HeadLoopNode: {
           use: true,
-          id: 'HeadLoopButton',
-          text: 'Schleife',
-          icon: 'countLoopIcon',
-          color: 'rgb(220, 239, 231)'
+          id: "HeadLoopButton",
+          text: "Schleife",
+          icon: "countLoopIcon",
+          color: "rgb(220, 239, 231)",
         },
         FootLoopNode: {
           use: false,
-          id: 'FootLoopButton',
-          text: 'Fußgesteuerte Schleife',
-          icon: 'footLoopIcon',
-          color: 'rgb(220, 239, 231)'
+          id: "FootLoopButton",
+          text: "Fußgesteuerte Schleife",
+          icon: "footLoopIcon",
+          color: "rgb(220, 239, 231)",
         },
         BranchNode: {
           use: true,
-          id: 'BranchButton',
-          text: 'Verzweigung',
-          icon: 'branchIcon',
-          color: 'rgb(250, 218, 209)'
+          id: "BranchButton",
+          text: "Verzweigung",
+          icon: "branchIcon",
+          color: "rgb(250, 218, 209)",
         },
         CaseNode: {
           use: true,
-          id: 'CaseButton',
-          text: 'Fallunterscheidung',
-          icon: 'caseIcon',
-          color: 'rgb(250, 218, 209)'
+          id: "CaseButton",
+          text: "Fallunterscheidung",
+          icon: "caseIcon",
+          color: "rgb(250, 218, 209)",
         },
         FunctionNode: {
           use: false,
-          id: 'FunctionButton',
-          text: 'Funktionsblock',
-          icon: 'funcIcon',
-          color: 'rgb(255, 255, 255)'
+          id: "FunctionButton",
+          text: "Funktionsblock",
+          icon: "funcIcon",
+          color: "rgb(255, 255, 255)",
         },
         TryCatchNode: {
           use: true,
-          id: 'TryCatchButton',
-          text: 'Try-Catch-Block',
-          icon: 'tryCatchIcon',
-          color: 'rgb(250, 218, 209)'
-        }
+          id: "TryCatchButton",
+          text: "Try-Catch-Block",
+          icon: "tryCatchIcon",
+          color: "rgb(250, 218, 209)",
+        },
       },
       python_func: {
         InsertNode: {
-          color: 'rgb(255,255,243)'
+          color: "rgb(255,255,243)",
         },
         Placeholder: {
-          color: 'rgb(255,255,243)'
+          color: "rgb(255,255,243)",
         },
         InsertCase: {
-          color: 'rgb(250, 218, 209)'
+          color: "rgb(250, 218, 209)",
         },
         InputNode: {
           use: true,
-          id: 'InputButton',
-          text: 'Eingabe-Feld',
-          icon: 'taskIcon',
-          color: 'rgb(253, 237, 206)'
+          id: "InputButton",
+          text: "Eingabe-Feld",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)",
         },
         OutputNode: {
           use: true,
-          id: 'OutputButton',
-          text: 'Ausgabe-Feld',
-          icon: 'taskIcon',
-          color: 'rgb(253, 237, 206)'
+          id: "OutputButton",
+          text: "Ausgabe-Feld",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)",
         },
         TaskNode: {
           use: true,
-          id: 'TaskButton',
-          text: 'Anweisung',
-          icon: 'taskIcon',
-          color: 'rgb(253, 237, 206)'
+          id: "TaskButton",
+          text: "Anweisung",
+          icon: "taskStatementIcon",
+          color: "rgb(253, 237, 206)",
         },
         CountLoopNode: {
-          use: true,
-          id: 'CountLoopButton',
-          text: 'Zählergesteuerte Schleife',
-          icon: 'countLoopIcon',
-          color: 'rgb(220, 239, 231)'
+          use: false,
+          id: "CountLoopButton",
+          text: "Zählergesteuerte Schleife",
+          icon: "countLoopIcon",
+          color: "rgb(220, 239, 231)",
         },
         HeadLoopNode: {
           use: true,
-          id: 'HeadLoopButton',
-          text: 'Kopfgesteuerte Schleife',
-          icon: 'countLoopIcon',
-          color: 'rgb(220, 239, 231)'
+          id: "HeadLoopButton",
+          text: "Schleife",
+          icon: "countLoopIcon",
+          color: "rgb(220, 239, 231)",
         },
         FootLoopNode: {
-          use: true,
-          id: 'FootLoopButton',
-          text: 'Fußgesteuerte Schleife',
-          icon: 'footLoopIcon',
-          color: 'rgb(220, 239, 231)'
+          use: false,
+          id: "FootLoopButton",
+          text: "Fußgesteuerte Schleife",
+          icon: "footLoopIcon",
+          color: "rgb(220, 239, 231)",
         },
         BranchNode: {
           use: true,
-          id: 'BranchButton',
-          text: 'Verzweigung',
-          icon: 'branchIcon',
-          color: 'rgb(250, 218, 209)'
+          id: "BranchButton",
+          text: "Verzweigung",
+          icon: "branchIcon",
+          color: "rgb(250, 218, 209)",
         },
         CaseNode: {
           use: true,
-          id: 'CaseButton',
-          text: 'Fallunterscheidung',
-          icon: 'caseIcon',
-          color: 'rgb(250, 218, 209)'
+          id: "CaseButton",
+          text: "Fallunterscheidung",
+          icon: "caseIcon",
+          color: "rgb(250, 218, 209)",
         },
         FunctionNode: {
           use: true,
-          id: 'FunctionButton',
-          text: 'Funktionsblock',
-          icon: 'funcIcon',
-          color: 'rgb(255, 255, 255)'
+          id: "FunctionButton",
+          text: "Funktionsblock",
+          icon: "funcIcon",
+          color: "rgb(255, 255, 255)",
         },
         TryCatchNode: {
           use: true,
-          id: 'TryCatchButton',
-          text: 'Try-Catch-Block',
-          icon: 'tryCatchIcon',
-          color: 'rgb(250, 218, 209)'
-        }
+          id: "TryCatchButton",
+          text: "Try-Catch-Block",
+          icon: "tryCatchIcon",
+          color: "rgb(250, 218, 209)",
+        },
+      },
+      c: {
+        InsertNode: {
+          color: "rgb(255,255,243)",
+        },
+        Placeholder: {
+          color: "rgb(255,255,243)",
+        },
+        InsertCase: {
+          color: "rgb(250, 218, 209)",
+        },
+        InputNode: {
+          use: true,
+          id: "InputButton",
+          text: "Eingabe-Feld",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)",
+        },
+        OutputNode: {
+          use: true,
+          id: "OutputButton",
+          text: "Ausgabe-Feld",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)",
+        },
+        TaskNode: {
+          use: true,
+          id: "TaskButton",
+          text: "Anweisung",
+          icon: "taskStatementIcon",
+          color: "rgb(253, 237, 206)",
+        },
+        CountLoopNode: {
+          use: true,
+          id: "CountLoopButton",
+          text: "Zählergesteuerte Schleife",
+          icon: "countLoopIcon",
+          color: "rgb(220, 239, 231)",
+        },
+        HeadLoopNode: {
+          use: true,
+          id: "HeadLoopButton",
+          text: "Kopfgesteuerte Schleife",
+          icon: "countLoopIcon",
+          color: "rgb(220, 239, 231)",
+        },
+        FootLoopNode: {
+          use: true,
+          id: "FootLoopButton",
+          text: "Fußgesteuerte Schleife",
+          icon: "footLoopIcon",
+          color: "rgb(220, 239, 231)",
+        },
+        BranchNode: {
+          use: true,
+          id: "BranchButton",
+          text: "Verzweigung",
+          icon: "branchIcon",
+          color: "rgb(250, 218, 209)",
+        },
+        CaseNode: {
+          use: true,
+          id: "CaseButton",
+          text: "Fallunterscheidung",
+          icon: "caseIcon",
+          color: "rgb(250, 218, 209)",
+        },
+        FunctionNode: {
+          use: true,
+          id: "FunctionButton",
+          text: "Funktionsblock",
+          icon: "funcIcon",
+          color: "rgb(255, 255, 255)",
+        },
+        TryCatchNode: {
+          use: false,
+          id: "TryCatchButton",
+          text: "Try-Catch-Block",
+          icon: "tryCatchIcon",
+          color: "rgb(250, 218, 209)",
+        },
+      },
+      beginner: {
+        InsertNode: {
+          color: "rgb(255,255,243)",
+        },
+        Placeholder: {
+          color: "rgb(255,255,243)",
+        },
+        InsertCase: {
+          color: "rgb(250, 218, 209)",
+        },
+        InputNode: {
+          use: true,
+          id: "InputButton",
+          text: "Eingabe-Feld",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)",
+        },
+        OutputNode: {
+          use: true,
+          id: "OutputButton",
+          text: "Ausgabe-Feld",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)",
+        },
+        TaskNode: {
+          use: true,
+          id: "TaskButton",
+          text: "Anweisung",
+          icon: "taskStatementIcon",
+          color: "rgb(253, 237, 206)",
+        },
+        CountLoopNode: {
+          use: false,
+          id: "CountLoopButton",
+          text: "Zählergesteuerte Schleife",
+          icon: "countLoopIcon",
+          color: "rgb(220, 239, 231)",
+        },
+        HeadLoopNode: {
+          use: true,
+          id: "HeadLoopButton",
+          text: "Schleife",
+          icon: "countLoopIcon",
+          color: "rgb(220, 239, 231)",
+        },
+        FootLoopNode: {
+          use: false,
+          id: "FootLoopButton",
+          text: "Fußgesteuerte Schleife",
+          icon: "footLoopIcon",
+          color: "rgb(220, 239, 231)",
+        },
+        BranchNode: {
+          use: true,
+          id: "BranchButton",
+          text: "Verzweigung",
+          icon: "branchIcon",
+          color: "rgb(250, 218, 209)",
+        },
+        CaseNode: {
+          use: false,
+          id: "CaseButton",
+          text: "Fallunterscheidung",
+          icon: "caseIcon",
+          color: "rgb(250, 218, 209)",
+        },
+        FunctionNode: {
+          use: false,
+          id: "FunctionButton",
+          text: "Funktionsblock",
+          icon: "funcIcon",
+          color: "rgb(255, 255, 255)",
+        },
+        TryCatchNode: {
+          use: false,
+          id: "TryCatchButton",
+          text: "Try-Catch-Block",
+          icon: "tryCatchIcon",
+          color: "rgb(250, 218, 209)",
+        },
+      },
+      all: {
+        InsertNode: {
+          color: "rgb(255,255,243)",
+        },
+        Placeholder: {
+          color: "rgb(255,255,243)",
+        },
+        InsertCase: {
+          color: "rgb(250, 218, 209)",
+        },
+        InputNode: {
+          use: true,
+          id: "InputButton",
+          text: "Eingabe-Feld",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)",
+        },
+        OutputNode: {
+          use: true,
+          id: "OutputButton",
+          text: "Ausgabe-Feld",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)",
+        },
+        TaskNode: {
+          use: true,
+          id: "TaskButton",
+          text: "Anweisung",
+          icon: "taskStatementIcon",
+          color: "rgb(253, 237, 206)",
+        },
+        CountLoopNode: {
+          use: true,
+          id: "CountLoopButton",
+          text: "Zählergesteuerte Schleife",
+          icon: "countLoopIcon",
+          color: "rgb(220, 239, 231)",
+        },
+        HeadLoopNode: {
+          use: true,
+          id: "HeadLoopButton",
+          text: "Kopfgesteuerte Schleife",
+          icon: "countLoopIcon",
+          color: "rgb(220, 239, 231)",
+        },
+        FootLoopNode: {
+          use: true,
+          id: "FootLoopButton",
+          text: "Fußgesteuerte Schleife",
+          icon: "footLoopIcon",
+          color: "rgb(220, 239, 231)",
+        },
+        BranchNode: {
+          use: true,
+          id: "BranchButton",
+          text: "Verzweigung",
+          icon: "branchIcon",
+          color: "rgb(250, 218, 209)",
+        },
+        CaseNode: {
+          use: true,
+          id: "CaseButton",
+          text: "Fallunterscheidung",
+          icon: "caseIcon",
+          color: "rgb(250, 218, 209)",
+        },
+        FunctionNode: {
+          use: true,
+          id: "FunctionButton",
+          text: "Funktionsblock",
+          icon: "funcIcon",
+          color: "rgb(255, 255, 255)",
+        },
+        TryCatchNode: {
+          use: true,
+          id: "TryCatchButton",
+          text: "Try-Catch-Block",
+          icon: "tryCatchIcon",
+          color: "rgb(250, 218, 209)",
+        },
       },
       standard: {
         InsertNode: {
-          color: 'rgb(255,255,243)'
+          color: "rgb(255,255,243)",
         },
         Placeholder: {
-          color: 'rgb(255,255,243)'
+          color: "rgb(255,255,243)",
         },
         InsertCase: {
-          color: 'rgb(250, 218, 209)'
+          color: "rgb(250, 218, 209)",
         },
         InputNode: {
           use: true,
-          id: 'InputButton',
-          text: 'Eingabe-Feld',
-          icon: 'taskIcon',
-          color: 'rgb(253, 237, 206)'
+          id: "InputButton",
+          text: "Eingabe-Feld",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)",
         },
         OutputNode: {
           use: true,
-          id: 'OutputButton',
-          text: 'Ausgabe-Feld',
-          icon: 'taskIcon',
-          color: 'rgb(253, 237, 206)'
+          id: "OutputButton",
+          text: "Ausgabe-Feld",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)",
         },
         TaskNode: {
           use: true,
-          id: 'TaskButton',
-          text: 'Anweisung',
-          icon: 'taskIcon',
-          color: 'rgb(253, 237, 206)'
+          id: "TaskButton",
+          text: "Anweisung",
+          icon: "taskStatementIcon",
+          color: "rgb(253, 237, 206)",
         },
         CountLoopNode: {
           use: true,
-          id: 'CountLoopButton',
-          text: 'Zählergesteuerte Schleife',
-          icon: 'countLoopIcon',
-          color: 'rgb(220, 239, 231)'
+          id: "CountLoopButton",
+          text: "Zählergesteuerte Schleife",
+          icon: "countLoopIcon",
+          color: "rgb(220, 239, 231)",
         },
         HeadLoopNode: {
           use: true,
-          id: 'HeadLoopButton',
-          text: 'Kopfgesteuerte Schleife',
-          icon: 'countLoopIcon',
-          color: 'rgb(220, 239, 231)'
+          id: "HeadLoopButton",
+          text: "Kopfgesteuerte Schleife",
+          icon: "countLoopIcon",
+          color: "rgb(220, 239, 231)",
         },
         FootLoopNode: {
           use: true,
-          id: 'FootLoopButton',
-          text: 'Fußgesteuerte Schleife',
-          icon: 'footLoopIcon',
-          color: 'rgb(220, 239, 231)'
+          id: "FootLoopButton",
+          text: "Fußgesteuerte Schleife",
+          icon: "footLoopIcon",
+          color: "rgb(220, 239, 231)",
         },
         BranchNode: {
           use: true,
-          id: 'BranchButton',
-          text: 'Verzweigung',
-          icon: 'branchIcon',
-          color: 'rgb(250, 218, 209)'
+          id: "BranchButton",
+          text: "Verzweigung",
+          icon: "branchIcon",
+          color: "rgb(250, 218, 209)",
         },
         CaseNode: {
           use: true,
-          id: 'CaseButton',
-          text: 'Fallunterscheidung',
-          icon: 'caseIcon',
-          color: 'rgb(250, 218, 209)'
+          id: "CaseButton",
+          text: "Fallunterscheidung",
+          icon: "caseIcon",
+          color: "rgb(250, 218, 209)",
         },
         FunctionNode: {
           use: false,
-          id: 'FunctionButton',
-          text: 'Funktionsblock',
-          icon: 'funcIcon',
-          color: 'rgb(255, 255, 255)'
+          id: "FunctionButton",
+          text: "Funktionsblock",
+          icon: "funcIcon",
+          color: "rgb(255, 255, 255)",
         },
         TryCatchNode: {
           use: false,
-          id: 'TryCatchButton',
-          text: 'Try-Catch-Block',
-          icon: 'tryCatchIcon',
-          color: 'rgb(250, 218, 209)'
-        }
-      }
-    }
+          id: "TryCatchButton",
+          text: "Try-Catch-Block",
+          icon: "tryCatchIcon",
+          color: "rgb(250, 218, 209)",
+        },
+      },
+    };
   }
 
-  get () {
-    return this.data
+  get() {
+    return this.data;
   }
 
-  loadConfig (id) {
+  loadConfig(id) {
     if (id in this.alternatives) {
-      this.data = this.alternatives[id]
+      this.data = this.alternatives[id];
     }
   }
 }
 
-export const config = new Config()
+export const config = new Config();

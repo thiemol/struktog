@@ -13,10 +13,10 @@ header {
 body {
   font: 100% $font-stack;
   max-width: 100vw;
+  min-height: 100vh;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   background-color: rgb(250, 250, 250);
   overflow-x: hidden;
 
@@ -25,15 +25,56 @@ body {
   }
 }
 
+:root {
+  --ui-group-bg: rgba(0, 0, 0, 0.1);
+}
+
 footer {
+  margin-top: auto;
   text-align: center;
   font-size: small;
   padding: 8px;
+  width: 100%;
 }
 
 footer div {
   display: inline-block;
   margin: 0 0.5em;
+}
+
+.footerDonateLink {
+  padding: 0.15em 0.5em;
+  border-radius: 0.35em;
+  background: rgba(255, 204, 0, 0.18);
+  animation: donatePulse 7s ease-in-out infinite;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.footerDonateLink:hover {
+  background: rgba(255, 204, 0, 0.32);
+  transform: translateY(-1px);
+}
+
+@keyframes donatePulse {
+  0%,
+  85%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 204, 0, 0);
+  }
+
+  92% {
+    box-shadow: 0 0 0 0.3em rgba(255, 204, 0, 0.18);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .footerDonateLink {
+    animation: none;
+  }
+
+  .footerDonateLink:hover {
+    transform: none;
+  }
 }
 
 strong {
@@ -110,16 +151,26 @@ strong {
 }
 
 .options-container {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
+  display: block;
+  text-align: right;
+  width: 100%;
+}
+
+.optionButtonsGroup {
+  display: inline-flex;
   align-items: center;
-  justify-content: right;
+  gap: 1.58em;
+  padding: 0.18em 0.3em;
+  border-radius: 0.45em;
+  background: var(--ui-group-bg);
+  margin-right: 1em;
 }
 
 .options-element {
+  display: inline-block;
+  width: 3em;
   height: 3em;
-  flex-basis: 5em;
+  vertical-align: middle;
 }
 
 .hand {
@@ -144,8 +195,11 @@ strong {
 .columnEditorCode {
   margin: 0.2em;
   padding-top: 1em;
+  padding-left: 0.35em;
+  padding-right: 0.35em;
   flex-grow: 0;
   width: 100%;
+  background: var(--ui-group-bg);
 }
 
 @media screen and (min-width: 480px) {
@@ -300,6 +354,15 @@ strong {
   font-size: 1em;
 }
 
+.structoNameContainer {
+  margin: 0.1em auto 0;
+  padding: 0.12em 0.45em;
+  border-radius: 0.45em;
+  background: var(--ui-group-bg);
+  width: fit-content;
+  max-width: calc(100vw - 1em);
+}
+
 .borderWidth {
   flex: 0 0 3px;
 }
@@ -357,4 +420,21 @@ strong {
 
 #structogram {
   border-right: 1px solid black;
+}
+
+#insertButtons {
+  padding: 0;
+}
+
+#struktoOptions1,
+#struktoOptions2 {
+  padding: 0.2em;
+  background: var(--ui-group-bg);
+}
+
+@media screen and (max-width: 600px) {
+  .optionButtonsGroup,
+  .structoNameContainer {
+    border-radius: 0.35em;
+  }
 }

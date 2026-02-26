@@ -22,11 +22,13 @@ import { Presenter } from "./presenter/main";
 import { Structogram } from "./views/structogram";
 import { CodeView } from "./views/code";
 import { ImportExport } from "./views/importExport";
+import { WebTour } from "./views/webtour";
 import {
   generateFooter,
   generateHtmltree,
   highlight,
 } from "./helpers/generator";
+import { initializeI18n, t } from "./i18n";
 
 import "./assets/scss/structog.scss";
 
@@ -50,6 +52,8 @@ function registerServiceWorker() {
 }
 
 window.onload = function () {
+  let configId = null;
+  initializeI18n();
   // manipulate the localStorage before loading the presenter
   if (typeof Storage !== "undefined") {
     const url = new URL(window.location.href);
@@ -62,12 +66,35 @@ window.onload = function () {
           presenter.readUrl(json);
         });
     }
-    const configId = url.searchParams.get("config");
+    configId = url.searchParams.get("config");
     config.loadConfig(configId);
   }
 
   generateHtmltree();
   generateFooter();
+
+  const footerSpan = document.querySelector("footer .column span");
+  if (footerSpan) {
+    const donateLink = document.createElement("div");
+    donateLink.classList.add(
+      "hand",
+      "tooltip",
+      "tooltip-top",
+      "footerDonateLink"
+    );
+    donateLink.appendChild(document.createTextNode(t("nav.donate")));
+    donateLink.setAttribute("data-tooltip", t("nav.donateTooltip"));
+    donateLink.addEventListener("click", () => {
+      window.open(
+        "https://www.paypal.com/donate?hosted_button_id=5ZRTXH9NUJG5U",
+        "_blank"
+      );
+    });
+
+    footerSpan.appendChild(document.createTextNode("|"));
+    footerSpan.appendChild(donateLink);
+  }
+
   // create presenter object
   const presenter = new Presenter(model);
   // TODO: this should not be necessary, but some functions depend on moveId and nextInsertElement
@@ -89,6 +116,18 @@ window.onload = function () {
     document.getElementById("Export")
   );
   presenter.addView(importExport);
+
+  const webTour = new WebTour();
+  webTour.bindTrigger("#tourInfoButton");
+
+  const hasConfigOverride = Boolean(configId);
+  if (hasConfigOverride) {
+    presenter.setActiveConfigProfile(configId);
+  }
+  presenter.applySettings(presenter.getStoredSettings(hasConfigOverride), {
+    persist: false,
+    rerender: false,
+  });
 
   presenter.init();
 

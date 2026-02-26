@@ -18,12 +18,30 @@
 import { config } from "../config.js";
 import { generateResetButton } from "../helpers/generator";
 import { newElement } from "../helpers/domBuilding";
+import {
+  getContentDefault,
+  getNodeLabel,
+  isContentDefaultValue,
+  t,
+} from "../i18n";
 
 export class Structogram {
   constructor(presenter, domRoot) {
     this.presenter = presenter;
     this.domRoot = domRoot;
     this.size = 7;
+    this.insertShortcuts = {
+      Digit1: "InputButton",
+      Digit2: "OutputButton",
+      Digit3: "TaskButton",
+      Digit4: "CountLoopButton",
+      Digit5: "HeadLoopButton",
+      Digit6: "FootLoopButton",
+      Digit7: "BranchButton",
+      Digit8: "CaseButton",
+      Digit9: "TryCatchButton",
+      Digit0: "FunctionButton",
+    };
     this.buttonList = [
       "InputNode",
       "OutputNode",
@@ -37,7 +55,58 @@ export class Structogram {
       "FunctionNode",
     ];
 
+    this.registerInsertShortcuts();
     this.preRender();
+  }
+
+  registerInsertShortcuts() {
+    document.addEventListener("keydown", (event) =>
+      this.handleInsertShortcut(event)
+    );
+  }
+
+  handleInsertShortcut(event) {
+    if (!this.presenter.getShortcutsEnabled()) {
+      return;
+    }
+
+    if (!event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
+      return;
+    }
+
+    const activeElement = document.activeElement;
+    if (
+      activeElement &&
+      (activeElement.tagName === "INPUT" ||
+        activeElement.tagName === "TEXTAREA" ||
+        activeElement.isContentEditable)
+    ) {
+      return;
+    }
+
+    const modal = document.getElementById("IEModal");
+    if (modal && modal.classList.contains("active")) {
+      return;
+    }
+
+    const buttonId = this.insertShortcuts[event.code];
+    if (!buttonId || !document.getElementById(buttonId)) {
+      return;
+    }
+
+    event.preventDefault();
+    this.presenter.insertNode(buttonId, event);
+  }
+
+  getShortcutLabel(buttonId) {
+    for (const [shortcutKey, mappedButtonId] of Object.entries(
+      this.insertShortcuts
+    )) {
+      if (mappedButtonId === buttonId) {
+        return "Alt+" + shortcutKey.slice(-1);
+      }
+    }
+    return "";
   }
 
   preRender() {
@@ -47,11 +116,12 @@ export class Structogram {
     // divHeader.classList.add('elementButtonColumns');
     const spanHeader = document.createElement("strong");
     spanHeader.classList.add("margin-small");
-    spanHeader.appendChild(document.createTextNode("Element wählen:"));
+    spanHeader.appendChild(document.createTextNode(t("editor.chooseElement")));
     divHeader.appendChild(spanHeader);
     divInsert.appendChild(divHeader);
 
     const divButtons = document.createElement("div");
+    divButtons.id = "insertButtons";
     divButtons.classList.add("container", "justify-center");
     for (const item of this.buttonList) {
       if (config.get()[item].use) {
@@ -64,7 +134,7 @@ export class Structogram {
     divEditorHeadline.classList.add("columnEditorFull", "headerContainer");
     const editorHeadline = document.createElement("strong");
     editorHeadline.classList.add("margin-small", "floatBottom");
-    editorHeadline.appendChild(document.createTextNode("Editor:"));
+    editorHeadline.appendChild(document.createTextNode(t("editor.heading")));
     divEditorHeadline.appendChild(editorHeadline);
 
     const optionsContainer1 = document.createElement("div");
@@ -91,6 +161,7 @@ export class Structogram {
     divWorkingArea.classList.add("columnAuto");
     divWorkingArea.id = "structogram";
 
+    divEditorContent.appendChild(divEditorHeadline);
     divEditorContent.appendChild(divEditorContentSplitTop);
     divEditorContentSplitTop.appendChild(divWorkingArea);
     divEditorContentSplitTop.appendChild(divFixRightBorder);
@@ -101,7 +172,6 @@ export class Structogram {
 
     this.domRoot.appendChild(divInsert);
     this.domRoot.appendChild(editorOptions);
-    this.domRoot.appendChild(divEditorHeadline);
     this.domRoot.appendChild(divEditorContent);
 
     const codeAndOptions = document.createElement("div");
@@ -138,7 +208,7 @@ export class Structogram {
       "tooltip-bottom",
       "hand"
     );
-    undo.setAttribute("data-tooltip", "Undo");
+    undo.setAttribute("data-tooltip", t("common.undo"));
     domNode.appendChild(undo);
     const undoOverlay = document.createElement("div");
     undoOverlay.classList.add(
@@ -158,7 +228,7 @@ export class Structogram {
       "tooltip-bottom",
       "hand"
     );
-    redo.setAttribute("data-tooltip", "Redo");
+    redo.setAttribute("data-tooltip", t("common.redo"));
     domNode.appendChild(redo);
     const redoOverlay = document.createElement("div");
     redoOverlay.classList.add(
@@ -173,9 +243,21 @@ export class Structogram {
 
   createButton(button) {
     const div = document.createElement("div");
-    div.classList.add("columnInput", "insertButton", "hand");
+    div.classList.add(
+      "columnInput",
+      "insertButton",
+      "hand",
+      "tooltip",
+      "tooltip-bottom"
+    );
     div.style.backgroundColor = config.get()[button].color;
     div.id = config.get()[button].id;
+    const shortcutLabel = this.getShortcutLabel(div.id);
+    const buttonLabel = getNodeLabel(button);
+    const tooltipText = shortcutLabel
+      ? buttonLabel + " (" + shortcutLabel + ")"
+      : buttonLabel;
+    div.setAttribute("data-tooltip", tooltipText);
     div.draggable = "true";
     div.addEventListener("click", (event) =>
       this.presenter.insertNode(config.get()[button].id, event)
@@ -185,7 +267,7 @@ export class Structogram {
     );
     div.addEventListener("dragend", () => this.presenter.resetDrop());
     const spanText = document.createElement("span");
-    spanText.appendChild(document.createTextNode(config.get()[button].text));
+    spanText.appendChild(document.createTextNode(buttonLabel));
     const divIcon = document.createElement("div");
     divIcon.classList.add(config.get()[button].icon, "buttonLogo");
 
@@ -194,7 +276,25 @@ export class Structogram {
     return div;
   }
 
+  refreshInsertButtons() {
+    const divButtons = document.getElementById("insertButtons");
+    if (!divButtons) {
+      return;
+    }
+
+    while (divButtons.hasChildNodes()) {
+      divButtons.removeChild(divButtons.lastChild);
+    }
+
+    for (const item of this.buttonList) {
+      if (config.get()[item].use) {
+        divButtons.appendChild(this.createButton(item));
+      }
+    }
+  }
+
   render(tree) {
+    this.refreshInsertButtons();
     // remove content
     while (this.domRoot.hasChildNodes()) {
       this.domRoot.removeChild(this.domRoot.lastChild);
@@ -228,7 +328,8 @@ export class Structogram {
     fieldSize,
     placeHolder,
     uid,
-    content = null
+    content = null,
+    headerEditType = "funcname"
   ) {
     // add text from input field as span-element to the header-div
     const textNodeSpan = document.createElement("span");
@@ -258,7 +359,7 @@ export class Structogram {
       );
       removeParamBtn.style.minWidth = "1.2em";
       removeParamBtn.style.border = "none";
-      removeParamBtn.setAttribute("data-tooltip", "Entfernen");
+      removeParamBtn.setAttribute("data-tooltip", t("common.remove"));
       removeParamBtn.addEventListener("click", () => {
         this.presenter.removeParamFromParameters(pos);
       });
@@ -326,7 +427,11 @@ export class Structogram {
       inputAccept.addEventListener("click", () => {
         // update function name and function parameters in the model tree
         if (divContainer.classList.contains("func-box-header")) {
-          this.presenter.editElement(uid, inputElement.value, "funcname|");
+          this.presenter.editElement(
+            uid,
+            inputElement.value,
+            headerEditType + "|"
+          );
         } else {
           this.presenter.editElement(
             uid,
@@ -357,7 +462,11 @@ export class Structogram {
 
           // update function name and function parameters in the model tree
           if (divContainer.classList.contains("func-box-header")) {
-            this.presenter.editElement(uid, inputElement.value, "funcname|");
+            this.presenter.editElement(
+              uid,
+              inputElement.value,
+              headerEditType + "|"
+            );
           } else {
             this.presenter.editElement(
               uid,
@@ -429,7 +538,7 @@ export class Structogram {
    * @param    funcParams         variable names of the function parameters
    * Return a function header with function name and parameters for editing
    */
-  renderFunctionBox(uid, content, funcParams) {
+  renderFunctionBox(uid, content, funcParams, returnType = "") {
     // field attributes... ff: function name... fp: parameter name
     // size is field length
     const ffSize = 15;
@@ -479,25 +588,22 @@ export class Structogram {
     );
     addParamBtn.style.marginTop = "auto";
     addParamBtn.style.marginBottom = "auto";
-    addParamBtn.setAttribute("data-tooltip", "Parameter hinzufügen");
-    addParamBtn.addEventListener("click", () => {
+    addParamBtn.type = "button";
+    addParamBtn.setAttribute("data-tooltip", t("common.addParameter"));
+    addParamBtn.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
       addParamBtn.remove();
-      const countParam =
-        document.getElementsByClassName("function-elem").length - 1;
+      const countParam = paramDiv.querySelectorAll(".function-elem").length;
       this.renderParam(countParam, paramDiv, spacingSize, fpSize, uid);
-    });
-
-    // show adding-parameters-button when hovering
-    functionBoxHeaderDiv.addEventListener("mouseover", () => {
       paramDiv.appendChild(addParamBtn);
     });
-
-    functionBoxHeaderDiv.addEventListener("mouseleave", () => {
-      addParamBtn.remove();
-    });
+    paramDiv.appendChild(addParamBtn);
 
     // add all box header elements
-    functionBoxHeaderDiv.appendChild(document.createTextNode("function"));
+    functionBoxHeaderDiv.appendChild(
+      document.createTextNode(getContentDefault("functionKeyword"))
+    );
     functionBoxHeaderDiv.appendChild(this.createSpacing(2 * spacingSize));
     functionBoxHeaderDiv.appendChild(
       this.createFunctionHeaderTextEl(
@@ -512,6 +618,20 @@ export class Structogram {
     functionBoxHeaderDiv.appendChild(document.createTextNode("("));
     functionBoxHeaderDiv.appendChild(paramDiv);
     functionBoxHeaderDiv.appendChild(document.createTextNode(")"));
+    functionBoxHeaderDiv.appendChild(this.createSpacing(spacingSize));
+    functionBoxHeaderDiv.appendChild(document.createTextNode("->"));
+    functionBoxHeaderDiv.appendChild(this.createSpacing(spacingSize));
+    functionBoxHeaderDiv.appendChild(
+      this.createFunctionHeaderTextEl(
+        functionBoxHeaderDiv,
+        9,
+        fpSize,
+        getContentDefault("returnTypePlaceholder"),
+        uid,
+        returnType,
+        "returntype"
+      )
+    );
     functionBoxHeaderDiv.appendChild(this.createSpacing(spacingSize));
     functionBoxHeaderDiv.appendChild(document.createTextNode("{"));
     const spacer = document.createElement("div");
@@ -583,7 +703,7 @@ export class Structogram {
                     const bold = document.createElement("strong");
                     bold.classList.add("moveText");
                     bold.appendChild(
-                      document.createTextNode("Verschieben abbrechen")
+                      document.createTextNode(t("common.moveCancel"))
                     );
                     div.appendChild(bold);
                   } else {
@@ -634,7 +754,7 @@ export class Structogram {
                       const bold = document.createElement("strong");
                       bold.classList.add("moveText");
                       bold.appendChild(
-                        document.createTextNode("Verschieben abbrechen")
+                        document.createTextNode(t("common.moveCancel"))
                       );
                       div.appendChild(bold);
                     } else {
@@ -767,7 +887,9 @@ export class Structogram {
             "text-left",
             "bottomHeader"
           );
-          divHeaderTrue.appendChild(document.createTextNode("Wahr"));
+          divHeaderTrue.appendChild(
+            document.createTextNode(t("editor.trueLabel"))
+          );
 
           const divHeaderFalse = document.createElement("div");
           divHeaderFalse.classList.add(
@@ -775,7 +897,9 @@ export class Structogram {
             "text-right",
             "bottomHeader"
           );
-          divHeaderFalse.appendChild(document.createTextNode("Falsch"));
+          divHeaderFalse.appendChild(
+            document.createTextNode(t("editor.falseLabel"))
+          );
 
           divHeadBottom.appendChild(divHeaderTrue);
           divHeadBottom.appendChild(divHeaderFalse);
@@ -836,7 +960,9 @@ export class Structogram {
           const optionDiv = this.createOptionDiv(subTree.type, subTree.id);
           divTry.appendChild(optionDiv);
           const textTry = newElement("div", ["symbol"], divTry);
-          textTry.appendChild(document.createTextNode("Try"));
+          textTry.appendChild(
+            document.createTextNode(getContentDefault("tryLabel"))
+          );
 
           const divTryContent = newElement(
             "div",
@@ -885,7 +1011,9 @@ export class Structogram {
               divCatch.appendChild(optionDiv);
             }
             const textCatch = newElement("div", ["symbol"], divCatch);
-            textCatch.appendChild(document.createTextNode("Catch"));
+            textCatch.appendChild(
+              document.createTextNode(getContentDefault("catchLabel"))
+            );
 
             const textDiv = this.createTextDiv(
               catchElem.type,
@@ -975,7 +1103,8 @@ export class Structogram {
           const divFunctionHeader = this.renderFunctionBox(
             subTree.id,
             subTree.text,
-            subTree.parameters
+            subTree.parameters,
+            subTree.returnType || ""
           );
 
           const divHead = document.createElement("div");
@@ -1252,7 +1381,9 @@ export class Structogram {
     const title = document.createElement("strong");
     title.appendChild(
       document.createTextNode(
-        "Einstellungen der " + config.get().CaseNode.text + ": "
+        t("editor.caseSettingsTitle", {
+          node: getNodeLabel("CaseNode"),
+        })
       )
     );
     content.appendChild(title);
@@ -1266,7 +1397,9 @@ export class Structogram {
     content.appendChild(list);
     const caseNumberTitle = document.createElement("dt");
     caseNumberTitle.classList.add("dtItem");
-    caseNumberTitle.appendChild(document.createTextNode("Anzahl der Fälle:"));
+    caseNumberTitle.appendChild(
+      document.createTextNode(t("editor.numberOfCases"))
+    );
     list.appendChild(caseNumberTitle);
     const caseNumber = document.createElement("dd");
     caseNumber.classList.add("ddItem", "container");
@@ -1287,13 +1420,13 @@ export class Structogram {
       this.presenter.addCase(uid);
       this.openCaseOptions(uid);
     });
-    addCase.setAttribute("data-tooltip", "Fall hinzufügen");
+    addCase.setAttribute("data-tooltip", t("common.addCase"));
     caseNumber.appendChild(addCase);
 
     const defaultOnTitle = document.createElement("dt");
     defaultOnTitle.classList.add("dtItem");
     defaultOnTitle.appendChild(
-      document.createTextNode("Sonst Zweig einschalten:")
+      document.createTextNode(t("editor.enableDefaultBranch"))
     );
     list.appendChild(defaultOnTitle);
     const defaultOn = document.createElement("dd");
@@ -1308,7 +1441,7 @@ export class Structogram {
     defaultNo.setAttribute("data-abbr", "N");
     defaultOn.appendChild(defaultNo);
     const defaultNoText = document.createElement("span");
-    defaultNoText.appendChild(document.createTextNode("Nein"));
+    defaultNoText.appendChild(document.createTextNode(t("common.no")));
     defaultNo.appendChild(defaultNoText);
     const switchDefault = document.createElement("div");
     switchDefault.classList.add("hand", "caseOptionsIcons");
@@ -1323,12 +1456,12 @@ export class Structogram {
     defaultYes.setAttribute("data-abbr", "J");
     defaultOn.appendChild(defaultYes);
     const defaultYesText = document.createElement("span");
-    defaultYesText.appendChild(document.createTextNode("Ja"));
+    defaultYesText.appendChild(document.createTextNode(t("common.yes")));
     defaultYes.appendChild(defaultYesText);
 
     const cancelButton = document.createElement("div");
     cancelButton.classList.add("modal-buttons", "hand");
-    cancelButton.appendChild(document.createTextNode("Schließen"));
+    cancelButton.appendChild(document.createTextNode(t("common.close")));
     cancelButton.addEventListener("click", () =>
       document.getElementById("IEModal").classList.remove("active")
     );
@@ -1351,7 +1484,9 @@ export class Structogram {
     const title = document.createElement("strong");
     title.appendChild(
       document.createTextNode(
-        "Einstellungen des " + config.get().TryCatchNode.text + "s : "
+        t("editor.tryCatchSettingsTitle", {
+          node: getNodeLabel("TryCatchNode"),
+        })
       )
     );
 
@@ -1361,7 +1496,7 @@ export class Structogram {
     const caseNumberTitle = document.createElement("dt");
     caseNumberTitle.classList.add("dtItem");
     caseNumberTitle.appendChild(
-      document.createTextNode("Anzahl der Catch-Blöcke:")
+      document.createTextNode(t("editor.numberOfCatches"))
     );
     list.appendChild(caseNumberTitle);
     const caseNumber = document.createElement("dd");
@@ -1383,7 +1518,7 @@ export class Structogram {
       this.presenter.addCatch(uid);
       this.openTryCatchOptions(uid);
     });
-    addCase.setAttribute("data-tooltip", "Catch hinzufügen");
+    addCase.setAttribute("data-tooltip", t("common.addCatch"));
     caseNumber.appendChild(addCase);
 
     const defaultOnTitle = document.createElement("dt");
@@ -1405,7 +1540,7 @@ export class Structogram {
     defaultNo.setAttribute("data-abbr", "N");
     defaultOn.appendChild(defaultNo);
     const defaultNoText = document.createElement("span");
-    defaultNoText.appendChild(document.createTextNode("Nein"));
+    defaultNoText.appendChild(document.createTextNode(t("common.no")));
     defaultNo.appendChild(defaultNoText);
     const switchDefault = document.createElement("div");
     switchDefault.classList.add("hand", "caseOptionsIcons");
@@ -1420,12 +1555,12 @@ export class Structogram {
     defaultYes.setAttribute("data-abbr", "J");
     defaultOn.appendChild(defaultYes);
     const defaultYesText = document.createElement("span");
-    defaultYesText.appendChild(document.createTextNode("Ja"));
+    defaultYesText.appendChild(document.createTextNode(t("common.yes")));
     defaultYes.appendChild(defaultYesText);
 
     const cancelButton = document.createElement("div");
     cancelButton.classList.add("modal-buttons", "hand");
-    cancelButton.appendChild(document.createTextNode("Schließen"));
+    cancelButton.appendChild(document.createTextNode(t("common.close")));
     cancelButton.addEventListener("click", () =>
       document.getElementById("IEModal").classList.remove("active")
     );
@@ -1456,7 +1591,7 @@ export class Structogram {
         "tooltip",
         "tooltip-bottoml"
       );
-      caseOptions.setAttribute("data-tooltip", "Einstellung");
+      caseOptions.setAttribute("data-tooltip", t("common.settings"));
       caseOptions.addEventListener("click", () => this.openCaseOptions(uid));
       optionDiv.appendChild(caseOptions);
     }
@@ -1470,7 +1605,7 @@ export class Structogram {
         "tooltip",
         "tooltip-bottoml"
       );
-      tryCatchOptions.setAttribute("data-tooltip", "Einstellung");
+      tryCatchOptions.setAttribute("data-tooltip", t("common.settings"));
       tryCatchOptions.addEventListener("click", () =>
         this.openTryCatchOptions(uid)
       );
@@ -1489,7 +1624,7 @@ export class Structogram {
       moveElem.classList.add("hand");
       moveElem.classList.add("tooltip");
       moveElem.classList.add("tooltip-bottoml");
-      moveElem.setAttribute("data-tooltip", "Verschieben");
+      moveElem.setAttribute("data-tooltip", t("common.move"));
       moveElem.addEventListener("click", () => this.presenter.moveElement(uid));
       optionDiv.appendChild(moveElem);
     }
@@ -1501,7 +1636,7 @@ export class Structogram {
     deleteElem.classList.add("hand");
     deleteElem.classList.add("tooltip");
     deleteElem.classList.add("tooltip-bottoml");
-    deleteElem.setAttribute("data-tooltip", "Entfernen");
+    deleteElem.setAttribute("data-tooltip", t("common.remove"));
     deleteElem.addEventListener("click", () =>
       this.presenter.removeElement(uid)
     );
@@ -1563,10 +1698,10 @@ export class Structogram {
     // some types need additional text or a different position
     switch (type) {
       case "InputNode":
-        content = "E: " + content;
+        content = getContentDefault("inputPrefix") + ": " + content;
         break;
       case "OutputNode":
-        content = "A: " + content;
+        content = getContentDefault("outputPrefix") + ": " + content;
         break;
       case "BranchNode":
       case "InsertCase":
@@ -1582,7 +1717,9 @@ export class Structogram {
     // innerTextDiv.classList.add('column');
     // innerTextDiv.classList.add('col-12');
     // special handling for the default case of case nodes
-    if (!(type === "InsertCase" && content === "Sonst")) {
+    if (
+      !(type === "InsertCase" && isContentDefaultValue(content, "elseLabel"))
+    ) {
       innerTextDiv.classList.add("padding");
       if (!this.presenter.getInsertMode()) {
         innerTextDiv.classList.add("hand", "fullHeight");
@@ -1735,7 +1872,7 @@ export class Structogram {
                 ) {
                   const bold = document.createElement("strong");
                   bold.appendChild(
-                    document.createTextNode("Verschieben abbrechen")
+                    document.createTextNode(t("common.moveCancel"))
                   );
                   text.appendChild(bold);
                 } else {
@@ -1857,13 +1994,17 @@ export class Structogram {
           const divSubHeaderTrue = document.createElement("div");
           divSubHeaderTrue.classList.add("column");
           divSubHeaderTrue.classList.add("col-6");
-          divSubHeaderTrue.appendChild(document.createTextNode("Wahr"));
+          divSubHeaderTrue.appendChild(
+            document.createTextNode(t("editor.trueLabel"))
+          );
 
           const divSubHeaderFalse = document.createElement("div");
           divSubHeaderFalse.classList.add("column");
           divSubHeaderFalse.classList.add("col-6");
           divSubHeaderFalse.classList.add("text-right");
-          divSubHeaderFalse.appendChild(document.createTextNode("Falsch"));
+          divSubHeaderFalse.appendChild(
+            document.createTextNode(t("editor.falseLabel"))
+          );
 
           divSubHeader.appendChild(divSubHeaderTrue);
           divSubHeader.appendChild(divSubHeaderFalse);
