@@ -8,10 +8,19 @@ const CopyPlugin = require("copy-webpack-plugin");
 const { GenerateSW } = require("workbox-webpack-plugin");
 const gameRoot = process.cwd();
 const Webpack = require("webpack");
+const packageVersion = require("./package.json").version;
 
 function resolveBuildIdentifier() {
   if (process.env.CI_COMMIT_TAG) {
     return process.env.CI_COMMIT_TAG;
+  }
+
+  const branchName =
+    process.env.CI_COMMIT_BRANCH || process.env.CI_COMMIT_REF_NAME || "";
+  const defaultBranch = process.env.CI_DEFAULT_BRANCH || "master";
+
+  if (branchName !== "" && branchName === defaultBranch) {
+    return `v${packageVersion}`;
   }
 
   if (process.env.CI_COMMIT_SHORT_SHA) {
