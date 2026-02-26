@@ -111,6 +111,36 @@
   width: 100%;
 }
 
+.settingsTabs {
+  display: flex;
+  gap: 0.4em;
+  margin-bottom: 0.8em;
+}
+
+.settingsTabButton {
+  flex: 1;
+  border: 0.08em solid rgb(38, 64, 64);
+  border-radius: 0.3em;
+  background: rgb(250, 238, 214);
+  color: rgb(38, 64, 64);
+  padding: 0.35em 0.55em;
+  font-size: 1em;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.settingsTabButton.active {
+  background: rgb(240, 211, 161);
+}
+
+.settingsTabPanel {
+  display: none;
+}
+
+.settingsTabPanel.active {
+  display: block;
+}
+
 .settingsGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -130,18 +160,95 @@
   color: rgb(38, 64, 64);
 }
 
+.settingsColorGroup {
+  border: 0.08em solid rgba(38, 64, 64, 0.25);
+  border-radius: 0.35em;
+  padding: 0.55em;
+  margin-bottom: 0.7em;
+}
+
+.settingsColorGroupHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.4em;
+  margin-bottom: 0.4em;
+}
+
+.settingsColorSyncButton {
+  border: 0.08em solid rgb(38, 64, 64);
+  border-radius: 0.28em;
+  background: rgb(253, 237, 206);
+  color: rgb(38, 64, 64);
+  padding: 0.18em 0.5em;
+  cursor: pointer;
+  font-size: 0.85em;
+}
+
+.settingsColorResetButton {
+  width: 100%;
+  border: 0.08em solid rgb(38, 64, 64);
+  border-radius: 0.3em;
+  background: rgb(250, 238, 214);
+  color: rgb(38, 64, 64);
+  padding: 0.35em 0.55em;
+  cursor: pointer;
+  font-weight: bold;
+  margin-bottom: 0.7em;
+}
+
+.settingsColorRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.45em;
+  margin-bottom: 0.3em;
+  color: rgb(38, 64, 64);
+}
+
+.settingsColorInput {
+  width: 2.3em;
+  height: 1.5em;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.settingsColorValue {
+  font-family: monospace;
+  min-width: 5.6em;
+  text-align: right;
+}
+
+@media screen and (max-width: 600px) {
+  .settingsColorGroupHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .settingsColorRow {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .settingsColorValue {
+    grid-column: 1 / span 2;
+    text-align: left;
+  }
+}
+
 .settingsActionButton {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 5.2em;
-  padding: 0 0.9em;
+  padding: 0.35em 0.55em;
+  min-height: auto;
   border: 0.1em solid rgb(38, 64, 64);
-  border-radius: 0.35em;
-  min-height: 1.8em;
+  border-radius: 0.3em;
   text-align: center;
-  background: rgb(253, 237, 206);
+  background: rgb(250, 238, 214);
   color: rgb(38, 64, 64);
+  font-size: 1em;
   font-weight: bold;
   box-shadow: 0 0.08em 0 rgba(38, 64, 64, 0.25);
 }
@@ -154,8 +261,14 @@
 }
 
 .settingsFooter .modal-buttons {
-  flex: 0 0 auto;
+  flex: 1 1 0;
   margin: 0;
+  min-height: auto;
+}
+
+.modal-container .modal-footer.settingsFooter .settingsActionButton {
+  min-height: unset;
+  line-height: normal;
 }
 
 .settingsActionButton:hover {

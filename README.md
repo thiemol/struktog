@@ -55,7 +55,7 @@ Weitere Profile:
 Beim Speichern wird eine JSON-Datei erzeugt.
 
 - Neuere Exporte enthalten `formatVersion`, `meta`, `settings` und `tree`.
-- Beim Laden werden diese Einstellungen (Profil, sichtbare Elemente, Sprache, Quellcode-Sichtbarkeit, Shortcuts) automatisch wiederhergestellt.
+- Beim Laden werden diese Einstellungen (Profil, sichtbare Elemente, Elementfarben, Sprache, Quellcode-Sichtbarkeit, Shortcuts) automatisch wiederhergestellt.
 - Aeltere Exportdateien, die nur den Baum (`tree`) enthalten, bleiben weiterhin kompatibel und koennen unveraendert eingelesen werden.
 
 Der Bildexport erzeugt weiterhin eine PNG-Datei der aktuellen Darstellung.

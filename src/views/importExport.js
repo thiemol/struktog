@@ -1046,12 +1046,55 @@ export class ImportExport {
     }
   }
 
+  normalizeHexColor(colorValue) {
+    if (typeof colorValue !== "string") {
+      return "#ffffff";
+    }
+
+    const trimmedValue = colorValue.trim();
+    const hexMatch = trimmedValue.match(/^#([\da-fA-F]{3}|[\da-fA-F]{6})$/);
+    if (hexMatch) {
+      if (trimmedValue.length === 4) {
+        return (
+          "#" +
+          trimmedValue[1] +
+          trimmedValue[1] +
+          trimmedValue[2] +
+          trimmedValue[2] +
+          trimmedValue[3] +
+          trimmedValue[3]
+        ).toLowerCase();
+      }
+      return trimmedValue.toLowerCase();
+    }
+
+    const rgbMatch = trimmedValue.match(
+      /^rgb\s*\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/i
+    );
+    if (!rgbMatch) {
+      return "#ffffff";
+    }
+
+    const channels = rgbMatch.slice(1).map((item) => Number(item));
+    if (
+      channels.some(
+        (channel) => Number.isNaN(channel) || channel < 0 || channel > 255
+      )
+    ) {
+      return "#ffffff";
+    }
+
+    const toHex = (channel) => channel.toString(16).padStart(2, "0");
+    return "#" + channels.map((channel) => toHex(channel)).join("");
+  }
+
   openSettingsDialog() {
     const { content, footer } = this.clearModal();
     footer.classList.add("settingsFooter");
     const settings = {
       profile: this.presenter.getActiveConfigProfile(),
       elements: this.presenter.getSettingsElements(),
+      colors: this.presenter.getSettingsColors(),
       language: this.presenter.getCodeLanguage(),
       displaySourcecode: this.presenter.getSourcecodeDisplay(),
       shortcutsEnabled: this.presenter.getShortcutsEnabled(),
@@ -1061,6 +1104,41 @@ export class ImportExport {
     title.classList.add("settingsTitle");
     title.appendChild(document.createTextNode("Einstellungen"));
     content.appendChild(title);
+
+    const tabList = document.createElement("div");
+    tabList.classList.add("settingsTabs");
+
+    const generalTabButton = document.createElement("button");
+    generalTabButton.type = "button";
+    generalTabButton.classList.add("settingsTabButton", "active");
+    generalTabButton.appendChild(document.createTextNode("Allgemein"));
+
+    const colorTabButton = document.createElement("button");
+    colorTabButton.type = "button";
+    colorTabButton.classList.add("settingsTabButton");
+    colorTabButton.appendChild(document.createTextNode("Farben"));
+
+    tabList.appendChild(generalTabButton);
+    tabList.appendChild(colorTabButton);
+    content.appendChild(tabList);
+
+    const generalPanel = document.createElement("div");
+    generalPanel.classList.add("settingsTabPanel", "active");
+    const colorPanel = document.createElement("div");
+    colorPanel.classList.add("settingsTabPanel");
+    content.appendChild(generalPanel);
+    content.appendChild(colorPanel);
+
+    const setActiveTab = (tabId) => {
+      const showGeneral = tabId === "general";
+      generalTabButton.classList.toggle("active", showGeneral);
+      colorTabButton.classList.toggle("active", !showGeneral);
+      generalPanel.classList.toggle("active", showGeneral);
+      colorPanel.classList.toggle("active", !showGeneral);
+    };
+
+    generalTabButton.addEventListener("click", () => setActiveTab("general"));
+    colorTabButton.addEventListener("click", () => setActiveTab("colors"));
 
     const profileContainer = document.createElement("div");
     profileContainer.classList.add("settingsGroup");
@@ -1083,7 +1161,7 @@ export class ImportExport {
       profileSelect.appendChild(option);
     }
     profileContainer.appendChild(profileSelect);
-    content.appendChild(profileContainer);
+    generalPanel.appendChild(profileContainer);
 
     const elementsContainer = document.createElement("div");
     elementsContainer.classList.add("settingsGroup");
@@ -1094,7 +1172,150 @@ export class ImportExport {
     elementsGrid.classList.add("settingsGrid");
     this.renderSettingsElements(elementsGrid, settings.elements);
     elementsContainer.appendChild(elementsGrid);
-    content.appendChild(elementsContainer);
+    generalPanel.appendChild(elementsContainer);
+
+    const elementLabels = {};
+    for (const element of settings.elements) {
+      elementLabels[element.key] = element.text;
+    }
+
+    const colorGroups = [
+      {
+        title: "Ein- und Ausgabe",
+        keys: ["InputNode", "OutputNode", "TaskNode"],
+      },
+      {
+        title: "Schleifen",
+        keys: ["CountLoopNode", "HeadLoopNode", "FootLoopNode"],
+      },
+      {
+        title: "Verzweigungen und Fehlerbehandlung",
+        keys: ["BranchNode", "CaseNode", "TryCatchNode"],
+      },
+      {
+        title: "Funktionen",
+        keys: ["FunctionNode"],
+      },
+    ];
+
+    const colorInputMap = {};
+    const colorValueMap = {};
+    const updateColorValueLabel = (key) => {
+      if (!(key in colorInputMap) || !(key in colorValueMap)) {
+        return;
+      }
+      colorValueMap[key].textContent = colorInputMap[key].value.toUpperCase();
+    };
+
+    const applyColorSettings = (colorSettings) => {
+      for (const key of this.presenter.getSettingsElementKeys()) {
+        if (!(key in colorInputMap)) {
+          continue;
+        }
+        if (key in colorSettings) {
+          colorInputMap[key].value = this.normalizeHexColor(colorSettings[key]);
+          updateColorValueLabel(key);
+        }
+      }
+    };
+
+    const getProfileColors = () => {
+      const profileConfig = config.alternatives[profileSelect.value];
+      const profileColors = {};
+      for (const key of this.presenter.getSettingsElementKeys()) {
+        profileColors[key] = profileConfig[key].color;
+      }
+      return profileColors;
+    };
+
+    const getDefaultEditorColors = () => {
+      const fallbackProfile =
+        "standard" in config.alternatives
+          ? config.alternatives.standard
+          : config.alternatives[profileSelect.value];
+      const defaultColors = {};
+      for (const key of this.presenter.getSettingsElementKeys()) {
+        defaultColors[key] = fallbackProfile[key].color;
+      }
+      return defaultColors;
+    };
+
+    const resetColorButton = document.createElement("button");
+    resetColorButton.type = "button";
+    resetColorButton.classList.add("settingsColorResetButton");
+    resetColorButton.appendChild(document.createTextNode("Reset Farben"));
+    resetColorButton.addEventListener("click", () => {
+      applyColorSettings(getDefaultEditorColors());
+    });
+    colorPanel.appendChild(resetColorButton);
+
+    for (const group of colorGroups) {
+      const colorGroup = document.createElement("div");
+      colorGroup.classList.add("settingsColorGroup");
+
+      const colorGroupHeader = document.createElement("div");
+      colorGroupHeader.classList.add("settingsColorGroupHeader");
+      const colorGroupTitle = document.createElement("strong");
+      colorGroupTitle.appendChild(document.createTextNode(group.title));
+      colorGroupHeader.appendChild(colorGroupTitle);
+
+      if (group.keys.length > 1) {
+        const syncGroupButton = document.createElement("button");
+        syncGroupButton.type = "button";
+        syncGroupButton.classList.add("settingsColorSyncButton");
+        syncGroupButton.appendChild(
+          document.createTextNode("Gruppenfarbe übernehmen")
+        );
+        syncGroupButton.addEventListener("click", () => {
+          const leadKey = group.keys[0];
+          if (!(leadKey in colorInputMap)) {
+            return;
+          }
+          const leadColor = colorInputMap[leadKey].value;
+          for (const key of group.keys) {
+            if (key in colorInputMap) {
+              colorInputMap[key].value = leadColor;
+              updateColorValueLabel(key);
+            }
+          }
+        });
+        colorGroupHeader.appendChild(syncGroupButton);
+      }
+
+      colorGroup.appendChild(colorGroupHeader);
+
+      for (const key of group.keys) {
+        const row = document.createElement("label");
+        row.classList.add("settingsColorRow");
+
+        const rowLabel = document.createElement("span");
+        rowLabel.appendChild(
+          document.createTextNode(
+            key in elementLabels ? elementLabels[key] : key
+          )
+        );
+        row.appendChild(rowLabel);
+
+        const colorPicker = document.createElement("input");
+        colorPicker.type = "color";
+        colorPicker.classList.add("settingsColorInput");
+        colorPicker.dataset.nodeType = key;
+        colorPicker.value = this.normalizeHexColor(settings.colors[key]);
+        colorPicker.addEventListener("input", () => updateColorValueLabel(key));
+        colorInputMap[key] = colorPicker;
+        row.appendChild(colorPicker);
+
+        const colorValue = document.createElement("span");
+        colorValue.classList.add("settingsColorValue");
+        colorValueMap[key] = colorValue;
+        row.appendChild(colorValue);
+        updateColorValueLabel(key);
+
+        colorGroup.appendChild(row);
+      }
+
+      colorPanel.appendChild(colorGroup);
+    }
 
     profileSelect.addEventListener("change", () => {
       const profileConfig = config.alternatives[profileSelect.value];
@@ -1106,6 +1327,7 @@ export class ImportExport {
           use: profileConfig[key].use,
         }));
       this.renderSettingsElements(elementsGrid, profileElements);
+      applyColorSettings(getProfileColors());
     });
 
     const languageContainer = document.createElement("div");
@@ -1125,7 +1347,7 @@ export class ImportExport {
       languageSelect.appendChild(option);
     }
     languageContainer.appendChild(languageSelect);
-    content.appendChild(languageContainer);
+    generalPanel.appendChild(languageContainer);
 
     const sourcecodeToggle = document.createElement("label");
     sourcecodeToggle.classList.add("settingsCheck");
@@ -1134,7 +1356,7 @@ export class ImportExport {
     sourcecodeCheckbox.checked = settings.displaySourcecode;
     sourcecodeToggle.appendChild(sourcecodeCheckbox);
     sourcecodeToggle.appendChild(document.createTextNode("Quellcode anzeigen"));
-    content.appendChild(sourcecodeToggle);
+    generalPanel.appendChild(sourcecodeToggle);
 
     const shortcutToggle = document.createElement("label");
     shortcutToggle.classList.add("settingsCheck");
@@ -1145,7 +1367,7 @@ export class ImportExport {
     shortcutToggle.appendChild(
       document.createTextNode("Shortcuts (Alt+1..0) aktivieren")
     );
-    content.appendChild(shortcutToggle);
+    generalPanel.appendChild(shortcutToggle);
 
     const saveButton = document.createElement("div");
     saveButton.classList.add("modal-buttons", "settingsActionButton", "hand");
@@ -1154,6 +1376,10 @@ export class ImportExport {
       const elementSettings = {};
       for (const checkbox of elementsGrid.getElementsByTagName("input")) {
         elementSettings[checkbox.dataset.nodeType] = checkbox.checked;
+      }
+      const colorSettings = {};
+      for (const [key, colorInput] of Object.entries(colorInputMap)) {
+        colorSettings[key] = colorInput.value;
       }
       const hasActiveElement = Object.values(elementSettings).some(
         (value) => value
@@ -1166,12 +1392,14 @@ export class ImportExport {
       this.presenter.applySettings({
         profile: profileSelect.value,
         elements: elementSettings,
+        colors: colorSettings,
         language: languageSelect.value,
         displaySourcecode: sourcecodeCheckbox.checked,
         shortcutsEnabled: shortcutCheckbox.checked,
       });
       document.getElementById("IEModal").classList.remove("active");
     });
+
     footer.appendChild(saveButton);
 
     const cancelButton = document.createElement("div");

@@ -162,6 +162,56 @@ export class Presenter {
     }));
   }
 
+  getSettingsColors() {
+    const colorSettings = {};
+    for (const key of this.getSettingsElementKeys()) {
+      colorSettings[key] = config.get()[key].color;
+    }
+    return colorSettings;
+  }
+
+  normalizeColorValue(value) {
+    if (typeof value !== "string") {
+      return null;
+    }
+
+    const trimmedValue = value.trim();
+    const hexMatch = trimmedValue.match(/^#([\da-fA-F]{3}|[\da-fA-F]{6})$/);
+    if (hexMatch) {
+      if (trimmedValue.length === 4) {
+        return (
+          "#" +
+          trimmedValue[1] +
+          trimmedValue[1] +
+          trimmedValue[2] +
+          trimmedValue[2] +
+          trimmedValue[3] +
+          trimmedValue[3]
+        ).toLowerCase();
+      }
+      return trimmedValue.toLowerCase();
+    }
+
+    const rgbMatch = trimmedValue.match(
+      /^rgb\s*\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/i
+    );
+    if (!rgbMatch) {
+      return null;
+    }
+
+    const channels = rgbMatch.slice(1).map((item) => Number(item));
+    if (
+      channels.some(
+        (channel) => Number.isNaN(channel) || channel < 0 || channel > 255
+      )
+    ) {
+      return null;
+    }
+
+    const toHex = (channel) => channel.toString(16).padStart(2, "0");
+    return "#" + channels.map((channel) => toHex(channel)).join("");
+  }
+
   getStoredSettings(ignoreProfile = false) {
     if (typeof Storage === "undefined") {
       return {};
@@ -173,6 +223,9 @@ export class Presenter {
     }
     if (!ignoreProfile && "struktog_settings_elements" in localStorage) {
       settings.elements = JSON.parse(localStorage.struktog_settings_elements);
+    }
+    if (!ignoreProfile && "struktog_settings_colors" in localStorage) {
+      settings.colors = JSON.parse(localStorage.struktog_settings_colors);
     }
     if ("lang" in localStorage) {
       settings.language = localStorage.lang;
@@ -199,8 +252,14 @@ export class Presenter {
       elementSettings[key] = config.get()[key].use;
     }
 
+    const colorSettings = {};
+    for (const key of this.getSettingsElementKeys()) {
+      colorSettings[key] = config.get()[key].color;
+    }
+
     localStorage.struktog_settings_profile = this.activeConfigProfile;
     localStorage.struktog_settings_elements = JSON.stringify(elementSettings);
+    localStorage.struktog_settings_colors = JSON.stringify(colorSettings);
     localStorage.struktog_settings_shortcuts = JSON.stringify(
       this.shortcutsEnabled
     );
@@ -222,6 +281,19 @@ export class Presenter {
       for (const key of this.getSettingsElementKeys()) {
         if (key in settings.elements) {
           config.get()[key].use = Boolean(settings.elements[key]);
+        }
+      }
+    }
+
+    if (settings.colors) {
+      for (const key of this.getSettingsElementKeys()) {
+        if (key in settings.colors) {
+          const normalizedColor = this.normalizeColorValue(
+            settings.colors[key]
+          );
+          if (normalizedColor) {
+            config.get()[key].color = normalizedColor;
+          }
         }
       }
     }
@@ -950,13 +1022,16 @@ export class Presenter {
 
   getCurrentSettingsSnapshot() {
     const elements = {};
+    const colors = {};
     for (const key of this.getSettingsElementKeys()) {
       elements[key] = config.get()[key].use;
+      colors[key] = config.get()[key].color;
     }
 
     return {
       profile: this.getActiveConfigProfile(),
       elements,
+      colors,
       language: this.getCodeLanguage(),
       displaySourcecode: this.getSourcecodeDisplay(),
       shortcutsEnabled: this.getShortcutsEnabled(),
