@@ -3,6 +3,11 @@ export class WebTour {
     this.hintStorageKey = "struktog_tour_hint_seen_v1";
     this.steps = [
       {
+        selector: ".webtour-intro-anchor",
+        title: "Was ist ein Struktogramm?",
+        text: "Ein Struktogramm beschreibt einen Algorithmus in klaren, strukturierten Bausteinen. Du planst damit den Programmablauf schrittweise über Sequenz, Verzweigung und Schleife, bevor du ihn als Quellcode formulierst. Der Editor unterstützt dich dabei, diese Bausteine konsistent zu erstellen, logisch zu ordnen und in ausführbaren Code zu überführen.",
+      },
+      {
         selector: "#tourInfoButton",
         title: "Kurze Tour",
         text: "Hier startest du jederzeit diese Einführung.",
@@ -28,14 +33,14 @@ export class WebTour {
         text: "Oben findest du Einstellungen sowie Laden, Speichern und Bildexport.",
       },
       {
+        selector: "#struktoOptions1, #struktoOptions2",
+        title: "Undo, Redo, Reset",
+        text: "Diese Leiste enthält Rückgängig, Wiederholen und Zurücksetzen des Diagramms.",
+      },
+      {
         selector: ".ToggleSourcecode",
         title: "Quellcode",
         text: "Mit diesem Button blendest du den Quellcode ein. Sprache und Kopieren stehen dann rechts bereit.",
-      },
-      {
-        selector: "#struktoOptions1",
-        title: "Undo, Redo, Reset",
-        text: "Diese Leiste enthält Rückgängig, Wiederholen und Zurücksetzen des Diagramms.",
       },
     ];
 
