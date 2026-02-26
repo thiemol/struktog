@@ -356,7 +356,7 @@ class Model {
       subTree.cases.push({
         id: guidGenerator(),
         type: "InsertCase",
-        text: "Fall",
+        text: typeof text === "string" && text !== "" ? text : "Fall",
         followElement: {
           id: guidGenerator(),
           type: "InsertNode",
@@ -385,7 +385,7 @@ class Model {
       subTree.catches.push({
         id: guidGenerator(),
         type: "InsertNode",
-        text: "undefiniert",
+        text: typeof text === "string" && text !== "" ? text : "undefiniert",
         specialType: "CatchNode",
         followElement: { type: "Placeholder" },
       });

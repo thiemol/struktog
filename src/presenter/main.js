@@ -17,6 +17,15 @@
 
 import { guidGenerator } from "../helpers/generator";
 import { config } from "../config";
+import {
+  getContentDefault,
+  getNodeLabel,
+  getUiLanguagePreference,
+  getUiLanguageStorageKey,
+  localizeContentDefault,
+  setUiLanguagePreference,
+  t,
+} from "../i18n";
 
 export class Presenter {
   constructor(model) {
@@ -30,6 +39,7 @@ export class Presenter {
     this.codeLanguage = "--";
     this.shortcutsEnabled = true;
     this.activeConfigProfile = "standard";
+    this.uiLanguage = getUiLanguagePreference();
     this.undoList = [];
     this.redoList = [];
 
@@ -47,6 +57,10 @@ export class Presenter {
       }
       if ("struktog_settings_profile" in localStorage) {
         this.activeConfigProfile = localStorage.struktog_settings_profile;
+      }
+      if (getUiLanguageStorageKey() in localStorage) {
+        this.uiLanguage = localStorage[getUiLanguageStorageKey()];
+        setUiLanguagePreference(this.uiLanguage, false);
       }
     }
   }
@@ -157,9 +171,18 @@ export class Presenter {
   getSettingsElements() {
     return this.getSettingsElementKeys().map((key) => ({
       key,
-      text: config.get()[key].text,
+      text: getNodeLabel(key),
       use: config.get()[key].use,
     }));
+  }
+
+  getUiLanguage() {
+    return this.uiLanguage;
+  }
+
+  setUiLanguage(uiLanguage) {
+    this.uiLanguage = uiLanguage;
+    setUiLanguagePreference(uiLanguage, false);
   }
 
   getSettingsColors() {
@@ -227,6 +250,9 @@ export class Presenter {
     if (!ignoreProfile && "struktog_settings_colors" in localStorage) {
       settings.colors = JSON.parse(localStorage.struktog_settings_colors);
     }
+    if (getUiLanguageStorageKey() in localStorage) {
+      settings.uiLanguage = localStorage[getUiLanguageStorageKey()];
+    }
     if ("lang" in localStorage) {
       settings.language = localStorage.lang;
     }
@@ -263,6 +289,7 @@ export class Presenter {
     localStorage.struktog_settings_shortcuts = JSON.stringify(
       this.shortcutsEnabled
     );
+    localStorage[getUiLanguageStorageKey()] = this.uiLanguage;
   }
 
   applySettings(settings, options = {}) {
@@ -310,6 +337,12 @@ export class Presenter {
       this.setShortcutsEnabled(settings.shortcutsEnabled);
     }
 
+    if (Object.prototype.hasOwnProperty.call(settings, "uiLanguage")) {
+      this.setUiLanguage(settings.uiLanguage);
+    }
+
+    this.migrateLocalizedDefaultContent();
+
     if (opts.persist) {
       this.persistSettings();
       this.updateBrowserStore();
@@ -328,6 +361,7 @@ export class Presenter {
   resetSettingsToDefault() {
     this.applySettings({
       profile: "standard",
+      uiLanguage: "auto",
       language: "--",
       displaySourcecode: false,
       shortcutsEnabled: true,
@@ -361,7 +395,156 @@ export class Presenter {
   }
 
   init() {
+    if (this.migrateLocalizedDefaultContent()) {
+      this.updateBrowserStore();
+    }
     this.renderAllViews();
+  }
+
+  updateNodeTextFromDefault(node, textKey) {
+    if (!node || typeof node.text !== "string") {
+      return false;
+    }
+
+    const localizedText = localizeContentDefault(node.text, textKey);
+    if (localizedText !== node.text) {
+      node.text = localizedText;
+      return true;
+    }
+    return false;
+  }
+
+  migrateLocalizedDefaultContentInNode(subTree) {
+    if (!subTree || typeof subTree !== "object") {
+      return false;
+    }
+
+    let changed = false;
+
+    switch (subTree.type) {
+      case "InsertNode":
+      case "InputNode":
+      case "OutputNode":
+        return this.migrateLocalizedDefaultContentInNode(subTree.followElement);
+      case "TaskNode":
+        changed =
+          this.updateNodeTextFromDefault(subTree, "taskDefault") || changed;
+        changed =
+          this.migrateLocalizedDefaultContentInNode(subTree.followElement) ||
+          changed;
+        return changed;
+      case "BranchNode":
+        changed =
+          this.updateNodeTextFromDefault(subTree, "branchCondition") || changed;
+        changed =
+          this.migrateLocalizedDefaultContentInNode(subTree.trueChild) ||
+          changed;
+        changed =
+          this.migrateLocalizedDefaultContentInNode(subTree.falseChild) ||
+          changed;
+        changed =
+          this.migrateLocalizedDefaultContentInNode(subTree.followElement) ||
+          changed;
+        return changed;
+      case "CaseNode":
+        changed =
+          this.updateNodeTextFromDefault(subTree, "caseVariable") || changed;
+        if (Array.isArray(subTree.cases)) {
+          for (const caseNode of subTree.cases) {
+            changed =
+              this.updateNodeTextFromDefault(caseNode, "caseLabel") || changed;
+            changed =
+              this.migrateLocalizedDefaultContentInNode(
+                caseNode.followElement
+              ) || changed;
+          }
+        }
+        if (subTree.defaultNode) {
+          changed =
+            this.updateNodeTextFromDefault(subTree.defaultNode, "elseLabel") ||
+            changed;
+          changed =
+            this.migrateLocalizedDefaultContentInNode(
+              subTree.defaultNode.followElement
+            ) || changed;
+        }
+        changed =
+          this.migrateLocalizedDefaultContentInNode(subTree.followElement) ||
+          changed;
+        return changed;
+      case "CountLoopNode":
+        changed =
+          this.updateNodeTextFromDefault(subTree, "countCondition") || changed;
+        changed =
+          this.migrateLocalizedDefaultContentInNode(subTree.child) || changed;
+        changed =
+          this.migrateLocalizedDefaultContentInNode(subTree.followElement) ||
+          changed;
+        return changed;
+      case "HeadLoopNode":
+      case "FootLoopNode":
+        changed =
+          this.updateNodeTextFromDefault(subTree, "loopCondition") || changed;
+        changed =
+          this.migrateLocalizedDefaultContentInNode(subTree.child) || changed;
+        changed =
+          this.migrateLocalizedDefaultContentInNode(subTree.followElement) ||
+          changed;
+        return changed;
+      case "FunctionNode":
+        if (typeof subTree.returnType === "string") {
+          const localizedReturnType = localizeContentDefault(
+            subTree.returnType,
+            "returnTypePlaceholder"
+          );
+          if (localizedReturnType !== subTree.returnType) {
+            subTree.returnType = localizedReturnType;
+            changed = true;
+          }
+        }
+        changed =
+          this.migrateLocalizedDefaultContentInNode(subTree.child) || changed;
+        changed =
+          this.migrateLocalizedDefaultContentInNode(subTree.followElement) ||
+          changed;
+        return changed;
+      case "TryCatchNode":
+        if (Array.isArray(subTree.catches)) {
+          for (const catchNode of subTree.catches) {
+            changed =
+              this.updateNodeTextFromDefault(catchNode, "catchUndefined") ||
+              changed;
+            changed =
+              this.migrateLocalizedDefaultContentInNode(
+                catchNode.followElement
+              ) || changed;
+          }
+        }
+        if (subTree.catchChild) {
+          changed =
+            this.migrateLocalizedDefaultContentInNode(subTree.catchChild) ||
+            changed;
+        }
+        changed =
+          this.migrateLocalizedDefaultContentInNode(subTree.tryChild) ||
+          changed;
+        changed =
+          this.migrateLocalizedDefaultContentInNode(subTree.followElement) ||
+          changed;
+        return changed;
+      case "InsertCase":
+      case "CatchNode":
+        changed =
+          this.migrateLocalizedDefaultContentInNode(subTree.followElement) ||
+          changed;
+        return changed;
+      default:
+        return false;
+    }
+  }
+
+  migrateLocalizedDefaultContent() {
+    return this.migrateLocalizedDefaultContentInNode(this.model.getTree());
   }
 
   /**
@@ -418,7 +601,7 @@ export class Presenter {
         this.nextInsertElement = {
           id: guidGenerator(),
           type: "TaskNode",
-          text: "Anweisung",
+          text: getContentDefault("taskDefault"),
           followElement: {
             id: guidGenerator(),
             type: "InsertNode",
@@ -430,7 +613,7 @@ export class Presenter {
         this.nextInsertElement = {
           id: guidGenerator(),
           type: "BranchNode",
-          text: "Bedingung",
+          text: getContentDefault("branchCondition"),
           followElement: {
             id: guidGenerator(),
             type: "InsertNode",
@@ -452,7 +635,7 @@ export class Presenter {
         this.nextInsertElement = {
           id: guidGenerator(),
           type: "CaseNode",
-          text: "Variable",
+          text: getContentDefault("caseVariable"),
           followElement: {
             id: guidGenerator(),
             type: "InsertNode",
@@ -462,7 +645,7 @@ export class Presenter {
           defaultNode: {
             id: guidGenerator(),
             type: "InsertCase",
-            text: "Sonst",
+            text: getContentDefault("elseLabel"),
             followElement: {
               id: guidGenerator(),
               type: "InsertNode",
@@ -473,7 +656,7 @@ export class Presenter {
             {
               id: guidGenerator(),
               type: "InsertCase",
-              text: "Fall",
+              text: getContentDefault("caseLabel"),
               followElement: {
                 id: guidGenerator(),
                 type: "InsertNode",
@@ -483,7 +666,7 @@ export class Presenter {
             {
               id: guidGenerator(),
               type: "InsertCase",
-              text: "Fall",
+              text: getContentDefault("caseLabel"),
               followElement: {
                 id: guidGenerator(),
                 type: "InsertNode",
@@ -497,7 +680,7 @@ export class Presenter {
         this.nextInsertElement = {
           id: guidGenerator(),
           type: "CountLoopNode",
-          text: "Zählbedingung",
+          text: getContentDefault("countCondition"),
           followElement: {
             id: guidGenerator(),
             type: "InsertNode",
@@ -514,7 +697,7 @@ export class Presenter {
         this.nextInsertElement = {
           id: guidGenerator(),
           type: "HeadLoopNode",
-          text: "Gültigkeitsbedingung",
+          text: getContentDefault("loopCondition"),
           followElement: {
             id: guidGenerator(),
             type: "InsertNode",
@@ -551,7 +734,7 @@ export class Presenter {
         this.nextInsertElement = {
           id: guidGenerator(),
           type: "FootLoopNode",
-          text: "Gültigkeitsbedingung",
+          text: getContentDefault("loopCondition"),
           followElement: {
             id: guidGenerator(),
             type: "InsertNode",
@@ -583,7 +766,7 @@ export class Presenter {
               id: guidGenerator(),
               type: "InsertNode",
               specialType: "CatchNode",
-              text: "undefiniert",
+              text: getContentDefault("catchUndefined"),
               followElement: { type: "Placeholder" },
             },
           ],
@@ -666,7 +849,7 @@ export class Presenter {
         this.model.getTree(),
         this.model.insertNewCase,
         false,
-        ""
+        getContentDefault("caseLabel")
       )
     );
     this.checkUndo();
@@ -687,7 +870,7 @@ export class Presenter {
         this.model.getTree(),
         this.model.insertNewCatch,
         false,
-        ""
+        getContentDefault("catchUndefined")
       )
     );
     this.checkUndo();
@@ -793,11 +976,7 @@ export class Presenter {
     while (footer.hasChildNodes()) {
       footer.removeChild(footer.lastChild);
     }
-    content.appendChild(
-      document.createTextNode(
-        "Dieses Element und alle darin erstellten Blöcke löschen?"
-      )
-    );
+    content.appendChild(document.createTextNode(t("editor.deleteQuestion")));
     const doButton = document.createElement("div");
     doButton.classList.add("modal-buttons", "acceptIcon", "hand");
     doButton.addEventListener("click", () =>
@@ -1032,6 +1211,7 @@ export class Presenter {
       profile: this.getActiveConfigProfile(),
       elements,
       colors,
+      uiLanguage: this.getUiLanguage(),
       language: this.getCodeLanguage(),
       displaySourcecode: this.getSourcecodeDisplay(),
       shortcutsEnabled: this.getShortcutsEnabled(),
@@ -1090,6 +1270,8 @@ export class Presenter {
         rerender: false,
       });
     }
+
+    this.migrateLocalizedDefaultContent();
 
     this.checkUndo();
     this.renderAllViews();
@@ -1157,15 +1339,13 @@ export class Presenter {
       try {
         parsedData = JSON.parse(event.target.result);
       } catch (error) {
-        window.alert("Datei konnte nicht gelesen werden: ungültiges JSON.");
+        window.alert(t("importExport.invalidJson"));
         return;
       }
 
       const isImported = this.applyImportedData(parsedData, fileName);
       if (!isImported) {
-        window.alert(
-          "Datei konnte nicht importiert werden: unbekanntes Format."
-        );
+        window.alert(t("importExport.unknownImportFormat"));
       }
     };
     // start the reading process

@@ -16,6 +16,7 @@
  */
 
 import { newElement } from "../helpers/domBuilding";
+import { t } from "../i18n";
 
 export class CodeView {
   constructor(presenter, domRoot) {
@@ -428,7 +429,7 @@ export class CodeView {
     sourcecodeHeader.classList.add("columnAuto", "sourcecodeHeaderRow");
     const sourcecodeTitle = document.createElement("strong");
     sourcecodeTitle.classList.add("sourcecodeLabel");
-    sourcecodeTitle.appendChild(document.createTextNode("Übersetzen in:"));
+    sourcecodeTitle.appendChild(document.createTextNode(t("code.translateTo")));
     const sourcecodeForm = document.createElement("div");
     sourcecodeForm.classList.add("sourcecodeSelectWrap");
     const sourcecodeSelect = document.createElement("select");
@@ -449,7 +450,7 @@ export class CodeView {
     }
 
     const sourcecodeCopy = document.createElement("div");
-    sourcecodeCopy.setAttribute("data-tooltip", "Kopiere Code");
+    sourcecodeCopy.setAttribute("data-tooltip", t("code.copyCode"));
     sourcecodeCopy.classList.add(
       "sourcecodeCopyButton",
       "copyIcon",
@@ -532,11 +533,7 @@ export class CodeView {
           codeText = codeText + i.textContent;
         });
       } else {
-        codeBlock.appendChild(
-          document.createTextNode(
-            "Das Struktogramm enthält Elemente, \nwelche in der gewählten Programmiersprache \nnicht direkt zur Verfügung stehen.\nDeshalb bitte manuell in Code überführen."
-          )
-        );
+        codeBlock.appendChild(document.createTextNode(t("code.unsupported")));
       }
       localStorage.setItem("struktog_code", codeText);
 
@@ -555,7 +552,7 @@ export class CodeView {
       "hand",
       "ToggleSourcecode"
     );
-    option.setAttribute("data-tooltip", "Quellcode einblenden");
+    option.setAttribute("data-tooltip", t("code.showSourcecode"));
     option.addEventListener("click", (event) =>
       presenter.alterSourcecodeDisplay(event)
     );
@@ -1392,7 +1389,7 @@ export class CodeView {
       }
     } else {
       for (const item of fields) {
-        item.setAttribute("data-tooltip", "Quellcode einblenden");
+        item.setAttribute("data-tooltip", t("code.showSourcecode"));
       }
       document.getElementById("SourcecodeDisplay").style.display = "none";
       if (window.matchMedia("(max-width: 1200px)")) {

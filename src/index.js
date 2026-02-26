@@ -28,6 +28,7 @@ import {
   generateHtmltree,
   highlight,
 } from "./helpers/generator";
+import { initializeI18n, t } from "./i18n";
 
 import "./assets/scss/structog.scss";
 
@@ -52,6 +53,7 @@ function registerServiceWorker() {
 
 window.onload = function () {
   let configId = null;
+  initializeI18n();
   // manipulate the localStorage before loading the presenter
   if (typeof Storage !== "undefined") {
     const url = new URL(window.location.href);
@@ -80,8 +82,8 @@ window.onload = function () {
       "tooltip-top",
       "footerDonateLink"
     );
-    donateLink.appendChild(document.createTextNode("Spenden"));
-    donateLink.setAttribute("data-tooltip", "Unterstuetze Struktog");
+    donateLink.appendChild(document.createTextNode(t("nav.donate")));
+    donateLink.setAttribute("data-tooltip", t("nav.donateTooltip"));
     donateLink.addEventListener("click", () => {
       window.open(
         "https://www.paypal.com/donate?hosted_button_id=5ZRTXH9NUJG5U",

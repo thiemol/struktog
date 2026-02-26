@@ -15,309 +15,317 @@
  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { t } from "../i18n";
+
 /**
  * Generate a random id string
  *
  * @ return   string   random generated
  */
-export function guidGenerator () {
+export function guidGenerator() {
   const gen = function () {
-    return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1)
-  }
+    return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
+  };
   return (
     gen() +
     gen() +
-    '-' +
+    "-" +
     gen() +
-    '-' +
+    "-" +
     gen() +
-    '-' +
+    "-" +
     gen() +
-    '-' +
+    "-" +
     gen() +
     gen()
-  )
+  );
 }
 
 /**
  * Generate HTML tree
  *
  */
-export function generateHtmltree () {
+export function generateHtmltree() {
   // Header
-  const header = document.createElement('header')
-  header.classList.add('container')
-  document.body.appendChild(header)
+  const header = document.createElement("header");
+  header.classList.add("container");
+  document.body.appendChild(header);
 
-  const section1 = document.createElement('section')
-  section1.classList.add('nav-col')
-  header.appendChild(section1)
+  const section1 = document.createElement("section");
+  section1.classList.add("nav-col");
+  header.appendChild(section1);
 
-  const logoDiv = document.createElement('div')
-  logoDiv.classList.add('nav-logo-container')
-  section1.appendChild(logoDiv)
+  const logoDiv = document.createElement("div");
+  logoDiv.classList.add("nav-logo-container");
+  section1.appendChild(logoDiv);
 
-  const logoAnker = document.createElement('a')
-  logoAnker.classList.add('column', 'container')
-  let url = 'index.html'
-  const browserUrl = new URL(window.location.href)
-  if (browserUrl.searchParams.get('config')) {
-    url = url + '?config=' + browserUrl.searchParams.get('config')
+  const logoAnker = document.createElement("a");
+  logoAnker.classList.add("column", "container");
+  let url = "index.html";
+  const browserUrl = new URL(window.location.href);
+  if (browserUrl.searchParams.get("config")) {
+    url = url + "?config=" + browserUrl.searchParams.get("config");
   }
-  logoAnker.setAttribute('href', url)
-  logoDiv.appendChild(logoAnker)
+  logoAnker.setAttribute("href", url);
+  logoDiv.appendChild(logoAnker);
 
-  const logo = document.createElement('div')
-  logo.classList.add('logo', 'logo-container')
-  logoAnker.appendChild(logo)
+  const logo = document.createElement("div");
+  logo.classList.add("logo", "logo-container");
+  logoAnker.appendChild(logo);
 
-  const logoText = document.createElement('strong')
-  logoText.classList.add('nav-col')
-  logoText.appendChild(document.createTextNode('Struktog.'))
-  logoAnker.appendChild(logoText)
+  const logoText = document.createElement("strong");
+  logoText.classList.add("nav-col");
+  logoText.appendChild(document.createTextNode("Struktog."));
+  logoAnker.appendChild(logoText);
 
-  const section2 = document.createElement('section')
-  section2.classList.add('nav-col-opt')
-  header.appendChild(section2)
+  const section2 = document.createElement("section");
+  section2.classList.add("nav-col-opt");
+  header.appendChild(section2);
 
-  const divOptions = document.createElement('div')
-  divOptions.classList.add('options-container')
-  divOptions.setAttribute('id', 'optionButtons')
-  section2.appendChild(divOptions)
+  const divOptions = document.createElement("div");
+  divOptions.classList.add("options-container");
+  divOptions.setAttribute("id", "optionButtons");
+  section2.appendChild(divOptions);
 
-  const divider = document.createElement('div')
-  divider.classList.add('divider')
-  document.body.appendChild(divider)
+  const divider = document.createElement("div");
+  divider.classList.add("divider");
+  document.body.appendChild(divider);
 
-  const dividerText = document.createElement('div')
-  dividerText.classList.add('divider-text')
-  dividerText.innerHTML = 'unbenannt'
-  dividerText.classList.add('tooltip', 'tooltip-top', 'hand')
-  dividerText.setAttribute('data-tooltip', 'Benenne dein Struktogramm.')
-  dividerText.addEventListener('click', () => {
-    let structoName = window.prompt(
-      'Bitte gib einen Namen für dein Struktogramm ein:'
-    )
-    if (structoName === null || structoName.trim() === ' ') {
-      structoName = 'unbenannt'
+  const dividerText = document.createElement("div");
+  dividerText.classList.add("divider-text");
+  dividerText.innerHTML = t("nav.unnamed");
+  dividerText.classList.add("tooltip", "tooltip-top", "hand");
+  dividerText.setAttribute("data-tooltip", t("nav.renameTooltip"));
+  dividerText.addEventListener("click", () => {
+    let structoName = window.prompt(t("nav.renamePrompt"));
+    if (structoName === null || structoName.trim() === " ") {
+      structoName = t("nav.unnamed");
     }
-    dividerText.innerHTML = structoName
-  })
-  dividerText.setAttribute('id', 'structoName')
-  document.body.appendChild(dividerText)
+    dividerText.innerHTML = structoName;
+  });
+  dividerText.setAttribute("id", "structoName");
+  document.body.appendChild(dividerText);
 
   // main
-  const main = document.createElement('main')
-  document.body.appendChild(main)
+  const main = document.createElement("main");
+  document.body.appendChild(main);
 
-  const editor = document.createElement('div')
-  editor.classList.add('container')
-  editor.setAttribute('id', 'editorDisplay')
-  main.appendChild(editor)
+  const editor = document.createElement("div");
+  editor.classList.add("container");
+  editor.setAttribute("id", "editorDisplay");
+  main.appendChild(editor);
 
-  const modal = document.createElement('div')
-  modal.classList.add('modal')
-  modal.setAttribute('id', 'IEModal')
-  main.appendChild(modal)
+  const modal = document.createElement("div");
+  modal.classList.add("modal");
+  modal.setAttribute("id", "IEModal");
+  main.appendChild(modal);
 
-  const modalOverlay = document.createElement('div')
-  modalOverlay.classList.add('modal-overlay')
-  modalOverlay.setAttribute('aria-label', 'Close')
-  modalOverlay.addEventListener('click', () => {
-    document.getElementById('IEModal').classList.remove('active')
-  })
-  modal.appendChild(modalOverlay)
+  const modalOverlay = document.createElement("div");
+  modalOverlay.classList.add("modal-overlay");
+  modalOverlay.setAttribute("aria-label", "Close");
+  modalOverlay.addEventListener("click", () => {
+    document.getElementById("IEModal").classList.remove("active");
+  });
+  modal.appendChild(modalOverlay);
 
-  const modalContainer = document.createElement('div')
-  modalContainer.classList.add('modal-container')
-  modal.appendChild(modalContainer)
+  const modalContainer = document.createElement("div");
+  modalContainer.classList.add("modal-container");
+  modal.appendChild(modalContainer);
 
-  const modalHeader = document.createElement('div')
-  modalHeader.classList.add('modal-header')
-  modalContainer.appendChild(modalHeader)
+  const modalHeader = document.createElement("div");
+  modalHeader.classList.add("modal-header");
+  modalContainer.appendChild(modalHeader);
 
-  const modalHeaderClose = document.createElement('div')
-  modalHeaderClose.classList.add('close', 'hand', 'cancelIcon')
-  modalHeaderClose.addEventListener('click', () => {
-    document.getElementById('IEModal').classList.remove('active')
-  })
-  modalHeader.appendChild(modalHeaderClose)
+  const modalHeaderClose = document.createElement("div");
+  modalHeaderClose.classList.add("close", "hand", "cancelIcon");
+  modalHeaderClose.addEventListener("click", () => {
+    document.getElementById("IEModal").classList.remove("active");
+  });
+  modalHeader.appendChild(modalHeaderClose);
 
-  const modalBody = document.createElement('div')
-  modalBody.classList.add('modal-body')
-  modalContainer.appendChild(modalBody)
+  const modalBody = document.createElement("div");
+  modalBody.classList.add("modal-body");
+  modalContainer.appendChild(modalBody);
 
-  const modalBodyContent = document.createElement('div')
-  modalBodyContent.classList.add('content')
-  modalBodyContent.setAttribute('id', 'modal-content')
-  modalBody.appendChild(modalBodyContent)
+  const modalBodyContent = document.createElement("div");
+  modalBodyContent.classList.add("content");
+  modalBodyContent.setAttribute("id", "modal-content");
+  modalBody.appendChild(modalBodyContent);
 
-  const modalFooter = document.createElement('div')
-  modalFooter.classList.add('modal-footer', 'container')
-  modalFooter.setAttribute('id', 'modal-footer')
-  modalContainer.appendChild(modalFooter)
+  const modalFooter = document.createElement("div");
+  modalFooter.classList.add("modal-footer", "container");
+  modalFooter.setAttribute("id", "modal-footer");
+  modalContainer.appendChild(modalFooter);
 }
 
 /**
  * Generate HTML tree for footer
  **/
-export function generateFooter () {
+export function generateFooter() {
   // footer
-  const footer = document.createElement('footer')
-  footer.classList.add('container')
-  document.body.appendChild(footer)
+  const footer = document.createElement("footer");
+  footer.classList.add("container");
+  document.body.appendChild(footer);
 
-  const footerDiv = document.createElement('div')
-  footerDiv.classList.add('column')
-  footer.appendChild(footerDiv)
+  const footerDiv = document.createElement("div");
+  footerDiv.classList.add("column");
+  footer.appendChild(footerDiv);
 
-  const footerSpan = document.createElement('span')
+  const footerSpan = document.createElement("span");
 
-  const url = new URL(window.location.href)
+  const url = new URL(window.location.href);
   // if url contains subfolder 'dev'
-  if (url.pathname.split('/')[1] === 'dev') {
+  if (url.pathname.split("/")[1] === "dev") {
     // create textnode
-    const devText = document.createTextNode('Development branch please use ')
-    footerSpan.appendChild(devText)
+    const devText = document.createTextNode(t("footer.devNotice"));
+    footerSpan.appendChild(devText);
     // create link
-    const devLink = document.createElement('a')
-    devLink.appendChild(document.createTextNode('stable version'))
-    devLink.setAttribute('href', 'https://ddi.education/struktog/')
-    footerSpan.appendChild(devLink)
-    footerSpan.appendChild(document.createTextNode(' | '))
+    const devLink = document.createElement("a");
+    devLink.appendChild(document.createTextNode(t("footer.stableVersion")));
+    devLink.setAttribute("href", "https://ddi.education/struktog/");
+    footerSpan.appendChild(devLink);
+    footerSpan.appendChild(document.createTextNode(" | "));
   }
 
-  const sourceLink = document.createElement('div')
-  sourceLink.classList.add('hand', 'tooltip', 'tooltip-top')
-  sourceLink.appendChild(document.createTextNode('Source code'))
+  const sourceLink = document.createElement("div");
+  sourceLink.classList.add("hand", "tooltip", "tooltip-top");
+  sourceLink.appendChild(document.createTextNode(t("footer.sourceCode")));
   sourceLink.setAttribute(
-    'href',
-    'https://gitlab.com/dev-ddi/cs-school-tools/struktog'
-  )
-  sourceLink.setAttribute('data-tooltip', 'Gitlab Repository')
-  sourceLink.addEventListener('click', () => {
-    window.open('https://gitlab.com/dev-ddi/cs-school-tools/struktog', '_blank')
-  })
+    "href",
+    "https://gitlab.com/dev-ddi/cs-school-tools/struktog"
+  );
+  sourceLink.setAttribute("data-tooltip", t("footer.sourceTooltip"));
+  sourceLink.addEventListener("click", () => {
+    window.open(
+      "https://gitlab.com/dev-ddi/cs-school-tools/struktog",
+      "_blank"
+    );
+  });
 
-  const maintainer = document.createElement('div')
-  maintainer.appendChild(document.createTextNode('Maintainer Thiemo Leonhardt'))
+  const maintainer = document.createElement("div");
+  maintainer.appendChild(document.createTextNode(t("footer.maintainer")));
 
-  const contributorLink = document.createElement('div')
-  contributorLink.classList.add('hand', 'tooltip', 'tooltip-top')
-  contributorLink.appendChild(document.createTextNode('Contributors'))
+  const contributorLink = document.createElement("div");
+  contributorLink.classList.add("hand", "tooltip", "tooltip-top");
+  contributorLink.appendChild(
+    document.createTextNode(t("footer.contributors"))
+  );
   contributorLink.setAttribute(
-    'href',
-    'https://gitlab.com/dev-ddi/cs-school-tools/struktog/-/blob/master/CONTRIBUTORS.md'
-  )
-  contributorLink.setAttribute('data-tooltip', 'Contributors')
-  contributorLink.addEventListener('click', () => {
+    "href",
+    "https://gitlab.com/dev-ddi/cs-school-tools/struktog/-/blob/master/CONTRIBUTORS.md"
+  );
+  contributorLink.setAttribute("data-tooltip", t("footer.contributorsTooltip"));
+  contributorLink.addEventListener("click", () => {
     window.open(
-      'https://gitlab.com/dev-ddi/cs-school-tools/struktog/-/blob/master/CONTRIBUTORS.md',
-      '_blank'
-    )
-  })
+      "https://gitlab.com/dev-ddi/cs-school-tools/struktog/-/blob/master/CONTRIBUTORS.md",
+      "_blank"
+    );
+  });
 
-  const hash = document.createElement('div')
-  hash.setAttribute('id', 'whats-new-link')
-  hash.classList.add('hand', 'tooltip', 'tooltip-top')
-  hash.appendChild(document.createTextNode(__COMMIT_HASH__))
+  const hash = document.createElement("div");
+  hash.setAttribute("id", "whats-new-link");
+  hash.classList.add("hand", "tooltip", "tooltip-top");
+  hash.appendChild(document.createTextNode(__COMMIT_HASH__));
   hash.setAttribute(
-    'href',
-    'https://gitlab.com/dev-ddi/cs-school-tools/struktog/-/blob/master/VERSIONS.md'
-  )
-  hash.setAttribute('data-tooltip', 'Whats New?')
-  hash.addEventListener('click', () => {
+    "href",
+    "https://gitlab.com/dev-ddi/cs-school-tools/struktog/-/blob/master/VERSIONS.md"
+  );
+  hash.setAttribute("data-tooltip", t("footer.whatsNewTooltip"));
+  hash.addEventListener("click", () => {
     window.open(
-      'https://gitlab.com/dev-ddi/cs-school-tools/struktog/-/blob/master/VERSIONS.md',
-      '_blank'
-    )
-  })
+      "https://gitlab.com/dev-ddi/cs-school-tools/struktog/-/blob/master/VERSIONS.md",
+      "_blank"
+    );
+  });
 
-  const impressumLink = document.createElement('div')
-  impressumLink.classList.add('hand', 'tooltip', 'tooltip-top')
-  impressumLink.appendChild(document.createTextNode('Impressum'))
-  impressumLink.setAttribute('href', 'https://ddi.education/impressum')
-  impressumLink.setAttribute('data-tooltip', 'Impressum')
-  impressumLink.addEventListener('click', () => {
-    window.open('https://ddi.education/impressum/', '_blank')
-  })
+  const impressumLink = document.createElement("div");
+  impressumLink.classList.add("hand", "tooltip", "tooltip-top");
+  impressumLink.appendChild(document.createTextNode(t("footer.imprint")));
+  impressumLink.setAttribute("href", "https://ddi.education/impressum");
+  impressumLink.setAttribute("data-tooltip", t("footer.imprintTooltip"));
+  impressumLink.addEventListener("click", () => {
+    window.open("https://ddi.education/impressum/", "_blank");
+  });
 
-  footerDiv.appendChild(footerSpan)
-  footerSpan.appendChild(sourceLink)
-  footerSpan.appendChild(document.createTextNode('|'))
-  footerSpan.appendChild(maintainer)
-  footerSpan.appendChild(document.createTextNode('|'))
-  footerSpan.appendChild(contributorLink)
-  footerSpan.appendChild(document.createTextNode('|'))
-  footerSpan.appendChild(hash)
-  footerSpan.appendChild(document.createTextNode('|'))
-  footerSpan.appendChild(impressumLink)
+  footerDiv.appendChild(footerSpan);
+  footerSpan.appendChild(sourceLink);
+  footerSpan.appendChild(document.createTextNode("|"));
+  footerSpan.appendChild(maintainer);
+  footerSpan.appendChild(document.createTextNode("|"));
+  footerSpan.appendChild(contributorLink);
+  footerSpan.appendChild(document.createTextNode("|"));
+  footerSpan.appendChild(hash);
+  footerSpan.appendChild(document.createTextNode("|"));
+  footerSpan.appendChild(impressumLink);
 }
 
-export function generateResetButton (presenter, domNode) {
+export function generateResetButton(presenter, domNode) {
   // reset button must be last defined
-  const resetButtonDiv = document.createElement('div')
+  const resetButtonDiv = document.createElement("div");
   resetButtonDiv.classList.add(
-    'struktoOption',
-    'resetIcon',
-    'tooltip',
-    'tooltip-bottom',
-    'hand'
-  )
-  resetButtonDiv.setAttribute('data-tooltip', 'Reset')
-  resetButtonDiv.addEventListener('click', () => {
-    const content = document.getElementById('modal-content')
-    const footer = document.getElementById('modal-footer')
+    "struktoOption",
+    "resetIcon",
+    "tooltip",
+    "tooltip-bottom",
+    "hand"
+  );
+  resetButtonDiv.setAttribute("data-tooltip", t("common.reset"));
+  resetButtonDiv.addEventListener("click", () => {
+    const content = document.getElementById("modal-content");
+    const footer = document.getElementById("modal-footer");
     while (content.hasChildNodes()) {
-      content.removeChild(content.lastChild)
+      content.removeChild(content.lastChild);
     }
     while (footer.hasChildNodes()) {
-      footer.removeChild(footer.lastChild)
+      footer.removeChild(footer.lastChild);
     }
-    content.appendChild(document.createTextNode('Alles löschen?'))
-    const doButton = document.createElement('div')
-    doButton.classList.add('modal-buttons', 'acceptIcon', 'hand')
-    doButton.addEventListener('click', () => presenter.resetModel())
-    footer.appendChild(doButton)
-    const cancelButton = document.createElement('div')
-    cancelButton.classList.add('modal-buttons', 'deleteIcon', 'hand')
-    cancelButton.addEventListener('click', () =>
-      document.getElementById('IEModal').classList.remove('active')
-    )
-    footer.appendChild(cancelButton)
+    content.appendChild(document.createTextNode(t("editor.deleteAllQuestion")));
+    const doButton = document.createElement("div");
+    doButton.classList.add("modal-buttons", "acceptIcon", "hand");
+    doButton.addEventListener("click", () => presenter.resetModel());
+    footer.appendChild(doButton);
+    const cancelButton = document.createElement("div");
+    cancelButton.classList.add("modal-buttons", "deleteIcon", "hand");
+    cancelButton.addEventListener("click", () =>
+      document.getElementById("IEModal").classList.remove("active")
+    );
+    footer.appendChild(cancelButton);
 
-    document.getElementById('IEModal').classList.add('active')
-  })
-  domNode.appendChild(resetButtonDiv)
+    document.getElementById("IEModal").classList.add("active");
+  });
+  domNode.appendChild(resetButtonDiv);
 }
 
-export function generateInfoButton (domNode) {
-  const infoButtonDiv = document.createElement('div')
+export function generateInfoButton(domNode) {
+  const infoButtonDiv = document.createElement("div");
   infoButtonDiv.classList.add(
-    'options-element',
-    'infoIcon',
-    'tooltip',
-    'tooltip-bottomInfo',
-    'hand'
-  )
-  infoButtonDiv.setAttribute('data-tooltip', 'Gitlab Repository')
-  infoButtonDiv.addEventListener('click', () => {
-    window.open('https://gitlab.com/dev-ddi/cs-school-tools/struktog', '_blank')
-  })
+    "options-element",
+    "infoIcon",
+    "tooltip",
+    "tooltip-bottomInfo",
+    "hand"
+  );
+  infoButtonDiv.setAttribute("data-tooltip", t("footer.sourceTooltip"));
+  infoButtonDiv.addEventListener("click", () => {
+    window.open(
+      "https://gitlab.com/dev-ddi/cs-school-tools/struktog",
+      "_blank"
+    );
+  });
 
-  domNode.appendChild(infoButtonDiv)
+  domNode.appendChild(infoButtonDiv);
 }
 
-export function highlight () {
+export function highlight() {
   // Rollout-Datum des Releases eintragen
-  const releaseDate = new Date('2025-08-25')
-  const now = new Date()
+  const releaseDate = new Date("2025-08-25");
+  const now = new Date();
 
   // 30 Tage später berechnen
-  const expiryDate = new Date(releaseDate)
-  expiryDate.setDate(expiryDate.getDate() + 30)
+  const expiryDate = new Date(releaseDate);
+  expiryDate.setDate(expiryDate.getDate() + 30);
 
   if (now <= expiryDate) {
-    document.getElementById('whats-new-link').classList.add('glimming')
+    document.getElementById("whats-new-link").classList.add("glimming");
   }
 }

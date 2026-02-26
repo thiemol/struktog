@@ -16,6 +16,12 @@
  */
 import * as htmlToImage from "html-to-image";
 import { config } from "../config";
+import {
+  getContentDefault,
+  getNodeLabel,
+  getUiLanguageSelectOptions,
+  t,
+} from "../i18n";
 export class ImportExport {
   constructor(presenter, domRoot) {
     this.presenter = presenter;
@@ -37,7 +43,7 @@ export class ImportExport {
       "hand"
     );
     infoDiv.id = "tourInfoButton";
-    infoDiv.setAttribute("data-tooltip", "Tour starten");
+    infoDiv.setAttribute("data-tooltip", t("importExport.startTour"));
     document.getElementById("optionButtons").appendChild(infoDiv);
 
     const settingsDiv = document.createElement("div");
@@ -48,7 +54,7 @@ export class ImportExport {
       "tooltip-bottom",
       "hand"
     );
-    settingsDiv.setAttribute("data-tooltip", "Einstellungen");
+    settingsDiv.setAttribute("data-tooltip", t("importExport.settings"));
     settingsDiv.addEventListener("click", () => this.openSettingsDialog());
     document.getElementById("optionButtons").appendChild(settingsDiv);
 
@@ -60,7 +66,7 @@ export class ImportExport {
       "tooltip-bottom",
       "hand"
     );
-    importDiv.setAttribute("data-tooltip", "Laden");
+    importDiv.setAttribute("data-tooltip", t("importExport.load"));
     const importInput = document.createElement("input");
     importInput.setAttribute("type", "file");
     importInput.addEventListener("change", (e) => this.presenter.readFile(e));
@@ -75,7 +81,7 @@ export class ImportExport {
       "tooltip-bottom",
       "hand"
     );
-    saveDiv.setAttribute("data-tooltip", "Speichern");
+    saveDiv.setAttribute("data-tooltip", t("importExport.save"));
     saveDiv.addEventListener("click", () => this.presenter.saveDialog());
     document.getElementById("optionButtons").appendChild(saveDiv);
 
@@ -88,7 +94,7 @@ export class ImportExport {
       "tooltip-bottom",
       "hand"
     );
-    exportDiv.setAttribute("data-tooltip", "Bildexport");
+    exportDiv.setAttribute("data-tooltip", t("importExport.imageExport"));
     exportDiv.addEventListener(
       "click",
       () => this.exportAsPngWithPackage()
@@ -169,7 +175,11 @@ export class ImportExport {
 
           ctx.fillStyle = "black";
           ctx.beginPath();
-          ctx.fillText("E: " + subTree.text, x + 15, y + defaultMargin);
+          ctx.fillText(
+            getContentDefault("inputPrefix") + ": " + subTree.text,
+            x + 15,
+            y + defaultMargin
+          );
           ctx.stroke();
           return this.renderTreeAsCanvas(
             subTree.followElement,
@@ -198,7 +208,11 @@ export class ImportExport {
 
           ctx.fillStyle = "black";
           ctx.beginPath();
-          ctx.fillText("A: " + subTree.text, x + 15, y + defaultMargin);
+          ctx.fillText(
+            getContentDefault("outputPrefix") + ": " + subTree.text,
+            x + 15,
+            y + defaultMargin
+          );
           ctx.stroke();
           return this.renderTreeAsCanvas(
             subTree.followElement,
@@ -262,10 +276,12 @@ export class ImportExport {
           );
           ctx.stroke();
           ctx.beginPath();
-          ctx.fillText("Wahr", x + 15, y + this.printHeight + defaultMargin);
+          const trueLabel = t("editor.trueLabel");
+          const falseLabel = t("editor.falseLabel");
+          ctx.fillText(trueLabel, x + 15, y + this.printHeight + defaultMargin);
           ctx.fillText(
-            "Falsch",
-            xmax - 15 - ctx.measureText("Falsch").width,
+            falseLabel,
+            xmax - 15 - ctx.measureText(falseLabel).width,
             y + this.printHeight + defaultMargin
           );
           ctx.stroke();
@@ -621,7 +637,8 @@ export class ImportExport {
           const returnType = (subTree.returnType || "").trim();
           const returnTypeText = returnType === "" ? "" : " -> " + returnType;
           ctx.fillText(
-            "function " +
+            getContentDefault("functionKeyword") +
+              " " +
               subTree.text +
               "(" +
               paramsText +
@@ -671,8 +688,16 @@ export class ImportExport {
 
           ctx.fillStyle = "black";
           ctx.beginPath();
-          ctx.fillText("Try", x + 15, y + defaultMargin);
-          ctx.fillText("Catch", x + 15, trychildY + defaultMargin);
+          ctx.fillText(
+            getContentDefault("tryLabel"),
+            x + 15,
+            y + defaultMargin
+          );
+          ctx.fillText(
+            getContentDefault("catchLabel"),
+            x + 15,
+            trychildY + defaultMargin
+          );
           ctx.stroke();
           ctx.beginPath();
           ctx.moveTo(x + (xmax - x) / 12, trychildY);
@@ -1095,6 +1120,7 @@ export class ImportExport {
       profile: this.presenter.getActiveConfigProfile(),
       elements: this.presenter.getSettingsElements(),
       colors: this.presenter.getSettingsColors(),
+      uiLanguage: this.presenter.getUiLanguage() || "auto",
       language: this.presenter.getCodeLanguage(),
       displaySourcecode: this.presenter.getSourcecodeDisplay(),
       shortcutsEnabled: this.presenter.getShortcutsEnabled(),
@@ -1102,7 +1128,7 @@ export class ImportExport {
 
     const title = document.createElement("div");
     title.classList.add("settingsTitle");
-    title.appendChild(document.createTextNode("Einstellungen"));
+    title.appendChild(document.createTextNode(t("importExport.settingsTitle")));
     content.appendChild(title);
 
     const tabList = document.createElement("div");
@@ -1111,12 +1137,16 @@ export class ImportExport {
     const generalTabButton = document.createElement("button");
     generalTabButton.type = "button";
     generalTabButton.classList.add("settingsTabButton", "active");
-    generalTabButton.appendChild(document.createTextNode("Allgemein"));
+    generalTabButton.appendChild(
+      document.createTextNode(t("importExport.tabGeneral"))
+    );
 
     const colorTabButton = document.createElement("button");
     colorTabButton.type = "button";
     colorTabButton.classList.add("settingsTabButton");
-    colorTabButton.appendChild(document.createTextNode("Farben"));
+    colorTabButton.appendChild(
+      document.createTextNode(t("importExport.tabColors"))
+    );
 
     tabList.appendChild(generalTabButton);
     tabList.appendChild(colorTabButton);
@@ -1143,7 +1173,9 @@ export class ImportExport {
     const profileContainer = document.createElement("div");
     profileContainer.classList.add("settingsGroup");
     const profileLabel = document.createElement("label");
-    profileLabel.appendChild(document.createTextNode("Profil"));
+    profileLabel.appendChild(
+      document.createTextNode(t("importExport.profile"))
+    );
     profileContainer.appendChild(profileLabel);
     const profileSelect = document.createElement("select");
     profileSelect.classList.add("form-select", "settingsSelect");
@@ -1166,7 +1198,9 @@ export class ImportExport {
     const elementsContainer = document.createElement("div");
     elementsContainer.classList.add("settingsGroup");
     const elementsLabel = document.createElement("label");
-    elementsLabel.appendChild(document.createTextNode("Elemente anzeigen"));
+    elementsLabel.appendChild(
+      document.createTextNode(t("importExport.showElements"))
+    );
     elementsContainer.appendChild(elementsLabel);
     const elementsGrid = document.createElement("div");
     elementsGrid.classList.add("settingsGrid");
@@ -1181,19 +1215,19 @@ export class ImportExport {
 
     const colorGroups = [
       {
-        title: "Ein- und Ausgabe",
+        title: t("importExport.colorGroupInputOutput"),
         keys: ["InputNode", "OutputNode", "TaskNode"],
       },
       {
-        title: "Schleifen",
+        title: t("importExport.colorGroupLoops"),
         keys: ["CountLoopNode", "HeadLoopNode", "FootLoopNode"],
       },
       {
-        title: "Verzweigungen und Fehlerbehandlung",
+        title: t("importExport.colorGroupBranching"),
         keys: ["BranchNode", "CaseNode", "TryCatchNode"],
       },
       {
-        title: "Funktionen",
+        title: t("importExport.colorGroupFunctions"),
         keys: ["FunctionNode"],
       },
     ];
@@ -1243,7 +1277,9 @@ export class ImportExport {
     const resetColorButton = document.createElement("button");
     resetColorButton.type = "button";
     resetColorButton.classList.add("settingsColorResetButton");
-    resetColorButton.appendChild(document.createTextNode("Reset Farben"));
+    resetColorButton.appendChild(
+      document.createTextNode(t("importExport.resetColors"))
+    );
     resetColorButton.addEventListener("click", () => {
       applyColorSettings(getDefaultEditorColors());
     });
@@ -1264,7 +1300,7 @@ export class ImportExport {
         syncGroupButton.type = "button";
         syncGroupButton.classList.add("settingsColorSyncButton");
         syncGroupButton.appendChild(
-          document.createTextNode("Gruppenfarbe übernehmen")
+          document.createTextNode(t("importExport.applyGroupColor"))
         );
         syncGroupButton.addEventListener("click", () => {
           const leadKey = group.keys[0];
@@ -1323,17 +1359,40 @@ export class ImportExport {
         .getSettingsElementKeys()
         .map((key) => ({
           key,
-          text: profileConfig[key].text,
+          text: getNodeLabel(key),
           use: profileConfig[key].use,
         }));
       this.renderSettingsElements(elementsGrid, profileElements);
       applyColorSettings(getProfileColors());
     });
 
+    const uiLanguageContainer = document.createElement("div");
+    uiLanguageContainer.classList.add("settingsGroup");
+    const uiLanguageLabel = document.createElement("label");
+    uiLanguageLabel.appendChild(
+      document.createTextNode(t("importExport.uiLanguage"))
+    );
+    uiLanguageContainer.appendChild(uiLanguageLabel);
+    const uiLanguageSelect = document.createElement("select");
+    uiLanguageSelect.classList.add("form-select", "settingsSelect");
+    for (const optionItem of getUiLanguageSelectOptions()) {
+      const option = document.createElement("option");
+      option.value = optionItem.value;
+      option.appendChild(document.createTextNode(optionItem.label));
+      if (optionItem.value === settings.uiLanguage) {
+        option.selected = true;
+      }
+      uiLanguageSelect.appendChild(option);
+    }
+    uiLanguageContainer.appendChild(uiLanguageSelect);
+    generalPanel.appendChild(uiLanguageContainer);
+
     const languageContainer = document.createElement("div");
     languageContainer.classList.add("settingsGroup");
     const languageLabel = document.createElement("label");
-    languageLabel.appendChild(document.createTextNode("Programmiersprache"));
+    languageLabel.appendChild(
+      document.createTextNode(t("importExport.language"))
+    );
     languageContainer.appendChild(languageLabel);
     const languageSelect = document.createElement("select");
     languageSelect.classList.add("form-select", "settingsSelect");
@@ -1355,7 +1414,9 @@ export class ImportExport {
     sourcecodeCheckbox.type = "checkbox";
     sourcecodeCheckbox.checked = settings.displaySourcecode;
     sourcecodeToggle.appendChild(sourcecodeCheckbox);
-    sourcecodeToggle.appendChild(document.createTextNode("Quellcode anzeigen"));
+    sourcecodeToggle.appendChild(
+      document.createTextNode(t("importExport.showSourcecode"))
+    );
     generalPanel.appendChild(sourcecodeToggle);
 
     const shortcutToggle = document.createElement("label");
@@ -1365,13 +1426,13 @@ export class ImportExport {
     shortcutCheckbox.checked = settings.shortcutsEnabled;
     shortcutToggle.appendChild(shortcutCheckbox);
     shortcutToggle.appendChild(
-      document.createTextNode("Shortcuts (Alt+1..0) aktivieren")
+      document.createTextNode(t("importExport.enableShortcuts"))
     );
     generalPanel.appendChild(shortcutToggle);
 
     const saveButton = document.createElement("div");
     saveButton.classList.add("modal-buttons", "settingsActionButton", "hand");
-    saveButton.appendChild(document.createTextNode("OK"));
+    saveButton.appendChild(document.createTextNode(t("common.ok")));
     saveButton.addEventListener("click", () => {
       const elementSettings = {};
       for (const checkbox of elementsGrid.getElementsByTagName("input")) {
@@ -1385,26 +1446,32 @@ export class ImportExport {
         (value) => value
       );
       if (!hasActiveElement) {
-        window.alert("Bitte mindestens ein Element aktiv lassen.");
+        window.alert(t("importExport.atLeastOneElement"));
         return;
       }
+
+      const previousUiLanguage = this.presenter.getUiLanguage();
 
       this.presenter.applySettings({
         profile: profileSelect.value,
         elements: elementSettings,
         colors: colorSettings,
+        uiLanguage: uiLanguageSelect.value,
         language: languageSelect.value,
         displaySourcecode: sourcecodeCheckbox.checked,
         shortcutsEnabled: shortcutCheckbox.checked,
       });
       document.getElementById("IEModal").classList.remove("active");
+      if (uiLanguageSelect.value !== previousUiLanguage) {
+        window.location.reload();
+      }
     });
 
     footer.appendChild(saveButton);
 
     const cancelButton = document.createElement("div");
     cancelButton.classList.add("modal-buttons", "settingsActionButton", "hand");
-    cancelButton.appendChild(document.createTextNode("Abbruch"));
+    cancelButton.appendChild(document.createTextNode(t("common.cancel")));
     cancelButton.addEventListener("click", () =>
       document.getElementById("IEModal").classList.remove("active")
     );

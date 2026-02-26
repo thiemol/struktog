@@ -1,46 +1,48 @@
+import { t } from "../i18n";
+
 export class WebTour {
   constructor() {
     this.hintStorageKey = "struktog_tour_hint_seen_v1";
     this.steps = [
       {
         selector: ".webtour-intro-anchor",
-        title: "Was ist ein Struktogramm?",
-        text: "Ein Struktogramm beschreibt einen Algorithmus in klaren, strukturierten Bausteinen. Du planst damit den Programmablauf schrittweise über Sequenz, Verzweigung und Schleife, bevor du ihn als Quellcode formulierst. Der Editor unterstützt dich dabei, diese Bausteine konsistent zu erstellen, logisch zu ordnen und in ausführbaren Code zu überführen.",
+        title: t("webtour.titleIntro"),
+        text: t("webtour.textIntro"),
       },
       {
         selector: "#tourInfoButton",
-        title: "Kurze Tour",
-        text: "Hier startest du jederzeit diese Einführung.",
+        title: t("webtour.titleStart"),
+        text: t("webtour.textStart"),
       },
       {
         selector: "#insertButtons",
-        title: "Elemente einfügen",
-        text: "Wähle hier ein Element aus und füge es per Klick oder Drag-and-Drop ein.",
+        title: t("webtour.titleInsert"),
+        text: t("webtour.textInsert"),
       },
       {
         selector: "#structogram",
-        title: "Arbeitsfläche",
-        text: "Hier baust du dein Struktogramm auf und bearbeitest die Inhalte direkt.",
+        title: t("webtour.titleWorkspace"),
+        text: t("webtour.textWorkspace"),
       },
       {
         selector: ".optionContainer",
-        title: "Elementoptionen",
-        text: "An eingefügten Elementen findest du Aktionen wie Entfernen und je nach Typ weitere Optionen.",
+        title: t("webtour.titleElementOptions"),
+        text: t("webtour.textElementOptions"),
       },
       {
         selector: "#optionButtons",
-        title: "Datei und Einstellungen",
-        text: "Oben findest du Einstellungen sowie Laden, Speichern und Bildexport.",
+        title: t("webtour.titleFileSettings"),
+        text: t("webtour.textFileSettings"),
       },
       {
         selector: "#struktoOptions1, #struktoOptions2",
-        title: "Undo, Redo, Reset",
-        text: "Diese Leiste enthält Rückgängig, Wiederholen und Zurücksetzen des Diagramms.",
+        title: t("webtour.titleHistory"),
+        text: t("webtour.textHistory"),
       },
       {
         selector: ".ToggleSourcecode",
-        title: "Quellcode",
-        text: "Mit diesem Button blendest du den Quellcode ein. Sprache und Kopieren stehen dann rechts bereit.",
+        title: t("webtour.titleSourcecode"),
+        text: t("webtour.textSourcecode"),
       },
     ];
 
@@ -144,7 +146,7 @@ export class WebTour {
     this.backButton = document.createElement("button");
     this.backButton.type = "button";
     this.backButton.classList.add("webtour-button");
-    this.backButton.appendChild(document.createTextNode("Zurück"));
+    this.backButton.appendChild(document.createTextNode(t("webtour.back")));
     this.backButton.addEventListener("click", () => this.previousStep());
 
     this.nextButton = document.createElement("button");
@@ -155,7 +157,7 @@ export class WebTour {
     const closeButton = document.createElement("button");
     closeButton.type = "button";
     closeButton.classList.add("webtour-button");
-    closeButton.appendChild(document.createTextNode("Beenden"));
+    closeButton.appendChild(document.createTextNode(t("webtour.finish")));
     closeButton.addEventListener("click", () => this.stop());
 
     controls.appendChild(this.backButton);
@@ -203,7 +205,9 @@ export class WebTour {
 
     this.backButton.disabled = this.currentStepIndex === 0;
     this.nextButton.textContent =
-      this.currentStepIndex === this.steps.length - 1 ? "Fertig" : "Weiter";
+      this.currentStepIndex === this.steps.length - 1
+        ? t("webtour.done")
+        : t("webtour.next");
 
     const target = this.getVisibleTarget(step.selector);
     if (!target) {
