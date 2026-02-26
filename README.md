@@ -1,137 +1,168 @@
 # Struktog
 
-Original open-source JavaScript tool for creating structograms
-in computer science education.
+Struktog is an open-source web editor for creating structograms in computer science education.
 
-🌐 Official website: https://ddi.education/struktog
-📦 Original repository: https://gitlab.com/dev-ddi/cs-school-tools/struktog/
+The project intentionally keeps runtime dependencies at zero to remain independent and easy to maintain long-term. The application is implemented in plain JavaScript, SCSS, and HTML. External packages are used only as development tooling (`devDependencies`).
 
-Note: There are forks of this project on other platforms. This repository is the original and officially maintained version.
+## Official Links
 
-# Struktogrammeditor
+- Website: https://ddi.education/struktog
+- Original repository: https://gitlab.com/dev-ddi/cs-school-tools/struktog/
 
-Freies offenes Webprogramm zur Erstellung von Struktogrammen sowie zur Umwandlung dessen in Code (Python, PHP, Java).
-Online nutzbar unter [https://ddi.education/struktog/](https://ddi.education/struktog/) oder als [Download](#download) einfach die index.html öffnen.
-Freie Software lebt von [Mitarbeit](#entwicklung). Gerne Kontakt aufnehmen und mithelfen.
+## Forks and Mirrors
 
-## Konfiguration
+Forks and mirrors of Struktog exist on other platforms. This repository is the officially maintained source of truth.
 
-Der Editor kann über verschiedene URL-Parameter angepasst werden. Dabei ist es möglich die Konfiguration zu ändern, um z.B. verschiedene Elemente auszublenden oder schon vorgefertigte Templates für Aufgaben geladen werden.
+Notable fork:
 
-### Verfügbare Elemente
+- **OpenPatch / struktolab**: https://github.com/openpatch/struktolab  
+  Integrated into the OpenPatch project. OpenPatch develops open-source projects for assessment and training of competencies in computer science.  
+  Maintainer: **Mike Barkmin**.
 
-- Anweisung, Eingabe, Ausgabe
-- Zählergesteuerte Schleife, Kopfgesteuerte Schleife, Fußgesteuerte Schleife
-- Verzweigung, Fallunterscheidung, trycatch
-- Funktionsblock
+If your fork should be listed here, feel free to open a PR.
 
-### Vorgegebene Konfiguration
+## Features
 
-Als Standard werden alle Elemente geladen.
+- Visual structogram editor with drag-and-drop workflow
+- Optional source-code view and language-specific generation
+- Profile-based element visibility and color configuration
+- Guided web tour and keyboard shortcuts (`Alt+1..0`)
+- JSON import/export and PNG image export
+- Optional offline support via service worker in production builds
 
-Für Python (https://dditools.inf.tu-dresden.de/struktog/?config=python):
+## Quick Start
+
+### Prerequisites
+
+- Node.js
+- npm
+- Git
+
+### Install
 
 ```bash
-{domain}/?config=python
+npm install
 ```
 
-Für Python mit Funktionsblock (https://dditools.inf.tu-dresden.de/struktog/?config=python_func):
+### Run development server
 
 ```bash
-{domain}/?config=python_func
+npm run watch
 ```
 
-Weitere Profile:
+### Build production bundle
 
 ```bash
-{domain}/?config=standard
-{domain}/?config=all
-{domain}/?config=c
-{domain}/?config=beginner
+npm run build
 ```
 
-## Import und Export
+The production output is written to `build/`.
 
-Beim Speichern wird eine JSON-Datei erzeugt.
+## URL Configuration
 
-- Neuere Exporte enthalten `formatVersion`, `meta`, `settings` und `tree`.
-- Beim Laden werden diese Einstellungen (Profil, sichtbare Elemente, Elementfarben, Oberflächensprache, Sprache, Quellcode-Sichtbarkeit, Shortcuts) automatisch wiederhergestellt.
-- Aeltere Exportdateien, die nur den Baum (`tree`) enthalten, bleiben weiterhin kompatibel und koennen unveraendert eingelesen werden.
+You can customize startup behavior with URL parameters.
 
-Der Bildexport erzeugt weiterhin eine PNG-Datei der aktuellen Darstellung.
+### `config` profiles
 
-### Beispiel Aufgaben
-
-Aufgaben können über eine übergebene URL geladen werden. Der Server auf dem die Beispiele hinterlegt werden, muss die entsprechende CORS Richtlinie freigeben, um CROSS ORIGIN zu erlauben. Alternativ können die Beispielaufgaben im Ordner 'src/assets/examples/' hinterlegt und dann direkt geladen werden.
+Examples:
 
 ```bash
-{domain}/?url=https://dditools.inf.tu-dresden.de/struktog/example1.json
+https://ddi.education/struktog/?config=standard
+https://ddi.education/struktog/?config=all
+https://ddi.education/struktog/?config=beginner
+https://ddi.education/struktog/?config=c
+https://ddi.education/struktog/?config=python
+https://ddi.education/struktog/?config=python_func
+```
+
+### `url` task import
+
+Load a JSON task at startup:
+
+```bash
+{domain}/?url=https://example.org/path/to/task.json
 {domain}/?url=example1.json
 ```
 
-# Download
+Note: External hosts must allow CORS for browser-side loading.
 
-- [Last-Release](https://dditools.inf.tu-dresden.de/releases/struktog/struktog-v1.3.0.tar.gz)
-- [Last-Build](https://dditools.inf.tu-dresden.de/releases/struktog/struktog-latest.tar.gz)
+## Import and Export
 
-# Maintainer
+### JSON export
 
-Thiemo Leonhardt
+Current exports use a v2 payload with:
 
-# Lizenz
+- `formatVersion`
+- `meta`
+- `settings`
+- `tree`
 
-aGPL 3
+When loading, Struktog restores persisted settings from the file, including:
 
-# Entwicklung
+- profile
+- visible elements
+- element colors
+- UI language
+- code language
+- source-code visibility
+- shortcut setting
 
-Die Entwicklung basiert auf den Paketen aus npm mit yarn und läuft momentan auf NodeJS Fermium.
-Installation von Node und Git ist Voraussetzung.
+Legacy exports that only contain `tree` are still supported.
 
-## Installation
+### PNG export
 
-```bash
-yarn
-```
+PNG export saves an image of the current structogram.
 
 ## Development
 
-Startet einen lokalen Webserver und aktualisiert Inhalte während der Entwicklung.
+Useful scripts:
 
 ```bash
-yarn run watch
+npm run watch
+npm run dev
+npm run build
+npm run chromium
 ```
 
-## Deployment
+## Testing
 
-Der fertige Build wird in dem Unterordner './build ' abgelegt.
-
-```bash
-yarn run build
-```
-
-## Tests
-
-Die UI-Tests werden mit Selenium gegen den lokalen Build ausgefuehrt.
+Run UI tests (Selenium against local build):
 
 ```bash
 npm test
 ```
 
-`npm test` baut zuerst das Projekt und startet dann `test/buttontest.js`.
+`npm test` builds the project first and then runs `test/buttontest.js`.
 
-### Optionale Umgebungsvariablen
+### Optional environment variables
 
-- `STRUKTOG_MAX_DEPTH` steuert die Verschachtelungstiefe (Standard: `2`)
-- `STRUKTOG_FAST_NESTED=true` aktiviert einen schnelleren Nested-Modus
-- `STRUKTOG_VERBOSE=true` zeigt detaillierte Testschritte statt kompakter Summary
-- `STRUKTOG_TEST_URL` ueberschreibt die zu testende URL (Standard: lokales `build/index.html`)
+- `STRUKTOG_MAX_DEPTH` controls nesting depth (default: `2`)
+- `STRUKTOG_FAST_NESTED=true` enables a faster nested mode
+- `STRUKTOG_VERBOSE=true` shows detailed test steps
+- `STRUKTOG_TEST_URL` overrides the target URL (default: local `build/index.html`)
 
-## Offline-Nutzung
+## Offline Support
 
-Im Produktionsbuild wird automatisch ein Service Worker erstellt und registriert.
-Dadurch kann die Webanwendung nach dem ersten Laden auch ohne Internetverbindung weiter genutzt werden.
+Production builds generate and register a service worker, enabling offline usage after first load.
 
-Hinweise:
+Notes:
 
-- Service Worker werden nur in sicheren Kontexten verwendet (`https://` oder `localhost`).
-- Nach Updates kann ein hartes Neuladen noetig sein, damit neue Assets direkt aktiv sind.
+- Service workers are only active in secure contexts (`https://` or `localhost`).
+- After updates, a hard reload may be required to activate new assets immediately.
+
+## Download
+
+- Latest release: https://dditools.inf.tu-dresden.de/releases/struktog/struktog-v1.3.0.tar.gz
+- Latest build: https://dditools.inf.tu-dresden.de/releases/struktog/struktog-latest.tar.gz
+
+## Contributing
+
+Contributions are welcome. Please open an issue or pull request in the official repository.
+
+## Maintainer
+
+Thiemo Leonhardt
+
+## License
+
+AGPL-3.0 (see `LICENSE`).
