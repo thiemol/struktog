@@ -108,6 +108,9 @@ const translations = {
         "Ein Struktogramm beschreibt einen Algorithmus in klaren, strukturierten Bausteinen. Du planst damit den Programmablauf schrittweise über Sequenz, Verzweigung und Schleife, bevor du ihn als Quellcode formulierst. Der Editor unterstützt dich dabei, diese Bausteine konsistent zu erstellen, logisch zu ordnen und in ausführbaren Code zu überführen.",
       titleStart: "Kurze Tour",
       textStart: "Hier startest du jederzeit diese Einführung.",
+      titleNaming: "Struktogramm benennen",
+      textNaming:
+        "Hier benennst du dein Struktogramm. Dieser Name wird auch für zukünftige JSON- und PNG-Exporte als Dateiname verwendet.",
       titleInsert: "Elemente einfügen",
       textInsert:
         "Wähle hier ein Element aus und füge es per Klick oder Drag-and-Drop ein.",
@@ -235,6 +238,9 @@ const translations = {
         "A structogram describes an algorithm using clear, structured building blocks. You plan program flow step by step with sequence, branch, and loop before writing source code. The editor helps you create these blocks consistently, arrange them logically, and transform them into executable code.",
       titleStart: "Quick tour",
       textStart: "You can start this introduction here at any time.",
+      titleNaming: "Name your structogram",
+      textNaming:
+        "You can rename your structogram here. This name is also used for future JSON and PNG export filenames.",
       titleInsert: "Insert elements",
       textInsert:
         "Choose an element here and insert it by click or drag and drop.",
@@ -363,6 +369,9 @@ const translations = {
         "Un structogramme décrit un algorithme avec des blocs structurés clairs. Vous planifiez le déroulement du programme étape par étape avec séquence, branchement et boucle avant d'écrire le code source. L'éditeur vous aide à créer ces blocs de manière cohérente, à les organiser logiquement et à les transformer en code exécutable.",
       titleStart: "Visite rapide",
       textStart: "Vous pouvez démarrer cette introduction ici à tout moment.",
+      titleNaming: "Nommer le structogramme",
+      textNaming:
+        "Vous pouvez renommer votre structogramme ici. Ce nom est aussi utilisé pour les futurs noms de fichiers d'export JSON et PNG.",
       titleInsert: "Insérer des éléments",
       textInsert:
         "Choisissez ici un élément et insérez-le par clic ou glisser-déposer.",
@@ -491,6 +500,9 @@ const translations = {
         "Un estructograma describe un algoritmo con bloques claros y estructurados. Planificas el flujo del programa paso a paso con secuencia, rama y bucle antes de escribir código fuente. El editor te ayuda a crear estos bloques de forma coherente, ordenarlos lógicamente y transformarlos en código ejecutable.",
       titleStart: "Tour rápido",
       textStart: "Puedes iniciar esta introducción aquí en cualquier momento.",
+      titleNaming: "Nombrar el estructograma",
+      textNaming:
+        "Aquí puedes renombrar tu estructograma. Este nombre también se usa para futuros nombres de archivo en las exportaciones JSON y PNG.",
       titleInsert: "Insertar elementos",
       textInsert:
         "Elige un elemento aquí e insértalo con clic o arrastrar y soltar.",
@@ -521,7 +533,7 @@ const contentDefaultsByLanguage = {
   de: {
     taskDefault: "Anweisung",
     branchCondition: "Bedingung",
-    caseVariable: "Expression",
+    caseVariable: "Variable",
     caseLabel: "Fall",
     elseLabel: "Sonst",
     countCondition: "Zählbedingung",
@@ -539,7 +551,7 @@ const contentDefaultsByLanguage = {
   en: {
     taskDefault: "Statement",
     branchCondition: "Condition",
-    caseVariable: "Variable",
+    caseVariable: "Expression",
     caseLabel: "Case",
     elseLabel: "Else",
     countCondition: "Count condition",

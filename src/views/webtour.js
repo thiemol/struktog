@@ -15,6 +15,11 @@ export class WebTour {
         text: t("webtour.textStart"),
       },
       {
+        selector: "#structoName",
+        title: t("webtour.titleNaming"),
+        text: t("webtour.textNaming"),
+      },
+      {
         selector: "#insertButtons",
         title: t("webtour.titleInsert"),
         text: t("webtour.textInsert"),
