@@ -9,6 +9,7 @@ const { GenerateSW } = require("workbox-webpack-plugin");
 const gameRoot = process.cwd();
 const Webpack = require("webpack");
 const packageVersion = require("./package.json").version;
+const isEmbedBuild = process.env.STRUKTOG_EMBED_BUILD === "1";
 
 function resolveBuildIdentifier() {
   if (process.env.CI_COMMIT_TAG) {
@@ -88,6 +89,7 @@ const config = {
   plugins: [
     new Webpack.DefinePlugin({
       __COMMIT_HASH__: JSON.stringify(commitHash),
+      __EMBED_BUILD__: JSON.stringify(isEmbedBuild),
     }),
     new WebpackShellPluginNext({
       onBuildStart: {
@@ -165,24 +167,26 @@ module.exports = (env, argv) => {
     // Production-Sourcemaps (falls benötigt)
     config.devtool = "source-map";
 
-    config.plugins.push(
-      new GenerateSW({
-        swDest: "sw.js",
-        clientsClaim: true,
-        skipWaiting: true,
-        cleanupOutdatedCaches: true,
-        navigateFallback: "/index.html",
-        runtimeCaching: [
-          {
-            urlPattern: /\/assets\/examples\/.*\.json$/,
-            handler: "NetworkFirst",
-            options: {
-              cacheName: "example-json-cache",
+    if (!isEmbedBuild) {
+      config.plugins.push(
+        new GenerateSW({
+          swDest: "sw.js",
+          clientsClaim: true,
+          skipWaiting: true,
+          cleanupOutdatedCaches: true,
+          navigateFallback: "/index.html",
+          runtimeCaching: [
+            {
+              urlPattern: /\/assets\/examples\/.*\.json$/,
+              handler: "NetworkFirst",
+              options: {
+                cacheName: "example-json-cache",
+              },
             },
-          },
-        ],
-      })
-    );
+          ],
+        })
+      );
+    }
   }
 
   return config;

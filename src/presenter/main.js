@@ -28,8 +28,11 @@ import {
 } from "../i18n";
 
 export class Presenter {
-  constructor(model) {
+  constructor(model, options = {}) {
     this.model = model;
+    this.options = options;
+    this.embedMode = Boolean(options.embedMode);
+    this.externalEventHandler = null;
     this.insertMode = false;
     this.settingFunctionMode = false; // if the user is setting a function block then true
     this.views = [];
@@ -40,6 +43,7 @@ export class Presenter {
     this.shortcutsEnabled = true;
     this.activeConfigProfile = "standard";
     this.uiLanguage = getUiLanguagePreference();
+    this.structogramName = t("nav.unnamed");
     this.undoList = [];
     this.redoList = [];
 
@@ -65,6 +69,24 @@ export class Presenter {
     }
   }
 
+  isEmbedMode() {
+    return this.embedMode;
+  }
+
+  setExternalEventHandler(handler) {
+    if (typeof handler === "function") {
+      this.externalEventHandler = handler;
+    } else {
+      this.externalEventHandler = null;
+    }
+  }
+
+  emitExternalEvent(type, payload = {}) {
+    if (typeof this.externalEventHandler === "function") {
+      this.externalEventHandler({ type, payload });
+    }
+  }
+
   addView(view) {
     this.views.push(view);
   }
@@ -79,6 +101,27 @@ export class Presenter {
 
   getModelTree() {
     return this.model.getTree();
+  }
+
+  getStructogramName() {
+    const structoNameNode = document.getElementById("structoName");
+    if (structoNameNode && typeof structoNameNode.innerHTML === "string") {
+      return structoNameNode.innerHTML;
+    }
+    return this.structogramName || t("nav.unnamed");
+  }
+
+  setStructogramName(name) {
+    const normalizedName =
+      typeof name === "string" && name.trim() !== "" ? name : t("nav.unnamed");
+    this.structogramName = normalizedName;
+
+    const structoNameNode = document.getElementById("structoName");
+    if (structoNameNode) {
+      structoNameNode.innerHTML = normalizedName;
+    }
+
+    return normalizedName;
   }
 
   getElementByUid(uid) {
@@ -356,6 +399,10 @@ export class Presenter {
         }
       }
     }
+
+    this.emitExternalEvent("settingsChanged", {
+      settings: this.getCurrentSettingsSnapshot(),
+    });
   }
 
   resetSettingsToDefault() {
@@ -394,11 +441,22 @@ export class Presenter {
     }
   }
 
+  notifyTreeChanged(reason = "changed") {
+    this.emitExternalEvent("treeChanged", {
+      reason,
+      tree: this.model.getTree(),
+    });
+  }
+
   init() {
     if (this.migrateLocalizedDefaultContent()) {
       this.updateBrowserStore();
     }
     this.renderAllViews();
+    this.emitExternalEvent("ready", {
+      embedMode: this.embedMode,
+      tree: this.model.getTree(),
+    });
   }
 
   updateNodeTextFromDefault(node, textKey) {
@@ -566,12 +624,24 @@ export class Presenter {
     this.setSourcecodeDisplayState(!this.displaySourcecode);
   }
 
-  /**
-   * Prepare for inserting an element
-   *
-   * @param   buttonId   id of the selected button
-   */
-  insertNode(id, event) {
+  getInsertButtonIdByNodeType(nodeType) {
+    const map = {
+      InputNode: "InputButton",
+      OutputNode: "OutputButton",
+      TaskNode: "TaskButton",
+      CountLoopNode: "CountLoopButton",
+      HeadLoopNode: "HeadLoopButton",
+      FootLoopNode: "FootLoopButton",
+      BranchNode: "BranchButton",
+      CaseNode: "CaseButton",
+      TryCatchNode: "TryCatchButton",
+      FunctionNode: "FunctionButton",
+    };
+    return map[nodeType] || null;
+  }
+
+  setNextInsertElementByButtonId(id) {
+    this.settingFunctionMode = false;
     switch (id) {
       case "InputButton":
         this.nextInsertElement = {
@@ -584,7 +654,7 @@ export class Presenter {
             followElement: null,
           },
         };
-        break;
+        return true;
       case "OutputButton":
         this.nextInsertElement = {
           id: guidGenerator(),
@@ -596,7 +666,7 @@ export class Presenter {
             followElement: null,
           },
         };
-        break;
+        return true;
       case "TaskButton":
         this.nextInsertElement = {
           id: guidGenerator(),
@@ -608,7 +678,7 @@ export class Presenter {
             followElement: null,
           },
         };
-        break;
+        return true;
       case "BranchButton":
         this.nextInsertElement = {
           id: guidGenerator(),
@@ -630,7 +700,7 @@ export class Presenter {
             followElement: { type: "Placeholder" },
           },
         };
-        break;
+        return true;
       case "CaseButton":
         this.nextInsertElement = {
           id: guidGenerator(),
@@ -675,7 +745,7 @@ export class Presenter {
             },
           ],
         };
-        break;
+        return true;
       case "CountLoopButton":
         this.nextInsertElement = {
           id: guidGenerator(),
@@ -692,7 +762,7 @@ export class Presenter {
             followElement: { type: "Placeholder" },
           },
         };
-        break;
+        return true;
       case "HeadLoopButton":
         this.nextInsertElement = {
           id: guidGenerator(),
@@ -709,7 +779,7 @@ export class Presenter {
             followElement: { type: "Placeholder" },
           },
         };
-        break;
+        return true;
       case "FunctionButton":
         this.nextInsertElement = {
           id: guidGenerator(),
@@ -729,7 +799,7 @@ export class Presenter {
           },
         };
         this.settingFunctionMode = true;
-        break;
+        return true;
       case "FootLoopButton":
         this.nextInsertElement = {
           id: guidGenerator(),
@@ -746,7 +816,7 @@ export class Presenter {
             followElement: { type: "Placeholder" },
           },
         };
-        break;
+        return true;
       case "TryCatchButton":
         this.nextInsertElement = {
           id: guidGenerator(),
@@ -771,21 +841,36 @@ export class Presenter {
             },
           ],
         };
-        break;
+        return true;
+      default:
+        return false;
     }
-    if (event.dataTransfer !== undefined) {
+  }
+
+  /**
+   * Prepare for inserting an element
+   *
+   * @param   buttonId   id of the selected button
+   */
+  insertNode(id, event) {
+    if (!this.setNextInsertElementByButtonId(id)) {
+      return;
+    }
+    if (event && event.dataTransfer !== undefined) {
       event.dataTransfer.effectAllowed = "move";
       event.dataTransfer.setData("text", id);
     }
     const button = document.getElementById(id);
-    if (button.classList.contains("boldText")) {
+    if (button && button.classList.contains("boldText")) {
       this.resetButtons();
       this.reset();
     } else {
       // prepare insert by updating the model data
       this.resetButtons();
       this.insertMode = true;
-      button.classList.add("boldText");
+      if (button) {
+        button.classList.add("boldText");
+      }
     }
     // rerender the struktogramm
     this.renderAllViews();
@@ -812,7 +897,11 @@ export class Presenter {
     this.checkUndo();
     this.updateBrowserStore();
     this.renderAllViews();
-    document.getElementById("IEModal").classList.remove("active");
+    const modal = document.getElementById("IEModal");
+    if (modal) {
+      modal.classList.remove("active");
+    }
+    this.notifyTreeChanged("reset");
   }
 
   /**
@@ -834,6 +923,24 @@ export class Presenter {
     this.checkUndo();
     this.updateBrowserStore();
     this.renderAllViews();
+    this.notifyTreeChanged("switchDefaultState");
+  }
+
+  setCaseDefault(uid, enabled) {
+    const element = this.getElementByUid(uid);
+    if (!element || element.type !== "CaseNode") {
+      return { ok: false, error: "Case node not found" };
+    }
+
+    const desiredState = Boolean(enabled);
+    if (Boolean(element.defaultOn) !== desiredState) {
+      this.switchDefaultState(uid);
+    }
+
+    return {
+      ok: true,
+      defaultOn: Boolean(this.getElementByUid(uid).defaultOn),
+    };
   }
 
   /**
@@ -855,6 +962,7 @@ export class Presenter {
     this.checkUndo();
     this.updateBrowserStore();
     this.renderAllViews();
+    this.notifyTreeChanged("addCase");
   }
 
   /**
@@ -876,6 +984,121 @@ export class Presenter {
     this.checkUndo();
     this.updateBrowserStore();
     this.renderAllViews();
+    this.notifyTreeChanged("addCatch");
+  }
+
+  getNodeTypeForRemoval(element) {
+    if (!element) {
+      return null;
+    }
+    if (element.specialType && element.specialType === "CatchNode") {
+      return "CatchNode";
+    }
+    return element.type;
+  }
+
+  checkEmptyCatches(catches) {
+    for (const item of catches) {
+      if (item.followElement.type !== "Placeholder") {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  requiresRemoveConfirmation(element, type) {
+    if (!element || !type) {
+      return false;
+    }
+
+    switch (type) {
+      case "TaskNode":
+      case "InputNode":
+      case "OutputNode":
+        return false;
+      case "HeadLoopNode":
+      case "CountLoopNode":
+      case "FootLoopNode":
+      case "FunctionNode":
+        return element.child.followElement.type !== "Placeholder";
+      case "BranchNode":
+        return (
+          element.trueChild.followElement.type !== "Placeholder" ||
+          element.falseChild.followElement.type !== "Placeholder"
+        );
+      case "TryCatchNode":
+        return (
+          element.tryChild.followElement.type !== "Placeholder" ||
+          this.checkEmptyCatches(element.catches)
+        );
+      case "CaseNode": {
+        let hasContent = false;
+        for (const item of element.cases) {
+          if (item.followElement.followElement.type !== "Placeholder") {
+            hasContent = true;
+          }
+        }
+        if (
+          element.defaultNode.followElement.followElement.type !== "Placeholder"
+        ) {
+          hasContent = true;
+        }
+        return hasContent;
+      }
+      case "InsertCase":
+      case "CatchNode":
+        return element.followElement.type !== "Placeholder";
+      default:
+        return true;
+    }
+  }
+
+  getRemovalInfo(uid) {
+    const element = this.model.getElementInTree(uid, this.model.getTree());
+    if (!element) {
+      return {
+        ok: false,
+        error: "Node not found",
+      };
+    }
+
+    const nodeType = this.getNodeTypeForRemoval(element);
+    const requiresConfirmation = this.requiresRemoveConfirmation(
+      element,
+      nodeType
+    );
+    return {
+      ok: true,
+      uid,
+      nodeType,
+      requiresConfirmation,
+    };
+  }
+
+  canRemove(uid) {
+    return this.getRemovalInfo(uid);
+  }
+
+  removeNode(uid, force = false) {
+    const removalInfo = this.getRemovalInfo(uid);
+    if (!removalInfo.ok) {
+      return removalInfo;
+    }
+
+    if (removalInfo.requiresConfirmation && !force) {
+      return {
+        ok: false,
+        requiresConfirmation: true,
+        nodeType: removalInfo.nodeType,
+        error: "Confirmation required",
+      };
+    }
+
+    this.removeNodeFromTree(uid, false);
+    return {
+      ok: true,
+      nodeType: removalInfo.nodeType,
+    };
   }
 
   /**
@@ -884,87 +1107,17 @@ export class Presenter {
    * @param   uid   id of the clicked element in the struktogramm
    */
   removeElement(uid) {
-    function _checkEmptyCatches(catches) {
-      // check if all catches are empty
-      for (const item of catches) {
-        if (item.followElement.type !== "Placeholder") {
-          return false;
-        }
-      }
-      return true;
+    const removalInfo = this.getRemovalInfo(uid);
+    if (!removalInfo.ok) {
+      return;
     }
 
-    const deleteElem = this.model.getElementInTree(uid, this.model.getTree());
-    let type = deleteElem.type;
-    if (deleteElem.specialType && deleteElem.specialType === "CatchNode") {
-      type = deleteElem.specialType;
+    if (removalInfo.requiresConfirmation) {
+      this.prepareRemoveQuestion(uid);
+      return;
     }
-    switch (type) {
-      case "TaskNode":
-      case "InputNode":
-      case "OutputNode":
-        this.removeNodeFromTree(uid);
-        break;
-      case "HeadLoopNode":
-      case "CountLoopNode":
-      case "FootLoopNode":
-      case "FunctionNode":
-        if (deleteElem.child.followElement.type !== "Placeholder") {
-          this.prepareRemoveQuestion(uid);
-        } else {
-          this.removeNodeFromTree(uid);
-        }
-        break;
-      case "BranchNode":
-        if (
-          deleteElem.trueChild.followElement.type !== "Placeholder" ||
-          deleteElem.falseChild.followElement.type !== "Placeholder"
-        ) {
-          this.prepareRemoveQuestion(uid);
-        } else {
-          this.removeNodeFromTree(uid);
-        }
-        break;
-      case "TryCatchNode":
-        // loop through all catches
-        if (
-          deleteElem.tryChild.followElement.type !== "Placeholder" ||
-          _checkEmptyCatches(deleteElem.catches)
-        ) {
-          this.prepareRemoveQuestion(uid);
-        } else {
-          this.removeNodeFromTree(uid);
-        }
-        break;
-      case "CaseNode": {
-        let check = false;
-        for (const item of deleteElem.cases) {
-          if (item.followElement.followElement.type !== "Placeholder") {
-            check = true;
-          }
-        }
-        if (
-          deleteElem.defaultNode.followElement.followElement.type !==
-          "Placeholder"
-        ) {
-          check = true;
-        }
-        if (check) {
-          this.prepareRemoveQuestion(uid);
-        } else {
-          this.removeNodeFromTree(uid);
-        }
-        break;
-      }
-      case "InsertCase":
-      case "CatchNode":
-        if (deleteElem.followElement.type !== "Placeholder") {
-          this.prepareRemoveQuestion(uid);
-        } else {
-          this.removeNodeFromTree(uid);
-        }
-        break;
-    }
+
+    this.removeNodeFromTree(uid);
   }
 
   prepareRemoveQuestion(uid) {
@@ -1008,8 +1161,12 @@ export class Presenter {
     this.updateBrowserStore();
     this.renderAllViews();
     if (closeModal) {
-      document.getElementById("IEModal").classList.remove("active");
+      const modal = document.getElementById("IEModal");
+      if (modal) {
+        modal.classList.remove("active");
+      }
     }
+    this.notifyTreeChanged("removeElement");
   }
 
   /**
@@ -1090,6 +1247,129 @@ export class Presenter {
     this.checkUndo();
     this.updateBrowserStore();
     this.renderAllViews();
+    this.notifyTreeChanged("editElement");
+  }
+
+  mutateFunctionNode(uid, mutator) {
+    const functionNode = this.getElementByUid(uid);
+    if (!functionNode || functionNode.type !== "FunctionNode") {
+      return { ok: false, error: "Function node not found" };
+    }
+
+    this.updateUndo();
+    this.model.setTree(
+      this.model.findAndAlterElement(
+        uid,
+        this.model.getTree(),
+        (subTree) => {
+          if (subTree.type === "FunctionNode") {
+            mutator(subTree);
+          }
+          return subTree;
+        },
+        false,
+        ""
+      )
+    );
+    this.checkUndo();
+    this.updateBrowserStore();
+    this.renderAllViews();
+    this.notifyTreeChanged("editElement");
+    return { ok: true, node: this.getElementByUid(uid) };
+  }
+
+  normalizeFunctionParameters(parameters) {
+    const normalized = [];
+    if (Array.isArray(parameters)) {
+      for (const item of parameters) {
+        normalized.push({
+          pos: 0,
+          parName: item && typeof item.parName === "string" ? item.parName : "",
+        });
+      }
+    }
+    for (let index = 0; index < normalized.length; index += 1) {
+      normalized[index].pos = index * 3;
+    }
+    return normalized;
+  }
+
+  setFunctionName(uid, name) {
+    const functionNode = this.getElementByUid(uid);
+    if (!functionNode || functionNode.type !== "FunctionNode") {
+      return { ok: false, error: "Function node not found" };
+    }
+
+    this.editElement(uid, String(name), "funcname|");
+    return { ok: true, node: this.getElementByUid(uid) };
+  }
+
+  setFunctionReturnType(uid, returnType) {
+    const functionNode = this.getElementByUid(uid);
+    if (!functionNode || functionNode.type !== "FunctionNode") {
+      return { ok: false, error: "Function node not found" };
+    }
+
+    this.editElement(uid, String(returnType), "returntype|");
+    return { ok: true, node: this.getElementByUid(uid) };
+  }
+
+  addFunctionParameter(uid, name = "") {
+    return this.mutateFunctionNode(uid, (functionNode) => {
+      const params = this.normalizeFunctionParameters(functionNode.parameters);
+      params.push({ pos: 0, parName: String(name) });
+      functionNode.parameters = this.normalizeFunctionParameters(params);
+    });
+  }
+
+  setFunctionParameter(uid, index, name) {
+    const indexNumber = Number(index);
+    if (!Number.isInteger(indexNumber) || indexNumber < 0) {
+      return { ok: false, error: "Invalid parameter index" };
+    }
+
+    const functionNode = this.getElementByUid(uid);
+    if (!functionNode || functionNode.type !== "FunctionNode") {
+      return { ok: false, error: "Function node not found" };
+    }
+
+    const params = this.normalizeFunctionParameters(functionNode.parameters);
+    if (indexNumber >= params.length) {
+      return { ok: false, error: "Parameter index out of bounds" };
+    }
+
+    return this.mutateFunctionNode(uid, (node) => {
+      const normalizedParams = this.normalizeFunctionParameters(
+        node.parameters
+      );
+      normalizedParams[indexNumber].parName = String(name);
+      node.parameters = normalizedParams;
+    });
+  }
+
+  removeFunctionParameter(uid, index) {
+    const indexNumber = Number(index);
+    if (!Number.isInteger(indexNumber) || indexNumber < 0) {
+      return { ok: false, error: "Invalid parameter index" };
+    }
+
+    const functionNode = this.getElementByUid(uid);
+    if (!functionNode || functionNode.type !== "FunctionNode") {
+      return { ok: false, error: "Function node not found" };
+    }
+
+    const params = this.normalizeFunctionParameters(functionNode.parameters);
+    if (indexNumber >= params.length) {
+      return { ok: false, error: "Parameter index out of bounds" };
+    }
+
+    return this.mutateFunctionNode(uid, (node) => {
+      const normalizedParams = this.normalizeFunctionParameters(
+        node.parameters
+      );
+      normalizedParams.splice(indexNumber, 1);
+      node.parameters = this.normalizeFunctionParameters(normalizedParams);
+    });
   }
 
   /**
@@ -1136,9 +1416,14 @@ export class Presenter {
     this.renderAllViews();
     // on new inserted elements start the editing mode of the element
     // start no editing mode for try catch blocks
-    if (!moveState && this.getElementByUid(elemId).type !== "TryCatchNode") {
+    if (
+      !this.embedMode &&
+      !moveState &&
+      this.getElementByUid(elemId).type !== "TryCatchNode"
+    ) {
       this.switchEditState(elemId);
     }
+    this.notifyTreeChanged(moveState ? "moveElement" : "insertElement");
   }
 
   /**
@@ -1148,6 +1433,17 @@ export class Presenter {
    * @param   paramIndex  index (position) of the function parameter
    */
   switchEditState(uid, paramIndex = null) {
+    if (this.embedMode) {
+      const node = this.getElementByUid(uid);
+      this.emitExternalEvent("nodeSelected", {
+        uid,
+        nodeType: node ? node.type : null,
+        text: node && typeof node.text === "string" ? node.text : "",
+        paramIndex,
+      });
+      return;
+    }
+
     let elem = document.getElementById(uid);
     console.log(elem);
 
@@ -1197,6 +1493,179 @@ export class Presenter {
 
   getStringifiedTree() {
     return JSON.stringify(this.model.getTree());
+  }
+
+  collectInsertTargetsInNode(subTree, targets) {
+    if (!subTree || typeof subTree !== "object") {
+      return;
+    }
+    if (subTree.type === "InsertNode" && subTree.id) {
+      targets.push(subTree.id);
+    }
+
+    if (subTree.followElement) {
+      this.collectInsertTargetsInNode(subTree.followElement, targets);
+    }
+    if (subTree.child) {
+      this.collectInsertTargetsInNode(subTree.child, targets);
+    }
+    if (subTree.trueChild) {
+      this.collectInsertTargetsInNode(subTree.trueChild, targets);
+    }
+    if (subTree.falseChild) {
+      this.collectInsertTargetsInNode(subTree.falseChild, targets);
+    }
+    if (subTree.tryChild) {
+      this.collectInsertTargetsInNode(subTree.tryChild, targets);
+    }
+    if (Array.isArray(subTree.cases)) {
+      for (const caseNode of subTree.cases) {
+        this.collectInsertTargetsInNode(caseNode, targets);
+      }
+    }
+    if (Array.isArray(subTree.catches)) {
+      for (const catchNode of subTree.catches) {
+        this.collectInsertTargetsInNode(catchNode, targets);
+      }
+    }
+    if (subTree.defaultNode) {
+      this.collectInsertTargetsInNode(subTree.defaultNode, targets);
+    }
+  }
+
+  getInsertTargets() {
+    const targets = [];
+    this.collectInsertTargetsInNode(this.model.getTree(), targets);
+    return targets;
+  }
+
+  nodeContainsUid(subTree, uid) {
+    if (!subTree || typeof subTree !== "object") {
+      return false;
+    }
+
+    if (subTree.id === uid) {
+      return true;
+    }
+
+    if (this.nodeContainsUid(subTree.followElement, uid)) {
+      return true;
+    }
+    if (this.nodeContainsUid(subTree.child, uid)) {
+      return true;
+    }
+    if (this.nodeContainsUid(subTree.trueChild, uid)) {
+      return true;
+    }
+    if (this.nodeContainsUid(subTree.falseChild, uid)) {
+      return true;
+    }
+    if (this.nodeContainsUid(subTree.tryChild, uid)) {
+      return true;
+    }
+    if (Array.isArray(subTree.cases)) {
+      for (const caseNode of subTree.cases) {
+        if (this.nodeContainsUid(caseNode, uid)) {
+          return true;
+        }
+      }
+    }
+    if (Array.isArray(subTree.catches)) {
+      for (const catchNode of subTree.catches) {
+        if (this.nodeContainsUid(catchNode, uid)) {
+          return true;
+        }
+      }
+    }
+    if (this.nodeContainsUid(subTree.defaultNode, uid)) {
+      return true;
+    }
+
+    return false;
+  }
+
+  moveNode(uid, targetInsertUid) {
+    const sourceNode = this.getElementByUid(uid);
+    if (!sourceNode) {
+      return { ok: false, error: "Source node not found" };
+    }
+
+    if (
+      sourceNode.type === "InsertNode" ||
+      sourceNode.type === "InsertCase" ||
+      sourceNode.type === "Placeholder" ||
+      sourceNode.specialType === "CatchNode"
+    ) {
+      return { ok: false, error: "Node type cannot be moved" };
+    }
+
+    const targetNode = this.getElementByUid(targetInsertUid);
+    if (!targetNode || targetNode.type !== "InsertNode") {
+      return { ok: false, error: "Invalid insert target" };
+    }
+
+    if (this.nodeContainsUid(sourceNode, targetInsertUid)) {
+      return { ok: false, error: "Target cannot be inside moved subtree" };
+    }
+
+    if (
+      !sourceNode.followElement ||
+      sourceNode.followElement.type !== "InsertNode"
+    ) {
+      return { ok: false, error: "Source node is malformed" };
+    }
+
+    this.moveId = uid;
+    this.insertMode = true;
+    this.nextInsertElement = sourceNode;
+    this.nextInsertElement.followElement.followElement = null;
+
+    this.appendElement(targetInsertUid);
+    return { ok: true, movedUid: uid };
+  }
+
+  insertNodeAt(targetInsertUid, nodeType) {
+    const buttonId = this.getInsertButtonIdByNodeType(nodeType);
+    if (!buttonId) {
+      return { ok: false, error: "Unknown node type" };
+    }
+
+    const targetNode = this.getElementByUid(targetInsertUid);
+    if (!targetNode || targetNode.type !== "InsertNode") {
+      return { ok: false, error: "Invalid insert target" };
+    }
+
+    const prepared = this.setNextInsertElementByButtonId(buttonId);
+    if (!prepared || !this.nextInsertElement || !this.nextInsertElement.id) {
+      return { ok: false, error: "Insert preparation failed" };
+    }
+
+    const newUid = this.nextInsertElement.id;
+    this.insertMode = true;
+    this.appendElement(targetInsertUid);
+    return { ok: true, newUid };
+  }
+
+  removeElementDirect(uid) {
+    const element = this.getElementByUid(uid);
+    if (!element) {
+      return false;
+    }
+    this.removeNodeFromTree(uid, false);
+    return true;
+  }
+
+  getExportPayload() {
+    const structoName = this.getStructogramName();
+    return {
+      formatVersion: 2,
+      meta: {
+        exportedAt: new Date().toISOString(),
+        structoName,
+      },
+      settings: this.getCurrentSettingsSnapshot(),
+      tree: this.model.getTree(),
+    };
   }
 
   getCurrentSettingsSnapshot() {
@@ -1258,7 +1727,7 @@ export class Presenter {
         : null;
     const structoName = structoNameFromMeta || fallbackName;
     if (structoName) {
-      document.getElementById("structoName").innerHTML = structoName;
+      this.setStructogramName(structoName);
     }
 
     this.updateUndo();
@@ -1276,20 +1745,13 @@ export class Presenter {
     this.checkUndo();
     this.renderAllViews();
     this.updateBrowserStore();
+    this.notifyTreeChanged("import");
     return true;
   }
 
   saveDialog() {
-    const structoName = document.getElementById("structoName").innerHTML;
-    const exportPayload = {
-      formatVersion: 2,
-      meta: {
-        exportedAt: new Date().toISOString(),
-        structoName,
-      },
-      settings: this.getCurrentSettingsSnapshot(),
-      tree: this.model.getTree(),
-    };
+    const exportPayload = this.getExportPayload();
+    const structoName = exportPayload.meta.structoName;
 
     // define the data url to start a download on click
     const dataUri =
@@ -1393,6 +1855,7 @@ export class Presenter {
       }
       this.renderAllViews();
       this.updateBrowserStore();
+      this.notifyTreeChanged("undo");
     }
   }
 
@@ -1428,6 +1891,7 @@ export class Presenter {
       }
       this.renderAllViews();
       this.updateBrowserStore();
+      this.notifyTreeChanged("redo");
     }
   }
 }

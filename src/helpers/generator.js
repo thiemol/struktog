@@ -45,7 +45,61 @@ export function guidGenerator() {
  * Generate HTML tree
  *
  */
-export function generateHtmltree() {
+export function generateHtmltree(options = {}) {
+  const mode = options.mode === "embed" ? "embed" : "full";
+  if (mode === "embed") {
+    const main = document.createElement("main");
+    document.body.appendChild(main);
+
+    const editor = document.createElement("div");
+    editor.classList.add("container");
+    editor.setAttribute("id", "editorDisplay");
+    main.appendChild(editor);
+
+    const modal = document.createElement("div");
+    modal.classList.add("modal");
+    modal.setAttribute("id", "IEModal");
+    main.appendChild(modal);
+
+    const modalOverlay = document.createElement("div");
+    modalOverlay.classList.add("modal-overlay");
+    modalOverlay.setAttribute("aria-label", "Close");
+    modalOverlay.addEventListener("click", () => {
+      document.getElementById("IEModal").classList.remove("active");
+    });
+    modal.appendChild(modalOverlay);
+
+    const modalContainer = document.createElement("div");
+    modalContainer.classList.add("modal-container");
+    modal.appendChild(modalContainer);
+
+    const modalHeader = document.createElement("div");
+    modalHeader.classList.add("modal-header");
+    modalContainer.appendChild(modalHeader);
+
+    const modalHeaderClose = document.createElement("div");
+    modalHeaderClose.classList.add("close", "hand", "cancelIcon");
+    modalHeaderClose.addEventListener("click", () => {
+      document.getElementById("IEModal").classList.remove("active");
+    });
+    modalHeader.appendChild(modalHeaderClose);
+
+    const modalBody = document.createElement("div");
+    modalBody.classList.add("modal-body");
+    modalContainer.appendChild(modalBody);
+
+    const modalBodyContent = document.createElement("div");
+    modalBodyContent.classList.add("content");
+    modalBodyContent.setAttribute("id", "modal-content");
+    modalBody.appendChild(modalBodyContent);
+
+    const modalFooter = document.createElement("div");
+    modalFooter.classList.add("modal-footer", "container");
+    modalFooter.setAttribute("id", "modal-footer");
+    modalContainer.appendChild(modalFooter);
+    return;
+  }
+
   // Header
   const header = document.createElement("header");
   header.classList.add("container");

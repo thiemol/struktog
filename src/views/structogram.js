@@ -26,10 +26,16 @@ import {
 } from "../i18n";
 
 export class Structogram {
-  constructor(presenter, domRoot) {
+  constructor(presenter, domRoot, options = {}) {
     this.presenter = presenter;
     this.domRoot = domRoot;
+    this.options = options;
     this.size = 7;
+    this.embedUi =
+      typeof options.embedUi === "string"
+        ? options.embedUi.toLowerCase()
+        : "minimal";
+    this.embedDragEnabled = Boolean(options.embedDragEnabled);
     this.insertShortcuts = {
       Digit1: "InputButton",
       Digit2: "OutputButton",
@@ -110,25 +116,35 @@ export class Structogram {
   }
 
   preRender() {
-    const divInsert = document.createElement("div");
-    divInsert.classList.add("columnEditorFull");
-    const divHeader = document.createElement("div");
-    // divHeader.classList.add('elementButtonColumns');
-    const spanHeader = document.createElement("strong");
-    spanHeader.classList.add("margin-small");
-    spanHeader.appendChild(document.createTextNode(t("editor.chooseElement")));
-    divHeader.appendChild(spanHeader);
-    divInsert.appendChild(divHeader);
-
-    const divButtons = document.createElement("div");
-    divButtons.id = "insertButtons";
-    divButtons.classList.add("container", "justify-center");
-    for (const item of this.buttonList) {
-      if (config.get()[item].use) {
-        divButtons.appendChild(this.createButton(item));
+    if (this.presenter.isEmbedMode()) {
+      if (this.embedUi === "hybrid") {
+        this.domRoot.appendChild(this.createInsertSection());
       }
+
+      const divEditorContent = document.createElement("div");
+      divEditorContent.classList.add("vcontainer", "columnEditorStructogram");
+      divEditorContent.id = "editorContent";
+
+      const divEditorContentSplitTop = document.createElement("div");
+      divEditorContentSplitTop.classList.add("columnAuto", "container");
+
+      const divFixRightBorder = document.createElement("div");
+      divFixRightBorder.classList.add("borderWidth", "frameLeft");
+
+      const divWorkingArea = document.createElement("div");
+      divWorkingArea.classList.add("columnAuto");
+      divWorkingArea.id = "structogram";
+
+      divEditorContent.appendChild(divEditorContentSplitTop);
+      divEditorContentSplitTop.appendChild(divWorkingArea);
+      divEditorContentSplitTop.appendChild(divFixRightBorder);
+      this.domRoot.appendChild(divEditorContent);
+
+      this.domRoot = document.getElementById("structogram");
+      return;
     }
-    divInsert.appendChild(divButtons);
+
+    const divInsert = this.createInsertSection();
 
     const divEditorHeadline = document.createElement("div");
     divEditorHeadline.classList.add("columnEditorFull", "headerContainer");
@@ -192,6 +208,29 @@ export class Structogram {
     codeAndOptions.appendChild(sourcecode);
 
     this.domRoot = document.getElementById("structogram");
+  }
+
+  createInsertSection() {
+    const divInsert = document.createElement("div");
+    divInsert.classList.add("columnEditorFull");
+    const divHeader = document.createElement("div");
+    const spanHeader = document.createElement("strong");
+    spanHeader.classList.add("margin-small");
+    spanHeader.appendChild(document.createTextNode(t("editor.chooseElement")));
+    divHeader.appendChild(spanHeader);
+    divInsert.appendChild(divHeader);
+
+    const divButtons = document.createElement("div");
+    divButtons.id = "insertButtons";
+    divButtons.classList.add("container", "justify-center");
+    for (const item of this.buttonList) {
+      if (config.get()[item].use) {
+        divButtons.appendChild(this.createButton(item));
+      }
+    }
+    divInsert.appendChild(divButtons);
+
+    return divInsert;
   }
 
   createStrukOptions(domNode) {
@@ -258,14 +297,17 @@ export class Structogram {
       ? buttonLabel + " (" + shortcutLabel + ")"
       : buttonLabel;
     div.setAttribute("data-tooltip", tooltipText);
-    div.draggable = "true";
+    const dragEnabled = !this.presenter.isEmbedMode() || this.embedDragEnabled;
+    div.draggable = dragEnabled;
     div.addEventListener("click", (event) =>
       this.presenter.insertNode(config.get()[button].id, event)
     );
-    div.addEventListener("dragstart", (event) =>
-      this.presenter.insertNode(config.get()[button].id, event)
-    );
-    div.addEventListener("dragend", () => this.presenter.resetDrop());
+    if (dragEnabled) {
+      div.addEventListener("dragstart", (event) =>
+        this.presenter.insertNode(config.get()[button].id, event)
+      );
+      div.addEventListener("dragend", () => this.presenter.resetDrop());
+    }
     const spanText = document.createElement("span");
     spanText.appendChild(document.createTextNode(buttonLabel));
     const divIcon = document.createElement("div");
@@ -1300,9 +1342,10 @@ export class Structogram {
     // remove color of buttons
     for (const button of this.buttonList) {
       if (config.get()[button].use) {
-        document
-          .getElementById(config.get()[button].id)
-          .classList.remove("boldText");
+        const buttonElement = document.getElementById(config.get()[button].id);
+        if (buttonElement) {
+          buttonElement.classList.remove("boldText");
+        }
       }
     }
   }
@@ -1580,6 +1623,10 @@ export class Structogram {
     // create the container for all options
     const optionDiv = document.createElement("div");
     optionDiv.classList.add("optionContainer");
+
+    if (this.presenter.isEmbedMode()) {
+      return optionDiv;
+    }
 
     // case nodes have additional options
     if (type === "CaseNode") {

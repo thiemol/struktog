@@ -6,6 +6,7 @@
     "test": "npm run build && node test/buttontest.js",
     "watch": "webpack serve",
     "build": "webpack --mode production",
+    "build:embed": "STRUKTOG_EMBED_BUILD=1 webpack --mode production",
     "dev": "webpack --mode development",
     "chromium": "webpack serve --open chromium"
   },
