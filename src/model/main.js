@@ -94,6 +94,7 @@ class Model {
           case "InputNode":
           case "OutputNode":
           case "TaskNode":
+          case "BlockCallNode":
             subTree.followElement = this.findAndAlterElement(
               uid,
               subTree.followElement,
@@ -417,6 +418,7 @@ class Model {
           case "InputNode":
           case "OutputNode":
           case "TaskNode":
+          case "BlockCallNode":
           case "InsertCase":
             return this.getElementInTree(uid, subTree.followElement);
 

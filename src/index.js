@@ -23,6 +23,7 @@ import { Structogram } from "./views/structogram";
 import { CodeView } from "./views/code";
 import { ImportExport } from "./views/importExport";
 import { WebTour } from "./views/webtour";
+import { registerEmbedBridge } from "./embed/bridge";
 import {
   generateFooter,
   generateHtmltree,
@@ -51,7 +52,40 @@ function registerServiceWorker() {
   });
 }
 
+function resolveAppMode() {
+  if (typeof __EMBED_BUILD__ !== "undefined" && __EMBED_BUILD__) {
+    return "embed";
+  }
+
+  const url = new URL(window.location.href);
+  const modeParam = url.searchParams.get("mode");
+  if (modeParam === "embed") {
+    return "embed";
+  }
+  return "full";
+}
+
+function resolveEmbedUiMode(appMode) {
+  if (appMode !== "embed") {
+    return "minimal";
+  }
+
+  const url = new URL(window.location.href);
+  const embedUiParam = url.searchParams.get("embedui");
+  if (
+    typeof embedUiParam === "string" &&
+    embedUiParam.toLowerCase() === "hybrid"
+  ) {
+    return "hybrid";
+  }
+
+  return "minimal";
+}
+
 window.onload = function () {
+  const appMode = resolveAppMode();
+  const isEmbedMode = appMode === "embed";
+  const embedUiMode = resolveEmbedUiMode(appMode);
   let configId = null;
   initializeI18n();
   // manipulate the localStorage before loading the presenter
@@ -70,55 +104,65 @@ window.onload = function () {
     config.loadConfig(configId);
   }
 
-  generateHtmltree();
-  generateFooter();
+  generateHtmltree({ mode: appMode });
 
-  const footerSpan = document.querySelector("footer .column span");
-  if (footerSpan) {
-    const donateLink = document.createElement("div");
-    donateLink.classList.add(
-      "hand",
-      "tooltip",
-      "tooltip-top",
-      "footerDonateLink"
-    );
-    donateLink.appendChild(document.createTextNode(t("nav.donate")));
-    donateLink.setAttribute("data-tooltip", t("nav.donateTooltip"));
-    donateLink.addEventListener("click", () => {
-      window.open(
-        "https://www.paypal.com/donate?hosted_button_id=5ZRTXH9NUJG5U",
-        "_blank"
+  if (!isEmbedMode) {
+    generateFooter();
+
+    const footerSpan = document.querySelector("footer .column span");
+    if (footerSpan) {
+      const donateLink = document.createElement("div");
+      donateLink.classList.add(
+        "hand",
+        "tooltip",
+        "tooltip-top",
+        "footerDonateLink"
       );
-    });
+      donateLink.appendChild(document.createTextNode(t("nav.donate")));
+      donateLink.setAttribute("data-tooltip", t("nav.donateTooltip"));
+      donateLink.addEventListener("click", () => {
+        window.open(
+          "https://www.paypal.com/donate?hosted_button_id=5ZRTXH9NUJG5U",
+          "_blank"
+        );
+      });
 
-    footerSpan.appendChild(document.createTextNode("|"));
-    footerSpan.appendChild(donateLink);
+      footerSpan.appendChild(document.createTextNode("|"));
+      footerSpan.appendChild(donateLink);
+    }
   }
 
   // create presenter object
-  const presenter = new Presenter(model);
+  const presenter = new Presenter(model, { embedMode: isEmbedMode });
   // TODO: this should not be necessary, but some functions depend on moveId and nextInsertElement
   model.setPresenter(presenter);
 
   // create our view objects
   const structogram = new Structogram(
     presenter,
-    document.getElementById("editorDisplay")
+    document.getElementById("editorDisplay"),
+    {
+      embedUi: embedUiMode,
+    }
   );
   presenter.addView(structogram);
-  const code = new CodeView(
-    presenter,
-    document.getElementById("editorDisplay")
-  );
-  presenter.addView(code);
-  const importExport = new ImportExport(
-    presenter,
-    document.getElementById("Export")
-  );
-  presenter.addView(importExport);
+  if (!isEmbedMode) {
+    const code = new CodeView(
+      presenter,
+      document.getElementById("editorDisplay")
+    );
+    presenter.addView(code);
+    const importExport = new ImportExport(
+      presenter,
+      document.getElementById("Export")
+    );
+    presenter.addView(importExport);
 
-  const webTour = new WebTour();
-  webTour.bindTrigger("#tourInfoButton");
+    const webTour = new WebTour();
+    webTour.bindTrigger("#tourInfoButton");
+  } else {
+    registerEmbedBridge(presenter);
+  }
 
   const hasConfigOverride = Boolean(configId);
   if (hasConfigOverride) {
@@ -131,6 +175,8 @@ window.onload = function () {
 
   presenter.init();
 
-  highlight();
-  registerServiceWorker();
+  if (!isEmbedMode) {
+    highlight();
+    registerServiceWorker();
+  }
 };

@@ -6,7 +6,7 @@ The project intentionally keeps runtime dependencies at zero to remain independe
 
 ## Official Links
 
-- Website: https://ddi.education/struktog
+- Website: https://ddi.education/struktog/
 - Original repository: https://gitlab.com/dev-ddi/cs-school-tools/struktog/
 
 ## Forks and Mirrors
@@ -152,7 +152,7 @@ Notes:
 
 ## Download
 
-- Latest release: https://dditools.inf.tu-dresden.de/releases/struktog/struktog-v1.3.2.tar.gz
+- Latest release: https://dditools.inf.tu-dresden.de/releases/struktog/struktog-v1.3.3.tar.gz
 - Latest build: https://dditools.inf.tu-dresden.de/releases/struktog/struktog-latest.tar.gz
 
 ## Contributing

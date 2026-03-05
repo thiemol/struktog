@@ -26,10 +26,16 @@ import {
 } from "../i18n";
 
 export class Structogram {
-  constructor(presenter, domRoot) {
+  constructor(presenter, domRoot, options = {}) {
     this.presenter = presenter;
     this.domRoot = domRoot;
+    this.options = options;
     this.size = 7;
+    this.embedUi =
+      typeof options.embedUi === "string"
+        ? options.embedUi.toLowerCase()
+        : "minimal";
+    this.embedDragEnabled = Boolean(options.embedDragEnabled);
     this.insertShortcuts = {
       Digit1: "InputButton",
       Digit2: "OutputButton",
@@ -46,6 +52,7 @@ export class Structogram {
       "InputNode",
       "OutputNode",
       "TaskNode",
+      "BlockCallNode",
       "CountLoopNode",
       "HeadLoopNode",
       "FootLoopNode",
@@ -110,25 +117,31 @@ export class Structogram {
   }
 
   preRender() {
-    const divInsert = document.createElement("div");
-    divInsert.classList.add("columnEditorFull");
-    const divHeader = document.createElement("div");
-    // divHeader.classList.add('elementButtonColumns');
-    const spanHeader = document.createElement("strong");
-    spanHeader.classList.add("margin-small");
-    spanHeader.appendChild(document.createTextNode(t("editor.chooseElement")));
-    divHeader.appendChild(spanHeader);
-    divInsert.appendChild(divHeader);
-
-    const divButtons = document.createElement("div");
-    divButtons.id = "insertButtons";
-    divButtons.classList.add("container", "justify-center");
-    for (const item of this.buttonList) {
-      if (config.get()[item].use) {
-        divButtons.appendChild(this.createButton(item));
+    if (this.presenter.isEmbedMode()) {
+      if (this.embedUi === "hybrid") {
+        this.domRoot.appendChild(this.createInsertSection());
       }
+
+      const divEditorContent = document.createElement("div");
+      divEditorContent.classList.add("vcontainer", "columnEditorStructogram");
+      divEditorContent.id = "editorContent";
+
+      const divEditorContentSplitTop = document.createElement("div");
+      divEditorContentSplitTop.classList.add("columnAuto", "container");
+
+      const divWorkingArea = document.createElement("div");
+      divWorkingArea.classList.add("columnAuto");
+      divWorkingArea.id = "structogram";
+
+      divEditorContent.appendChild(divEditorContentSplitTop);
+      divEditorContentSplitTop.appendChild(divWorkingArea);
+      this.domRoot.appendChild(divEditorContent);
+
+      this.domRoot = document.getElementById("structogram");
+      return;
     }
-    divInsert.appendChild(divButtons);
+
+    const divInsert = this.createInsertSection();
 
     const divEditorHeadline = document.createElement("div");
     divEditorHeadline.classList.add("columnEditorFull", "headerContainer");
@@ -154,17 +167,14 @@ export class Structogram {
     const divEditorContentSplitBottom = document.createElement("div");
     divEditorContentSplitBottom.classList.add("columnAuto-6");
 
-    const divFixRightBorder = document.createElement("div");
-    divFixRightBorder.classList.add("borderWidth", "frameLeft");
-
     const divWorkingArea = document.createElement("div");
     divWorkingArea.classList.add("columnAuto");
+    divWorkingArea.classList.add("mainStructogramArea");
     divWorkingArea.id = "structogram";
 
     divEditorContent.appendChild(divEditorHeadline);
     divEditorContent.appendChild(divEditorContentSplitTop);
     divEditorContentSplitTop.appendChild(divWorkingArea);
-    divEditorContentSplitTop.appendChild(divFixRightBorder);
     divEditorContent.appendChild(divEditorContentSplitBottom);
 
     const editorOptions = document.createElement("div");
@@ -194,9 +204,85 @@ export class Structogram {
     this.domRoot = document.getElementById("structogram");
   }
 
+  createInsertSection() {
+    const divInsert = document.createElement("div");
+    divInsert.classList.add("columnEditorFull");
+    const divHeader = document.createElement("div");
+    divHeader.classList.add("insertSectionHeader");
+    const spanHeader = document.createElement("strong");
+    spanHeader.classList.add("margin-small");
+    spanHeader.appendChild(document.createTextNode(t("editor.chooseElement")));
+    divHeader.appendChild(spanHeader);
+    divInsert.appendChild(divHeader);
+
+    const divButtons = document.createElement("div");
+    divButtons.id = "insertButtons";
+    divButtons.classList.add("container", "justify-center");
+    for (const item of this.buttonList) {
+      if (config.get()[item].use) {
+        divButtons.appendChild(this.createButton(item));
+      }
+    }
+    divInsert.appendChild(divButtons);
+
+    return divInsert;
+  }
+
   createStrukOptions(domNode) {
     this.generateUndoRedoButtons(this.presenter, domNode);
     generateResetButton(this.presenter, domNode);
+
+    if (!this.presenter.isEmbedMode()) {
+      this.generateEditorWidthToggle(domNode);
+      this.updateEditorWidthToggleButtons();
+    }
+  }
+
+  generateEditorWidthToggle(domNode) {
+    const widthToggle = document.createElement("div");
+    widthToggle.classList.add(
+      "struktoOption",
+      "editorWidthIcon",
+      "tooltip",
+      "tooltip-bottom",
+      "hand",
+      "ToggleEditorWidth"
+    );
+    widthToggle.addEventListener("click", () =>
+      this.toggleEditorContentWidth()
+    );
+    domNode.appendChild(widthToggle);
+  }
+
+  toggleEditorContentWidth() {
+    if (this.presenter.isEmbedMode()) {
+      return;
+    }
+
+    const structogram = document.getElementById("structogram");
+    if (!structogram) {
+      return;
+    }
+
+    structogram.classList.toggle("structogramFullWidth");
+    this.updateEditorWidthToggleButtons();
+  }
+
+  updateEditorWidthToggleButtons() {
+    const structogram = document.getElementById("structogram");
+    if (!structogram) {
+      return;
+    }
+
+    const isFullWidth = structogram.classList.contains("structogramFullWidth");
+    const tooltipText = isFullWidth
+      ? t("editor.limitEditorWidth")
+      : t("editor.expandEditorWidth");
+    const buttons = document.getElementsByClassName("ToggleEditorWidth");
+    for (const button of buttons) {
+      button.setAttribute("data-tooltip", tooltipText);
+      button.classList.toggle("struktoOptionActive", isFullWidth);
+    }
   }
 
   generateUndoRedoButtons(presenter, domNode) {
@@ -258,14 +344,17 @@ export class Structogram {
       ? buttonLabel + " (" + shortcutLabel + ")"
       : buttonLabel;
     div.setAttribute("data-tooltip", tooltipText);
-    div.draggable = "true";
+    const dragEnabled = !this.presenter.isEmbedMode() || this.embedDragEnabled;
+    div.draggable = dragEnabled;
     div.addEventListener("click", (event) =>
       this.presenter.insertNode(config.get()[button].id, event)
     );
-    div.addEventListener("dragstart", (event) =>
-      this.presenter.insertNode(config.get()[button].id, event)
-    );
-    div.addEventListener("dragend", () => this.presenter.resetDrop());
+    if (dragEnabled) {
+      div.addEventListener("dragstart", (event) =>
+        this.presenter.insertNode(config.get()[button].id, event)
+      );
+      div.addEventListener("dragend", () => this.presenter.resetDrop());
+    }
     const spanText = document.createElement("span");
     spanText.appendChild(document.createTextNode(buttonLabel));
     const divIcon = document.createElement("div");
@@ -312,6 +401,18 @@ export class Structogram {
     const lastLine = document.createElement("div");
     lastLine.classList.add("frameTop", "borderHeight");
     this.domRoot.appendChild(lastLine);
+  }
+
+  isBranchChildEmpty(node) {
+    if (!node || node.type === "Placeholder") {
+      return true;
+    }
+
+    if (node.type === "InsertNode") {
+      return !node.followElement || node.followElement.type === "Placeholder";
+    }
+
+    return false;
   }
 
   /**
@@ -583,6 +684,7 @@ export class Structogram {
       "addCaseIcon",
       "hand",
       "caseOptionsIcons",
+      "funcAddParamButton",
       "tooltip",
       "tooltip-bottom"
     );
@@ -831,9 +933,13 @@ export class Structogram {
         }
         case "InputNode":
         case "OutputNode":
+        case "BlockCallNode":
         case "TaskNode": {
           const divTaskNode = document.createElement("div");
           divTaskNode.classList.add("fixedHeight", "container");
+          if (subTree.type === "BlockCallNode") {
+            divTaskNode.classList.add("blockCallNode");
+          }
 
           const textDiv = this.createTextDiv(
             subTree.type,
@@ -887,6 +993,7 @@ export class Structogram {
             "text-left",
             "bottomHeader"
           );
+          divHeaderTrue.setAttribute("data-branch-side", "true");
           divHeaderTrue.appendChild(
             document.createTextNode(t("editor.trueLabel"))
           );
@@ -897,6 +1004,7 @@ export class Structogram {
             "text-right",
             "bottomHeader"
           );
+          divHeaderFalse.setAttribute("data-branch-side", "false");
           divHeaderFalse.appendChild(
             document.createTextNode(t("editor.falseLabel"))
           );
@@ -934,6 +1042,17 @@ export class Structogram {
           )) {
             this.applyCodeEventListeners(elem);
             divFalse.appendChild(elem);
+          }
+
+          const trueChildEmpty = this.isBranchChildEmpty(subTree.trueChild);
+          const falseChildEmpty = this.isBranchChildEmpty(subTree.falseChild);
+          if (trueChildEmpty !== falseChildEmpty) {
+            const emptyClass = trueChildEmpty
+              ? "branch-empty-true"
+              : "branch-empty-false";
+            divHead.classList.add(emptyClass);
+            divHeadBottom.classList.add(emptyClass);
+            divChildren.classList.add(emptyClass);
           }
 
           divChildren.appendChild(divTrue);
@@ -1300,9 +1419,10 @@ export class Structogram {
     // remove color of buttons
     for (const button of this.buttonList) {
       if (config.get()[button].use) {
-        document
-          .getElementById(config.get()[button].id)
-          .classList.remove("boldText");
+        const buttonElement = document.getElementById(config.get()[button].id);
+        if (buttonElement) {
+          buttonElement.classList.remove("boldText");
+        }
       }
     }
   }
@@ -1580,6 +1700,10 @@ export class Structogram {
     // create the container for all options
     const optionDiv = document.createElement("div");
     optionDiv.classList.add("optionContainer");
+
+    if (this.presenter.isEmbedMode()) {
+      return optionDiv;
+    }
 
     // case nodes have additional options
     if (type === "CaseNode") {
@@ -1919,11 +2043,15 @@ export class Structogram {
 
         case "InputNode":
         case "OutputNode":
+        case "BlockCallNode":
         case "TaskNode": {
           const div = document.createElement("div");
           div.id = subTree.id;
           div.classList.add("columns");
           div.classList.add("element");
+          if (subTree.type === "BlockCallNode") {
+            div.classList.add("blockCallNode");
+          }
 
           const textDiv = this.createTextDiv(
             subTree.type,
