@@ -7,6 +7,22 @@ function normalizeJsonInput(payload) {
   return payload;
 }
 
+function normalizeBridgeError(result, fallbackCode, fallbackMessage) {
+  if (result && result.ok === false) {
+    return {
+      ok: false,
+      code: result.code || fallbackCode,
+      error: result.error || fallbackMessage,
+    };
+  }
+
+  return {
+    ok: false,
+    code: fallbackCode,
+    error: fallbackMessage,
+  };
+}
+
 export function registerEmbedBridge(presenter) {
   const emitToAndroid = (event) => {
     try {
@@ -44,9 +60,82 @@ export function registerEmbedBridge(presenter) {
       return presenter.getInsertTargets();
     },
 
+    startInsert(nodeType) {
+      try {
+        const result = presenter.startInsertByNodeType(nodeType);
+        if (result && result.ok) {
+          return result;
+        }
+
+        const errorResult = normalizeBridgeError(
+          result,
+          "INTERNAL_ERROR",
+          "Failed to start insert mode"
+        );
+        emitToAndroid({
+          type: "insertRejected",
+          payload: {
+            code: errorResult.code,
+            error: errorResult.error,
+          },
+        });
+        return errorResult;
+      } catch (error) {
+        const message =
+          error && error.message ? error.message : "Internal error";
+        emitToAndroid({
+          type: "insertRejected",
+          payload: {
+            code: "INTERNAL_ERROR",
+            error: message,
+          },
+        });
+        return {
+          ok: false,
+          code: "INTERNAL_ERROR",
+          error: message,
+        };
+      }
+    },
+
+    cancelInsert() {
+      try {
+        const result = presenter.cancelInsertMode();
+        if (result && result.ok) {
+          return result;
+        }
+        return normalizeBridgeError(
+          result,
+          "INTERNAL_ERROR",
+          "Failed to cancel insert mode"
+        );
+      } catch (error) {
+        return {
+          ok: false,
+          code: "INTERNAL_ERROR",
+          error: error.message,
+        };
+      }
+    },
+
+    getInsertState() {
+      return {
+        ok: true,
+        state: presenter.getInsertState(),
+      };
+    },
+
+    getInsertNodeTypes() {
+      return {
+        ok: true,
+        nodeTypes: presenter.getInsertNodeTypes(),
+      };
+    },
+
     getCapabilities() {
       return {
         canInsert: true,
+        canStartInsertMode: true,
         canMove: true,
         canUndoRedo: true,
         canRemoveWithChecks: true,

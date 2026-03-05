@@ -34,6 +34,8 @@ export class Presenter {
     this.embedMode = Boolean(options.embedMode);
     this.externalEventHandler = null;
     this.insertMode = false;
+    this.insertModeEventActive = false;
+    this.activeInsertNodeType = null;
     this.settingFunctionMode = false; // if the user is setting a function block then true
     this.views = [];
     this.moveId = null;
@@ -137,6 +139,8 @@ export class Presenter {
   reset() {
     // reset the model fields connected to inserting
     this.insertMode = false;
+    this.insertModeEventActive = false;
+    this.activeInsertNodeType = null;
     this.settingFunctionMode = false;
     this.nextInsertElement = null;
     this.moveId = null;
@@ -624,8 +628,8 @@ export class Presenter {
     this.setSourcecodeDisplayState(!this.displaySourcecode);
   }
 
-  getInsertButtonIdByNodeType(nodeType) {
-    const map = {
+  getInsertNodeTypeMap() {
+    return {
       InputNode: "InputButton",
       OutputNode: "OutputButton",
       TaskNode: "TaskButton",
@@ -637,7 +641,147 @@ export class Presenter {
       TryCatchNode: "TryCatchButton",
       FunctionNode: "FunctionButton",
     };
-    return map[nodeType] || null;
+  }
+
+  getInsertNodeTypes() {
+    return Object.keys(this.getInsertNodeTypeMap());
+  }
+
+  getInsertButtonIdByNodeType(nodeType) {
+    if (typeof nodeType !== "string") {
+      return null;
+    }
+
+    const normalizedNodeType = nodeType.trim();
+    if (normalizedNodeType === "") {
+      return null;
+    }
+
+    const map = this.getInsertNodeTypeMap();
+    return map[normalizedNodeType] || null;
+  }
+
+  getInsertNodeTypeByButtonId(buttonId) {
+    const insertNodeTypeMap = this.getInsertNodeTypeMap();
+    for (const nodeType of Object.keys(insertNodeTypeMap)) {
+      if (insertNodeTypeMap[nodeType] === buttonId) {
+        return nodeType;
+      }
+    }
+    return null;
+  }
+
+  getInsertState() {
+    if (!this.insertMode) {
+      return {
+        active: false,
+        mode: "idle",
+      };
+    }
+
+    if (this.moveId) {
+      return {
+        active: true,
+        mode: "move",
+      };
+    }
+
+    const state = {
+      active: true,
+      mode: "insert",
+    };
+    if (this.activeInsertNodeType) {
+      state.nodeType = this.activeInsertNodeType;
+    }
+    return state;
+  }
+
+  emitInsertModeChanged(reason) {
+    this.emitExternalEvent("insertModeChanged", {
+      ...this.getInsertState(),
+      reason,
+    });
+  }
+
+  startInsertByNodeType(nodeType) {
+    if (!this.embedMode) {
+      return {
+        ok: false,
+        code: "INSERT_NOT_AVAILABLE",
+        error: "Insert bridge mode is only available in embed mode",
+      };
+    }
+
+    if (this.moveId) {
+      return {
+        ok: false,
+        code: "INSERT_MODE_CONFLICT",
+        error: "Move mode is active",
+      };
+    }
+
+    const buttonId = this.getInsertButtonIdByNodeType(nodeType);
+    if (!buttonId) {
+      return {
+        ok: false,
+        code: "UNKNOWN_NODE_TYPE",
+        error: "Unknown node type",
+      };
+    }
+
+    const previousState = this.getInsertState();
+    const prepared = this.setNextInsertElementByButtonId(buttonId);
+    if (!prepared || !this.nextInsertElement || !this.nextInsertElement.id) {
+      return {
+        ok: false,
+        code: "INSERT_NOT_AVAILABLE",
+        error: "Insert preparation failed",
+      };
+    }
+
+    this.resetButtons();
+    this.insertMode = true;
+    this.insertModeEventActive = true;
+    this.activeInsertNodeType = this.getInsertNodeTypeByButtonId(buttonId);
+
+    const button = document.getElementById(buttonId);
+    if (button) {
+      button.classList.add("boldText");
+    }
+
+    this.renderAllViews();
+
+    const reason =
+      previousState.active &&
+      previousState.mode === "insert" &&
+      previousState.nodeType &&
+      previousState.nodeType !== this.activeInsertNodeType
+        ? "replaced"
+        : "started";
+    this.emitInsertModeChanged(reason);
+
+    return {
+      ok: true,
+      state: this.getInsertState(),
+    };
+  }
+
+  cancelInsertMode() {
+    const hadActiveInsertMode = this.insertMode;
+    const shouldEmitEvent = this.insertModeEventActive;
+
+    this.resetButtons();
+    this.reset();
+    this.renderAllViews();
+
+    if (hadActiveInsertMode && shouldEmitEvent) {
+      this.emitInsertModeChanged("cancelled");
+    }
+
+    return {
+      ok: true,
+      state: this.getInsertState(),
+    };
   }
 
   setNextInsertElementByButtonId(id) {
@@ -853,6 +997,8 @@ export class Presenter {
    * @param   buttonId   id of the selected button
    */
   insertNode(id, event) {
+    const previousState = this.getInsertState();
+    const nextInsertNodeType = this.getInsertNodeTypeByButtonId(id);
     if (!this.setNextInsertElementByButtonId(id)) {
       return;
     }
@@ -862,15 +1008,30 @@ export class Presenter {
     }
     const button = document.getElementById(id);
     if (button && button.classList.contains("boldText")) {
+      const shouldEmitEvent = this.insertModeEventActive;
       this.resetButtons();
       this.reset();
+      if (shouldEmitEvent) {
+        this.emitInsertModeChanged("cancelled");
+      }
     } else {
       // prepare insert by updating the model data
       this.resetButtons();
       this.insertMode = true;
+      this.insertModeEventActive = true;
+      this.activeInsertNodeType = nextInsertNodeType;
       if (button) {
         button.classList.add("boldText");
       }
+
+      const reason =
+        previousState.active &&
+        previousState.mode === "insert" &&
+        previousState.nodeType &&
+        previousState.nodeType !== this.activeInsertNodeType
+          ? "replaced"
+          : "started";
+      this.emitInsertModeChanged(reason);
     }
     // rerender the struktogramm
     this.renderAllViews();
@@ -883,9 +1044,13 @@ export class Presenter {
     // while drag and dropping an inserting element, the user can drop everywhere
     // if the location is not valid, one step more must be done to abort everything
     if (this.insertMode) {
+      const shouldEmitEvent = this.insertModeEventActive;
       this.reset();
       this.resetButtons();
       this.renderAllViews();
+      if (shouldEmitEvent) {
+        this.emitInsertModeChanged("cancelled");
+      }
     } else {
       this.resetButtons();
     }
@@ -1223,6 +1388,8 @@ export class Presenter {
     // prepare data
     this.moveId = uid;
     this.insertMode = true;
+    this.insertModeEventActive = true;
+    this.activeInsertNodeType = null;
     this.nextInsertElement = this.model.getElementInTree(
       uid,
       this.model.getTree()
@@ -1230,6 +1397,7 @@ export class Presenter {
     this.nextInsertElement.followElement.followElement = null;
     // rerender
     this.renderAllViews();
+    this.emitInsertModeChanged("started");
   }
 
   // textType: only used for the distinction of function name and function parameters
@@ -1380,6 +1548,8 @@ export class Presenter {
   appendElement(uid) {
     this.updateUndo();
     // remove old node, when moving is used
+    const insertStateBeforeAppend = this.getInsertState();
+    const shouldEmitInsertEvent = this.insertModeEventActive;
     const moveState = this.moveId;
     if (moveState) {
       this.model.setTree(
@@ -1424,6 +1594,19 @@ export class Presenter {
       this.switchEditState(elemId);
     }
     this.notifyTreeChanged(moveState ? "moveElement" : "insertElement");
+    if (insertStateBeforeAppend.active && shouldEmitInsertEvent) {
+      const payload = {
+        ...this.getInsertState(),
+        reason: "completed",
+      };
+      if (
+        insertStateBeforeAppend.mode === "insert" &&
+        insertStateBeforeAppend.nodeType
+      ) {
+        payload.nodeType = insertStateBeforeAppend.nodeType;
+      }
+      this.emitExternalEvent("insertModeChanged", payload);
+    }
   }
 
   /**
@@ -1617,6 +1800,8 @@ export class Presenter {
 
     this.moveId = uid;
     this.insertMode = true;
+    this.insertModeEventActive = false;
+    this.activeInsertNodeType = null;
     this.nextInsertElement = sourceNode;
     this.nextInsertElement.followElement.followElement = null;
 
@@ -1642,6 +1827,8 @@ export class Presenter {
 
     const newUid = this.nextInsertElement.id;
     this.insertMode = true;
+    this.insertModeEventActive = false;
+    this.activeInsertNodeType = this.getInsertNodeTypeByButtonId(buttonId);
     this.appendElement(targetInsertUid);
     return { ok: true, newUid };
   }
