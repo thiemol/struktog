@@ -26,6 +26,7 @@ const translations = {
       InputNode: "Eingabe-Feld",
       OutputNode: "Ausgabe-Feld",
       TaskNode: "Anweisung",
+      BlockCallNode: "Blockaufruf",
       CountLoopNode: "Zählergesteuerte Schleife",
       HeadLoopNode: "Kopfgesteuerte Schleife",
       FootLoopNode: "Fußgesteuerte Schleife",
@@ -163,6 +164,7 @@ const translations = {
       InputNode: "Input field",
       OutputNode: "Output field",
       TaskNode: "Statement",
+      BlockCallNode: "Block call",
       CountLoopNode: "Count-controlled loop",
       HeadLoopNode: "Head-controlled loop",
       FootLoopNode: "Foot-controlled loop",
@@ -297,6 +299,7 @@ const translations = {
       InputNode: "Entrée",
       OutputNode: "Sortie",
       TaskNode: "Instruction",
+      BlockCallNode: "Appel de bloc",
       CountLoopNode: "Boucle à compteur",
       HeadLoopNode: "Boucle à pré-condition",
       FootLoopNode: "Boucle à post-condition",
@@ -434,6 +437,7 @@ const translations = {
       InputNode: "Entrada",
       OutputNode: "Salida",
       TaskNode: "Instrucción",
+      BlockCallNode: "Llamada de bloque",
       CountLoopNode: "Bucle con contador",
       HeadLoopNode: "Bucle de cabecera",
       FootLoopNode: "Bucle de pie",
@@ -552,6 +556,7 @@ const translations = {
 const contentDefaultsByLanguage = {
   de: {
     taskDefault: "Anweisung",
+    blockCallDefault: "Blockaufruf",
     branchCondition: "Bedingung",
     caseVariable: "Variable",
     caseLabel: "Fall",
@@ -570,6 +575,7 @@ const contentDefaultsByLanguage = {
   },
   en: {
     taskDefault: "Statement",
+    blockCallDefault: "Block call",
     branchCondition: "Condition",
     caseVariable: "Expression",
     caseLabel: "Case",
@@ -588,6 +594,7 @@ const contentDefaultsByLanguage = {
   },
   fr: {
     taskDefault: "Instruction",
+    blockCallDefault: "Appel de bloc",
     branchCondition: "Condition",
     caseVariable: "Expression",
     caseLabel: "Cas",
@@ -606,6 +613,7 @@ const contentDefaultsByLanguage = {
   },
   es: {
     taskDefault: "Instrucción",
+    blockCallDefault: "Llamada de bloque",
     branchCondition: "Condición",
     caseVariable: "Expresión",
     caseLabel: "Caso",
@@ -629,6 +637,7 @@ const contentDefaultAliases = {
   loopCondition: ["Gueltigkeitsbedingung", "Gultigkeitsbedingung"],
   returnTypePlaceholder: ["Rueckgabetyp", "Ruckgabetyp", "Ruckgabe Typ"],
   taskDefault: ["Anweisung"],
+  blockCallDefault: ["Blockaufruf"],
   branchCondition: ["Bedingung"],
   caseVariable: ["Variable"],
   caseLabel: ["Fall"],

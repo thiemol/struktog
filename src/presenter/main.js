@@ -205,6 +205,7 @@ export class Presenter {
       "InputNode",
       "OutputNode",
       "TaskNode",
+      "BlockCallNode",
       "CountLoopNode",
       "HeadLoopNode",
       "FootLoopNode",
@@ -495,6 +496,14 @@ export class Presenter {
           this.migrateLocalizedDefaultContentInNode(subTree.followElement) ||
           changed;
         return changed;
+      case "BlockCallNode":
+        changed =
+          this.updateNodeTextFromDefault(subTree, "blockCallDefault") ||
+          changed;
+        changed =
+          this.migrateLocalizedDefaultContentInNode(subTree.followElement) ||
+          changed;
+        return changed;
       case "BranchNode":
         changed =
           this.updateNodeTextFromDefault(subTree, "branchCondition") || changed;
@@ -633,6 +642,7 @@ export class Presenter {
       InputNode: "InputButton",
       OutputNode: "OutputButton",
       TaskNode: "TaskButton",
+      BlockCallNode: "BlockCallButton",
       CountLoopNode: "CountLoopButton",
       HeadLoopNode: "HeadLoopButton",
       FootLoopNode: "FootLoopButton",
@@ -816,6 +826,18 @@ export class Presenter {
           id: guidGenerator(),
           type: "TaskNode",
           text: getContentDefault("taskDefault"),
+          followElement: {
+            id: guidGenerator(),
+            type: "InsertNode",
+            followElement: null,
+          },
+        };
+        return true;
+      case "BlockCallButton":
+        this.nextInsertElement = {
+          id: guidGenerator(),
+          type: "BlockCallNode",
+          text: getContentDefault("blockCallDefault"),
           followElement: {
             id: guidGenerator(),
             type: "InsertNode",
@@ -1178,6 +1200,7 @@ export class Presenter {
 
     switch (type) {
       case "TaskNode":
+      case "BlockCallNode":
       case "InputNode":
       case "OutputNode":
         return false;

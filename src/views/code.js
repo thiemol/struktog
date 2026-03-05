@@ -626,6 +626,7 @@ export class CodeView {
           case "InputNode":
           case "OutputNode":
           case "TaskNode":
+          case "BlockCallNode":
             return (
               false ||
               this.checkForUntranslatable(subTree.followElement, nodeType)
@@ -755,13 +756,16 @@ export class CodeView {
             this.transformToCode(subTree.followElement, indentLevel, lang)
           );
         }
-        case "TaskNode": {
+        case "TaskNode":
+        case "BlockCallNode": {
+          const taskMappingKey =
+            subTree.type === "BlockCallNode" ? "TaskNode" : subTree.type;
           const taskPre = document.createElement("span");
           taskPre.classList.add("keyword");
           taskPre.appendChild(
             document.createTextNode(
               this.addIndentations(indentLevel) +
-                this.translationMap[lang].TaskNode.pre
+                this.translationMap[lang][taskMappingKey].pre
             )
           );
           elemSpan.appendChild(taskPre);
@@ -769,7 +773,9 @@ export class CodeView {
           const taskPost = document.createElement("span");
           taskPost.classList.add("keyword");
           taskPost.appendChild(
-            document.createTextNode(this.translationMap[lang].TaskNode.post)
+            document.createTextNode(
+              this.translationMap[lang][taskMappingKey].post
+            )
           );
           elemSpan.appendChild(taskPost);
           return [elemSpan].concat(

@@ -30,6 +30,29 @@ $main-background-color: rgba(128, 212, 255, 0.5);
   }
 }
 
+.blockCallNode {
+  position: relative;
+
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background-color: rgb(38, 64, 64);
+    pointer-events: none;
+  }
+
+  &::before {
+    left: 0.75em;
+  }
+
+  &::after {
+    right: 0.75em;
+  }
+}
+
 .fixedDoubleHeight {
   flex: 0 0 4em;
   //width: 100%;

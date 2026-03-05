@@ -44,6 +44,14 @@ class Config {
         use: true,
         id: "TaskButton",
         text: "Anweisung",
+        icon: "taskIcon",
+        color: "rgb(253, 237, 206)",
+      },
+
+      BlockCallNode: {
+        use: true,
+        id: "BlockCallButton",
+        text: "Blockaufruf",
         icon: "taskStatementIcon",
         color: "rgb(253, 237, 206)",
       },
@@ -127,6 +135,14 @@ class Config {
           use: true,
           id: "TaskButton",
           text: "Anweisung",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)",
+        },
+
+        BlockCallNode: {
+          use: true,
+          id: "BlockCallButton",
+          text: "Blockaufruf",
           icon: "taskStatementIcon",
           color: "rgb(253, 237, 206)",
         },
@@ -208,6 +224,14 @@ class Config {
           use: true,
           id: "TaskButton",
           text: "Anweisung",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)",
+        },
+
+        BlockCallNode: {
+          use: true,
+          id: "BlockCallButton",
+          text: "Blockaufruf",
           icon: "taskStatementIcon",
           color: "rgb(253, 237, 206)",
         },
@@ -289,6 +313,14 @@ class Config {
           use: true,
           id: "TaskButton",
           text: "Anweisung",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)",
+        },
+
+        BlockCallNode: {
+          use: true,
+          id: "BlockCallButton",
+          text: "Blockaufruf",
           icon: "taskStatementIcon",
           color: "rgb(253, 237, 206)",
         },
@@ -370,6 +402,14 @@ class Config {
           use: true,
           id: "TaskButton",
           text: "Anweisung",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)",
+        },
+
+        BlockCallNode: {
+          use: true,
+          id: "BlockCallButton",
+          text: "Blockaufruf",
           icon: "taskStatementIcon",
           color: "rgb(253, 237, 206)",
         },
@@ -451,6 +491,14 @@ class Config {
           use: true,
           id: "TaskButton",
           text: "Anweisung",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)",
+        },
+
+        BlockCallNode: {
+          use: true,
+          id: "BlockCallButton",
+          text: "Blockaufruf",
           icon: "taskStatementIcon",
           color: "rgb(253, 237, 206)",
         },
@@ -532,6 +580,14 @@ class Config {
           use: true,
           id: "TaskButton",
           text: "Anweisung",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)",
+        },
+
+        BlockCallNode: {
+          use: true,
+          id: "BlockCallButton",
+          text: "Blockaufruf",
           icon: "taskStatementIcon",
           color: "rgb(253, 237, 206)",
         },

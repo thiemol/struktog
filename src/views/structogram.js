@@ -52,6 +52,7 @@ export class Structogram {
       "InputNode",
       "OutputNode",
       "TaskNode",
+      "BlockCallNode",
       "CountLoopNode",
       "HeadLoopNode",
       "FootLoopNode",
@@ -932,9 +933,13 @@ export class Structogram {
         }
         case "InputNode":
         case "OutputNode":
+        case "BlockCallNode":
         case "TaskNode": {
           const divTaskNode = document.createElement("div");
           divTaskNode.classList.add("fixedHeight", "container");
+          if (subTree.type === "BlockCallNode") {
+            divTaskNode.classList.add("blockCallNode");
+          }
 
           const textDiv = this.createTextDiv(
             subTree.type,
@@ -2038,11 +2043,15 @@ export class Structogram {
 
         case "InputNode":
         case "OutputNode":
+        case "BlockCallNode":
         case "TaskNode": {
           const div = document.createElement("div");
           div.id = subTree.id;
           div.classList.add("columns");
           div.classList.add("element");
+          if (subTree.type === "BlockCallNode") {
+            div.classList.add("blockCallNode");
+          }
 
           const textDiv = this.createTextDiv(
             subTree.type,
