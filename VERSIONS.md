@@ -1,5 +1,12 @@
 # Versions
 
+v1.3.3
+
+- embed bridge workflow improvements (`startInsert`, `cancelInsert`, insert state/types, insert mode events)
+- PNG/SVG export enhancements (web format chooser and bridge `exportSvg` support)
+- main UI refinements from #35 (1200px layout caps, editor width toggle, improved branch split behavior)
+- new `BlockCallNode` element with statement-style visuals and full import/export/codegen integration
+
 v1.3.2
 
 - multilingual UI support (de, en, fr, es) with browser-language fallback and explicit settings override (#33)
