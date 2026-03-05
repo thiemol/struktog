@@ -99,11 +99,7 @@ export class ImportExport {
       "hand"
     );
     exportDiv.setAttribute("data-tooltip", t("importExport.imageExport"));
-    exportDiv.addEventListener(
-      "click",
-      () => this.exportAsPngWithPackage()
-      // this.exportAsPng(this.presenter.getModelTree())
-    );
+    exportDiv.addEventListener("click", () => this.openImageExportDialog());
     optionsTarget.appendChild(exportDiv);
 
     // ugly fix for HTMLToImage package
@@ -999,33 +995,104 @@ export class ImportExport {
   exportAsPngWithPackage() {
     htmlToImage
       .toPng(document.getElementById("structogram"))
-      .then(function (dataUrl) {
+      .then((dataUrl) => {
         const linkElement = document.createElement("a");
         linkElement.setAttribute("href", dataUrl);
-        // define filename
-        const now = new Date();
-        let hours = now.getHours();
-        let minutes = now.getMinutes();
-
-        hours = hours < 10 ? "0" + hours : hours;
-        minutes = minutes < 10 ? "0" + minutes : minutes;
-
-        const timeString = hours + "-" + minutes;
-        // get Struktogramm Name
-        const structoName = document.getElementById("structoName").innerHTML;
-        const exportFileDefaultName =
-          structoName +
-          "-" +
-          new Date(Date.now()).toJSON().substring(0, 10) +
-          "-" +
-          timeString +
-          ".png";
+        const exportFileDefaultName = this.buildImageExportFileName("png");
         linkElement.setAttribute("download", exportFileDefaultName);
         linkElement.click();
       })
       .catch(function (error) {
         console.error("oops, something went wrong!", error);
       });
+  }
+
+  exportAsSvgWithPackage() {
+    htmlToImage
+      .toSvg(document.getElementById("structogram"))
+      .then((dataUrl) => {
+        const linkElement = document.createElement("a");
+        linkElement.setAttribute("href", dataUrl);
+        const exportFileDefaultName = this.buildImageExportFileName("svg");
+        linkElement.setAttribute("download", exportFileDefaultName);
+        linkElement.click();
+      })
+      .catch(function (error) {
+        console.error("oops, something went wrong!", error);
+      });
+  }
+
+  buildImageExportFileName(extension) {
+    const now = new Date();
+    let hours = now.getHours();
+    let minutes = now.getMinutes();
+
+    hours = hours < 10 ? "0" + hours : hours;
+    minutes = minutes < 10 ? "0" + minutes : minutes;
+
+    const timeString = hours + "-" + minutes;
+    const structoName = document.getElementById("structoName").innerHTML;
+    return (
+      structoName +
+      "-" +
+      new Date(Date.now()).toJSON().substring(0, 10) +
+      "-" +
+      timeString +
+      "." +
+      extension
+    );
+  }
+
+  openImageExportDialog() {
+    const { content, footer } = this.clearModal();
+    footer.classList.add("settingsFooter");
+
+    const title = document.createElement("div");
+    title.classList.add("settingsTitle");
+    title.appendChild(
+      document.createTextNode(t("importExport.imageExportFormatTitle"))
+    );
+    content.appendChild(title);
+
+    const exportPngButton = document.createElement("div");
+    exportPngButton.classList.add(
+      "modal-buttons",
+      "settingsActionButton",
+      "hand"
+    );
+    exportPngButton.appendChild(
+      document.createTextNode(t("importExport.exportPng"))
+    );
+    exportPngButton.addEventListener("click", () => {
+      document.getElementById("IEModal").classList.remove("active");
+      this.exportAsPngWithPackage();
+    });
+    footer.appendChild(exportPngButton);
+
+    const exportSvgButton = document.createElement("div");
+    exportSvgButton.classList.add(
+      "modal-buttons",
+      "settingsActionButton",
+      "hand"
+    );
+    exportSvgButton.appendChild(
+      document.createTextNode(t("importExport.exportSvg"))
+    );
+    exportSvgButton.addEventListener("click", () => {
+      document.getElementById("IEModal").classList.remove("active");
+      this.exportAsSvgWithPackage();
+    });
+    footer.appendChild(exportSvgButton);
+
+    const cancelButton = document.createElement("div");
+    cancelButton.classList.add("modal-buttons", "settingsActionButton", "hand");
+    cancelButton.appendChild(document.createTextNode(t("common.cancel")));
+    cancelButton.addEventListener("click", () =>
+      document.getElementById("IEModal").classList.remove("active")
+    );
+    footer.appendChild(cancelButton);
+
+    document.getElementById("IEModal").classList.add("active");
   }
 
   clearModal() {

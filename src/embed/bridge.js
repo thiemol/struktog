@@ -143,6 +143,7 @@ export function registerEmbedBridge(presenter) {
         canEditCases: true,
         canExportJson: true,
         canExportPng: true,
+        canExportSvg: true,
       };
     },
 
@@ -266,6 +267,22 @@ export function registerEmbedBridge(presenter) {
         const pngOptions =
           options && typeof options === "object" ? options : {};
         const dataUrl = await htmlToImage.toPng(structogramNode, pngOptions);
+        return { ok: true, dataUrl };
+      } catch (error) {
+        return { ok: false, error: error.message };
+      }
+    },
+
+    async exportSvg(options = {}) {
+      try {
+        const structogramNode = document.getElementById("structogram");
+        if (!structogramNode) {
+          return { ok: false, error: "Structogram node not found" };
+        }
+
+        const svgOptions =
+          options && typeof options === "object" ? options : {};
+        const dataUrl = await htmlToImage.toSvg(structogramNode, svgOptions);
         return { ok: true, dataUrl };
       } catch (error) {
         return { ok: false, error: error.message };
