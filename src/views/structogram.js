@@ -637,6 +637,7 @@ export class Structogram {
       "addCaseIcon",
       "hand",
       "caseOptionsIcons",
+      "funcAddParamButton",
       "tooltip",
       "tooltip-bottom"
     );

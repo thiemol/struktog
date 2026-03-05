@@ -295,6 +295,25 @@ $main-background-color: rgba(128, 212, 255, 0.5);
   flex-basis: 3em;
 }
 
+.funcAddParamButton {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease-in-out;
+}
+
+.func-box-header:hover .funcAddParamButton,
+.func-box-header:focus-within .funcAddParamButton {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (hover: none), (pointer: coarse) {
+  .funcAddParamButton {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
 .dtItem {
   margin: 0.5em 0;
   flex-basis: 60%;
