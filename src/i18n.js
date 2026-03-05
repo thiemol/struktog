@@ -67,6 +67,8 @@ const translations = {
         "Dieses Element und alle darin erstellten Blöcke löschen?",
       deleteAllQuestion: "Alles löschen?",
       removeParameterTooltip: "Entfernen",
+      expandEditorWidth: "Editor auf Seitenbreite",
+      limitEditorWidth: "Editor auf 1200px",
     },
     code: {
       translateTo: "Übersetzen in:",
@@ -201,6 +203,8 @@ const translations = {
       deleteQuestion: "Delete this element and all nested blocks?",
       deleteAllQuestion: "Delete everything?",
       removeParameterTooltip: "Remove",
+      expandEditorWidth: "Expand editor to full page width",
+      limitEditorWidth: "Limit editor to 1200px",
     },
     code: {
       translateTo: "Translate to:",
@@ -334,6 +338,8 @@ const translations = {
         "Supprimer cet élément et tous les blocs qu'il contient ?",
       deleteAllQuestion: "Tout supprimer ?",
       removeParameterTooltip: "Supprimer",
+      expandEditorWidth: "Etendre l'editeur a la largeur de la page",
+      limitEditorWidth: "Limiter l'editeur a 1200px",
     },
     code: {
       translateTo: "Traduire vers :",
@@ -468,6 +474,8 @@ const translations = {
       deleteQuestion: "¿Eliminar este elemento y todos los bloques anidados?",
       deleteAllQuestion: "¿Eliminar todo?",
       removeParameterTooltip: "Eliminar",
+      expandEditorWidth: "Ampliar editor al ancho completo",
+      limitEditorWidth: "Limitar editor a 1200px",
     },
     code: {
       translateTo: "Traducir a:",

@@ -128,16 +128,12 @@ export class Structogram {
       const divEditorContentSplitTop = document.createElement("div");
       divEditorContentSplitTop.classList.add("columnAuto", "container");
 
-      const divFixRightBorder = document.createElement("div");
-      divFixRightBorder.classList.add("borderWidth", "frameLeft");
-
       const divWorkingArea = document.createElement("div");
       divWorkingArea.classList.add("columnAuto");
       divWorkingArea.id = "structogram";
 
       divEditorContent.appendChild(divEditorContentSplitTop);
       divEditorContentSplitTop.appendChild(divWorkingArea);
-      divEditorContentSplitTop.appendChild(divFixRightBorder);
       this.domRoot.appendChild(divEditorContent);
 
       this.domRoot = document.getElementById("structogram");
@@ -170,17 +166,14 @@ export class Structogram {
     const divEditorContentSplitBottom = document.createElement("div");
     divEditorContentSplitBottom.classList.add("columnAuto-6");
 
-    const divFixRightBorder = document.createElement("div");
-    divFixRightBorder.classList.add("borderWidth", "frameLeft");
-
     const divWorkingArea = document.createElement("div");
     divWorkingArea.classList.add("columnAuto");
+    divWorkingArea.classList.add("mainStructogramArea");
     divWorkingArea.id = "structogram";
 
     divEditorContent.appendChild(divEditorHeadline);
     divEditorContent.appendChild(divEditorContentSplitTop);
     divEditorContentSplitTop.appendChild(divWorkingArea);
-    divEditorContentSplitTop.appendChild(divFixRightBorder);
     divEditorContent.appendChild(divEditorContentSplitBottom);
 
     const editorOptions = document.createElement("div");
@@ -214,6 +207,7 @@ export class Structogram {
     const divInsert = document.createElement("div");
     divInsert.classList.add("columnEditorFull");
     const divHeader = document.createElement("div");
+    divHeader.classList.add("insertSectionHeader");
     const spanHeader = document.createElement("strong");
     spanHeader.classList.add("margin-small");
     spanHeader.appendChild(document.createTextNode(t("editor.chooseElement")));
@@ -236,6 +230,58 @@ export class Structogram {
   createStrukOptions(domNode) {
     this.generateUndoRedoButtons(this.presenter, domNode);
     generateResetButton(this.presenter, domNode);
+
+    if (!this.presenter.isEmbedMode()) {
+      this.generateEditorWidthToggle(domNode);
+      this.updateEditorWidthToggleButtons();
+    }
+  }
+
+  generateEditorWidthToggle(domNode) {
+    const widthToggle = document.createElement("div");
+    widthToggle.classList.add(
+      "struktoOption",
+      "editorWidthIcon",
+      "tooltip",
+      "tooltip-bottom",
+      "hand",
+      "ToggleEditorWidth"
+    );
+    widthToggle.addEventListener("click", () =>
+      this.toggleEditorContentWidth()
+    );
+    domNode.appendChild(widthToggle);
+  }
+
+  toggleEditorContentWidth() {
+    if (this.presenter.isEmbedMode()) {
+      return;
+    }
+
+    const structogram = document.getElementById("structogram");
+    if (!structogram) {
+      return;
+    }
+
+    structogram.classList.toggle("structogramFullWidth");
+    this.updateEditorWidthToggleButtons();
+  }
+
+  updateEditorWidthToggleButtons() {
+    const structogram = document.getElementById("structogram");
+    if (!structogram) {
+      return;
+    }
+
+    const isFullWidth = structogram.classList.contains("structogramFullWidth");
+    const tooltipText = isFullWidth
+      ? t("editor.limitEditorWidth")
+      : t("editor.expandEditorWidth");
+    const buttons = document.getElementsByClassName("ToggleEditorWidth");
+    for (const button of buttons) {
+      button.setAttribute("data-tooltip", tooltipText);
+      button.classList.toggle("struktoOptionActive", isFullWidth);
+    }
   }
 
   generateUndoRedoButtons(presenter, domNode) {

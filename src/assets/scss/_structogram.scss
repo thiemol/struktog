@@ -249,6 +249,9 @@ $main-background-color: rgba(128, 212, 255, 0.5);
 .headerContainer {
   display: flex;
   flex-wrap: nowrap;
+  width: min(100%, 1200px);
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .floatBottom {
@@ -284,6 +287,11 @@ $main-background-color: rgba(128, 212, 255, 0.5);
 .struktoOption {
   width: 2em;
   margin-right: 0;
+}
+
+.struktoOptionActive {
+  border-radius: 0.2em;
+  background-color: rgba(38, 64, 64, 0.15);
 }
 
 .disableIcon {

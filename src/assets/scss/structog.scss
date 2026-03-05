@@ -1,13 +1,16 @@
-@import 'structogram';
-@import 'importExport';
-@import 'cases';
-@import 'code';
-@import 'svg';
+@import "structogram";
+@import "importExport";
+@import "cases";
+@import "code";
+@import "svg";
 
-$font-stack: 'Verdana', Geneva, sans-serif;
+$font-stack: "Verdana", Geneva, sans-serif;
 
 header {
   margin-top: 0.5em;
+  width: min(100%, 1200px);
+  margin-left: auto;
+  margin-right: auto;
 }
 
 body {
@@ -34,7 +37,9 @@ footer {
   text-align: center;
   font-size: small;
   padding: 8px;
-  width: 100%;
+  width: min(100%, 1200px);
+  margin-left: auto;
+  margin-right: auto;
 }
 
 footer div {
@@ -173,6 +178,12 @@ strong {
   vertical-align: middle;
 }
 
+.editorWidthIcon {
+  background: url("../svg/editorWidthIcon.svg");
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
 .hand {
   cursor: pointer;
 }
@@ -190,6 +201,19 @@ strong {
 .columnEditorStructogram {
   flex-basis: 100%;
   margin: 0.2em;
+}
+
+#structogram.mainStructogramArea {
+  width: 100%;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  flex: 0 1 100%;
+}
+
+#structogram.mainStructogramArea.structogramFullWidth {
+  max-width: none;
+  flex: 1 1 auto;
 }
 
 .columnEditorCode {
@@ -346,12 +370,24 @@ strong {
   border-top: 0.1em solid rgb(38, 64, 64);
   height: 0.1em;
   margin: 0.2em 0;
+  width: min(100%, 1200px);
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .divider-text {
   text-align: center;
   margin-top: 1px;
   font-size: 1em;
+  width: min(100%, 1200px);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.insertSectionHeader {
+  width: min(100%, 1200px);
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .structoNameContainer {
@@ -419,11 +455,14 @@ strong {
 }
 
 #structogram {
-  border-right: 1px solid black;
+  border-right: 2px solid black;
 }
 
 #insertButtons {
   padding: 0;
+  width: min(100%, 1200px);
+  margin-left: auto;
+  margin-right: auto;
 }
 
 #struktoOptions1,
