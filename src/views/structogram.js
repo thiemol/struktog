@@ -356,6 +356,18 @@ export class Structogram {
     this.domRoot.appendChild(lastLine);
   }
 
+  isBranchChildEmpty(node) {
+    if (!node || node.type === "Placeholder") {
+      return true;
+    }
+
+    if (node.type === "InsertNode") {
+      return !node.followElement || node.followElement.type === "Placeholder";
+    }
+
+    return false;
+  }
+
   /**
    * @param    divContainer         div containing the function parameters
    * @param    pos                  position in the function header-div
@@ -929,6 +941,7 @@ export class Structogram {
             "text-left",
             "bottomHeader"
           );
+          divHeaderTrue.setAttribute("data-branch-side", "true");
           divHeaderTrue.appendChild(
             document.createTextNode(t("editor.trueLabel"))
           );
@@ -939,6 +952,7 @@ export class Structogram {
             "text-right",
             "bottomHeader"
           );
+          divHeaderFalse.setAttribute("data-branch-side", "false");
           divHeaderFalse.appendChild(
             document.createTextNode(t("editor.falseLabel"))
           );
@@ -976,6 +990,17 @@ export class Structogram {
           )) {
             this.applyCodeEventListeners(elem);
             divFalse.appendChild(elem);
+          }
+
+          const trueChildEmpty = this.isBranchChildEmpty(subTree.trueChild);
+          const falseChildEmpty = this.isBranchChildEmpty(subTree.falseChild);
+          if (trueChildEmpty !== falseChildEmpty) {
+            const emptyClass = trueChildEmpty
+              ? "branch-empty-true"
+              : "branch-empty-false";
+            divHead.classList.add(emptyClass);
+            divHeadBottom.classList.add(emptyClass);
+            divChildren.classList.add(emptyClass);
           }
 
           divChildren.appendChild(divTrue);

@@ -184,6 +184,50 @@ $main-background-color: rgba(128, 212, 255, 0.5);
   flex: 6;
 }
 
+.branch-empty-true {
+  &.branchSplit {
+    background-image: url("../svg/branchSplit-25.svg");
+  }
+
+  &.branchCenter {
+    background-image: url("../svg/branchCenter-25.svg");
+  }
+
+  [data-branch-side="true"] {
+    flex: 0 0 25%;
+    width: 25%;
+    max-width: 25%;
+  }
+
+  [data-branch-side="false"] {
+    flex: 0 0 75%;
+    width: 75%;
+    max-width: 75%;
+  }
+}
+
+.branch-empty-false {
+  &.branchSplit {
+    background-image: url("../svg/branchSplit-75.svg");
+  }
+
+  &.branchCenter {
+    background-image: url("../svg/branchCenter-75.svg");
+  }
+
+  [data-branch-side="true"] {
+    flex: 0 0 75%;
+    width: 75%;
+    max-width: 75%;
+  }
+
+  [data-branch-side="false"] {
+    flex: 0 0 25%;
+    width: 25%;
+    max-width: 25%;
+  }
+}
+
 .moveText {
   flex: auto;
   margin: auto;
