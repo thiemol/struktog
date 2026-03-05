@@ -6,7 +6,7 @@ The project intentionally keeps runtime dependencies at zero to remain independe
 
 ## Official Links
 
-- Website: https://ddi.education/struktog
+- Website: https://ddi.education/struktog/
 - Original repository: https://gitlab.com/dev-ddi/cs-school-tools/struktog/
 
 ## Forks and Mirrors
