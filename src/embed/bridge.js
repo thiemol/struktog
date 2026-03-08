@@ -118,6 +118,44 @@ export function registerEmbedBridge(presenter) {
       }
     },
 
+    startMove(uid) {
+      try {
+        const result = presenter.startMoveByUid(uid);
+        if (result && result.ok) {
+          return result;
+        }
+
+        const errorResult = normalizeBridgeError(
+          result,
+          "INTERNAL_ERROR",
+          "Failed to start move mode"
+        );
+        emitToAndroid({
+          type: "insertRejected",
+          payload: {
+            code: errorResult.code,
+            error: errorResult.error,
+          },
+        });
+        return errorResult;
+      } catch (error) {
+        const message =
+          error && error.message ? error.message : "Internal error";
+        emitToAndroid({
+          type: "insertRejected",
+          payload: {
+            code: "INTERNAL_ERROR",
+            error: message,
+          },
+        });
+        return {
+          ok: false,
+          code: "INTERNAL_ERROR",
+          error: message,
+        };
+      }
+    },
+
     getInsertState() {
       return {
         ok: true,

@@ -713,6 +713,80 @@ export class Presenter {
     });
   }
 
+  getMoveSourceError(uid, options = {}) {
+    const opts = {
+      allowFunctionNode: true,
+      ...options,
+    };
+
+    const sourceNode = this.getElementByUid(uid);
+    if (!sourceNode) {
+      return {
+        code: "NODE_NOT_FOUND",
+        error: "Node not found",
+      };
+    }
+
+    if (
+      sourceNode.type === "InsertNode" ||
+      sourceNode.type === "InsertCase" ||
+      sourceNode.type === "Placeholder" ||
+      sourceNode.specialType === "CatchNode" ||
+      (!opts.allowFunctionNode && sourceNode.type === "FunctionNode")
+    ) {
+      return {
+        code: "NODE_NOT_MOVABLE",
+        error: "Node type cannot be moved",
+      };
+    }
+
+    if (
+      !sourceNode.followElement ||
+      sourceNode.followElement.type !== "InsertNode"
+    ) {
+      return {
+        code: "NODE_NOT_MOVABLE",
+        error: "Source node is malformed",
+      };
+    }
+
+    return null;
+  }
+
+  startMoveByUid(uid) {
+    if (!this.embedMode) {
+      return {
+        ok: false,
+        code: "MOVE_NOT_AVAILABLE",
+        error: "Move bridge mode is only available in embed mode",
+      };
+    }
+
+    if (this.insertMode) {
+      return {
+        ok: false,
+        code: "MOVE_MODE_CONFLICT",
+        error: "Insert or move mode is already active",
+      };
+    }
+
+    const moveError = this.getMoveSourceError(uid, {
+      allowFunctionNode: false,
+    });
+    if (moveError) {
+      return {
+        ok: false,
+        ...moveError,
+      };
+    }
+
+    this.moveElement(uid);
+    return {
+      ok: true,
+      state: this.getInsertState(),
+    };
+  }
+
   startInsertByNodeType(nodeType) {
     if (!this.embedMode) {
       return {
@@ -1792,17 +1866,9 @@ export class Presenter {
 
   moveNode(uid, targetInsertUid) {
     const sourceNode = this.getElementByUid(uid);
-    if (!sourceNode) {
-      return { ok: false, error: "Source node not found" };
-    }
-
-    if (
-      sourceNode.type === "InsertNode" ||
-      sourceNode.type === "InsertCase" ||
-      sourceNode.type === "Placeholder" ||
-      sourceNode.specialType === "CatchNode"
-    ) {
-      return { ok: false, error: "Node type cannot be moved" };
+    const moveError = this.getMoveSourceError(uid);
+    if (moveError) {
+      return { ok: false, error: moveError.error };
     }
 
     const targetNode = this.getElementByUid(targetInsertUid);
@@ -1813,14 +1879,6 @@ export class Presenter {
     if (this.nodeContainsUid(sourceNode, targetInsertUid)) {
       return { ok: false, error: "Target cannot be inside moved subtree" };
     }
-
-    if (
-      !sourceNode.followElement ||
-      sourceNode.followElement.type !== "InsertNode"
-    ) {
-      return { ok: false, error: "Source node is malformed" };
-    }
-
     this.moveId = uid;
     this.insertMode = true;
     this.insertModeEventActive = false;
