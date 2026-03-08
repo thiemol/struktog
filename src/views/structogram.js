@@ -403,6 +403,31 @@ export class Structogram {
     this.domRoot.appendChild(lastLine);
   }
 
+  handleEmbedFunctionNodeSelection(event, uid) {
+    if (!this.presenter.isEmbedMode() || this.presenter.getInsertMode()) {
+      return false;
+    }
+
+    const target =
+      event && event.target instanceof Element ? event.target : null;
+    if (target) {
+      if (
+        target.closest("button") ||
+        target.closest("input") ||
+        target.closest(".optionIcon") ||
+        target.closest(".acceptIcon") ||
+        target.closest(".deleteIcon")
+      ) {
+        return false;
+      }
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    this.presenter.switchEditState(uid);
+    return true;
+  }
+
   isBranchChildEmpty(node) {
     if (!node || node.type === "Placeholder") {
       return true;
@@ -461,7 +486,10 @@ export class Structogram {
       removeParamBtn.style.minWidth = "1.2em";
       removeParamBtn.style.border = "none";
       removeParamBtn.setAttribute("data-tooltip", t("common.remove"));
-      removeParamBtn.addEventListener("click", () => {
+      removeParamBtn.addEventListener("click", (event) => {
+        if (this.handleEmbedFunctionNodeSelection(event, uid)) {
+          return;
+        }
         this.presenter.removeParamFromParameters(pos);
       });
 
@@ -475,7 +503,11 @@ export class Structogram {
     }
 
     // text can be clicked and afterwards can be changed
-    textNodeSpan.addEventListener("click", () => {
+    textNodeSpan.addEventListener("click", (event) => {
+      if (this.handleEmbedFunctionNodeSelection(event, uid)) {
+        return;
+      }
+
       textNodeDiv.remove();
 
       // div containing input field and field option
@@ -693,6 +725,9 @@ export class Structogram {
     addParamBtn.type = "button";
     addParamBtn.setAttribute("data-tooltip", t("common.addParameter"));
     addParamBtn.addEventListener("click", (event) => {
+      if (this.handleEmbedFunctionNodeSelection(event, uid)) {
+        return;
+      }
       event.preventDefault();
       event.stopPropagation();
       addParamBtn.remove();
@@ -1280,6 +1315,9 @@ export class Structogram {
           innerDiv.appendChild(divChild);
           innerDiv.appendChild(vertLineContainer);
           innerDiv.appendChild(divFuncFoot);
+          innerDiv.addEventListener("click", (event) =>
+            this.handleEmbedFunctionNodeSelection(event, subTree.id)
+          );
           container.appendChild(innerDiv);
           elemArray.push(container);
 
