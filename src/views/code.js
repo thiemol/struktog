@@ -23,6 +23,7 @@ export class CodeView {
     this.presenter = presenter;
     this.domRoot = domRoot;
     this.lang = "--";
+    this.sourcecodeActivatedFullWidth = false;
     this.translationMap = {
       Python: {
         untranslatable: [],
@@ -1385,22 +1386,52 @@ export class CodeView {
    */
   displaySourcecode(buttonClass) {
     const fields = document.getElementsByClassName(buttonClass);
+    const sourcecodeDisplay = document.getElementById("SourcecodeDisplay");
+    const editorContent = document.getElementById("editorContent");
+    const structogram = document.getElementById("structogram");
+    const hasStructogram = Boolean(structogram);
+    const isFullWidth =
+      hasStructogram && structogram.classList.contains("structogramFullWidth");
+
     if (this.presenter.getSourcecodeDisplay()) {
       for (const item of fields) {
         item.setAttribute("data-tooltip", "Quellcode ausblenden");
       }
-      document.getElementById("SourcecodeDisplay").style.display = "block";
-      if (window.matchMedia("(max-width: 1200px)")) {
-        document.getElementById("editorContent").style.flexBasis = "75%";
+      sourcecodeDisplay.style.display = "block";
+      if (editorContent) {
+        editorContent.style.flexBasis = "75%";
+      }
+      if (hasStructogram && !isFullWidth) {
+        structogram.classList.add("structogramFullWidth");
+        this.sourcecodeActivatedFullWidth = true;
+      } else {
+        this.sourcecodeActivatedFullWidth = false;
       }
     } else {
       for (const item of fields) {
         item.setAttribute("data-tooltip", t("code.showSourcecode"));
       }
-      document.getElementById("SourcecodeDisplay").style.display = "none";
-      if (window.matchMedia("(max-width: 1200px)")) {
-        document.getElementById("editorContent").style.flexBasis = "100%";
+      sourcecodeDisplay.style.display = "none";
+      if (editorContent) {
+        editorContent.style.flexBasis = "100%";
       }
+      if (hasStructogram && this.sourcecodeActivatedFullWidth) {
+        structogram.classList.remove("structogramFullWidth");
+      }
+      this.sourcecodeActivatedFullWidth = false;
+    }
+
+    const toggleButtons = document.getElementsByClassName("ToggleEditorWidth");
+    const tooltipText =
+      hasStructogram && structogram.classList.contains("structogramFullWidth")
+        ? t("editor.limitEditorWidth")
+        : t("editor.expandEditorWidth");
+    for (const button of toggleButtons) {
+      button.setAttribute("data-tooltip", tooltipText);
+      button.classList.toggle(
+        "struktoOptionActive",
+        hasStructogram && structogram.classList.contains("structogramFullWidth")
+      );
     }
   }
 }
