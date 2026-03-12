@@ -677,13 +677,9 @@ export class Structogram {
    * Return a function header with function name and parameters for editing
    */
   renderFunctionBox(uid, content, funcParams, returnType = "") {
-    // field attributes... ff: function name... fp: parameter name
-    // size is field length
     const ffSize = 15;
-    const fpSize = 5;
     const spacingSize = 1;
 
-    // box header containing all elements describing the function header
     const functionBoxHeaderDiv = document.createElement("div");
     functionBoxHeaderDiv.classList.add(
       "input-group",
@@ -695,54 +691,18 @@ export class Structogram {
     functionBoxHeaderDiv.style.flexDirection = "row";
     functionBoxHeaderDiv.style.paddingTop = "6.5px";
 
-    // header containing all param elements
-    const paramDiv = document.createElement("div");
-    paramDiv.classList.add("input-group");
-    paramDiv.style.display = "flex";
-    paramDiv.style.flexDirection = "row";
-    paramDiv.style.flex = "0 0 " + spacingSize + "ch";
+    const params = Array.isArray(funcParams)
+      ? funcParams.map((param) => param.parName || "")
+      : [];
+    const parameterText = params.join(", ");
+    const parameterSpan = document.createElement("span");
+    parameterSpan.classList.add("function-elem");
+    parameterSpan.appendChild(document.createTextNode(parameterText));
 
-    let countParam = 0;
-    for (const param of funcParams) {
-      this.renderParam(
-        countParam,
-        paramDiv,
-        spacingSize,
-        fpSize,
-        uid,
-        param.parName
-      );
-      countParam += 1;
-    }
+    const returnTypeSpan = document.createElement("span");
+    returnTypeSpan.classList.add("function-elem");
+    returnTypeSpan.appendChild(document.createTextNode(returnType || "void"));
 
-    // append a button for adding new parameters at the end of the param div
-    const addParamBtn = document.createElement("button");
-    addParamBtn.classList.add(
-      "addCaseIcon",
-      "hand",
-      "caseOptionsIcons",
-      "funcAddParamButton",
-      "tooltip",
-      "tooltip-bottom"
-    );
-    addParamBtn.style.marginTop = "auto";
-    addParamBtn.style.marginBottom = "auto";
-    addParamBtn.type = "button";
-    addParamBtn.setAttribute("data-tooltip", t("common.addParameter"));
-    addParamBtn.addEventListener("click", (event) => {
-      if (this.handleEmbedNodeSelection(event, uid)) {
-        return;
-      }
-      event.preventDefault();
-      event.stopPropagation();
-      addParamBtn.remove();
-      const countParam = paramDiv.querySelectorAll(".function-elem").length;
-      this.renderParam(countParam, paramDiv, spacingSize, fpSize, uid);
-      paramDiv.appendChild(addParamBtn);
-    });
-    paramDiv.appendChild(addParamBtn);
-
-    // add all box header elements
     functionBoxHeaderDiv.appendChild(
       document.createTextNode(getContentDefault("functionKeyword"))
     );
@@ -758,22 +718,12 @@ export class Structogram {
       )
     );
     functionBoxHeaderDiv.appendChild(document.createTextNode("("));
-    functionBoxHeaderDiv.appendChild(paramDiv);
+    functionBoxHeaderDiv.appendChild(parameterSpan);
     functionBoxHeaderDiv.appendChild(document.createTextNode(")"));
     functionBoxHeaderDiv.appendChild(this.createSpacing(spacingSize));
     functionBoxHeaderDiv.appendChild(document.createTextNode("->"));
     functionBoxHeaderDiv.appendChild(this.createSpacing(spacingSize));
-    functionBoxHeaderDiv.appendChild(
-      this.createFunctionHeaderTextEl(
-        functionBoxHeaderDiv,
-        9,
-        fpSize,
-        getContentDefault("returnTypePlaceholder"),
-        uid,
-        returnType,
-        "returntype"
-      )
-    );
+    functionBoxHeaderDiv.appendChild(returnTypeSpan);
     functionBoxHeaderDiv.appendChild(this.createSpacing(spacingSize));
     functionBoxHeaderDiv.appendChild(document.createTextNode("{"));
     const spacer = document.createElement("div");
@@ -1752,6 +1702,191 @@ export class Structogram {
     document.getElementById("IEModal").classList.add("active");
   }
 
+  openFunctionOptions(uid) {
+    const content = document.getElementById("modal-content");
+    const footer = document.getElementById("modal-footer");
+    while (content.hasChildNodes()) {
+      content.removeChild(content.lastChild);
+    }
+    while (footer.hasChildNodes()) {
+      footer.removeChild(footer.lastChild);
+    }
+
+    const element = this.presenter.getElementByUid(uid);
+    if (!element || element.type !== "FunctionNode") {
+      return;
+    }
+
+    const title = document.createElement("strong");
+    title.appendChild(
+      document.createTextNode(
+        t("editor.functionSettingsTitle", {
+          node: getNodeLabel("FunctionNode"),
+        })
+      )
+    );
+    content.appendChild(title);
+
+    const elementText = document.createElement("div");
+    elementText.classList.add("caseTitle", "boldText");
+    elementText.appendChild(document.createTextNode(element.text));
+    content.appendChild(elementText);
+
+    const list = document.createElement("dl");
+    list.classList.add("container");
+    content.appendChild(list);
+
+    const parameters = Array.isArray(element.parameters)
+      ? element.parameters
+      : [];
+
+    const parameterCountTitle = document.createElement("dt");
+    parameterCountTitle.classList.add("dtItem");
+    parameterCountTitle.appendChild(
+      document.createTextNode(t("editor.numberOfParameters"))
+    );
+    list.appendChild(parameterCountTitle);
+
+    const parameterCountRow = document.createElement("dd");
+    parameterCountRow.classList.add("ddItem", "container");
+    list.appendChild(parameterCountRow);
+
+    const parameterCount = document.createElement("div");
+    parameterCount.classList.add("text-center", "shortenOnMobile");
+    parameterCount.appendChild(document.createTextNode(parameters.length));
+    parameterCountRow.appendChild(parameterCount);
+
+    const addParameter = document.createElement("div");
+    addParameter.classList.add(
+      "addCaseIcon",
+      "hand",
+      "caseOptionsIcons",
+      "tooltip",
+      "tooltip-bottom"
+    );
+    addParameter.setAttribute("data-tooltip", t("common.addParameter"));
+    addParameter.addEventListener("click", () => {
+      this.presenter.addFunctionParameter(uid);
+      this.openFunctionOptions(uid);
+    });
+    parameterCountRow.appendChild(addParameter);
+
+    const returnTypeRow = document.createElement("dd");
+    returnTypeRow.classList.add("ddItem", "container");
+    returnTypeRow.style.flexBasis = "100%";
+    const returnTypeLabel = document.createElement("span");
+    returnTypeLabel.appendChild(
+      document.createTextNode(t("editor.functionReturnType"))
+    );
+    returnTypeRow.appendChild(returnTypeLabel);
+    list.appendChild(returnTypeRow);
+
+    const returnTypeInput = document.createElement("input");
+    returnTypeInput.classList.add("form-control");
+    returnTypeInput.style.flex = "1 1 auto";
+    returnTypeInput.style.marginLeft = "0.75em";
+    returnTypeInput.type = "text";
+    returnTypeInput.placeholder = getContentDefault("returnTypePlaceholder");
+    returnTypeInput.value = element.returnType || "";
+    returnTypeRow.appendChild(returnTypeInput);
+
+    const persistReturnType = () => {
+      this.presenter.setFunctionReturnType(uid, returnTypeInput.value);
+      this.openFunctionOptions(uid);
+    };
+
+    returnTypeInput.addEventListener("blur", persistReturnType);
+    returnTypeInput.addEventListener("keyup", (event) => {
+      if (event.key === "Enter") {
+        returnTypeInput.blur();
+      }
+    });
+
+    if (parameters.length === 0) {
+      const parameterRow = document.createElement("dd");
+      parameterRow.classList.add("ddItem", "container");
+      parameterRow.style.flexBasis = "100%";
+      const parameterLabel = document.createElement("span");
+      parameterLabel.appendChild(
+        document.createTextNode(t("editor.functionParameters"))
+      );
+      parameterRow.appendChild(parameterLabel);
+      const emptyState = document.createElement("div");
+      emptyState.classList.add("text-center");
+      emptyState.style.marginLeft = "auto";
+      emptyState.appendChild(
+        document.createTextNode(t("editor.functionParametersEmpty"))
+      );
+      parameterRow.appendChild(emptyState);
+      list.appendChild(parameterRow);
+    }
+
+    parameters.forEach((parameter, index) => {
+      const parameterItem = document.createElement("dd");
+      parameterItem.classList.add("ddItem", "container");
+      parameterItem.style.flexBasis = "100%";
+
+      const removeParameter = document.createElement("div");
+      removeParameter.classList.add(
+        "trashcan",
+        "hand",
+        "caseOptionsIcons",
+        "tooltip",
+        "tooltip-bottom"
+      );
+      removeParameter.setAttribute(
+        "data-tooltip",
+        t("editor.removeParameterTooltip")
+      );
+      removeParameter.addEventListener("click", () => {
+        this.presenter.removeFunctionParameter(uid, index);
+        this.openFunctionOptions(uid);
+      });
+      parameterItem.appendChild(removeParameter);
+
+      const parameterLabel = document.createElement("span");
+      parameterLabel.appendChild(
+        document.createTextNode(
+          `${t("editor.functionParameterLabel")} ${index + 1}:`
+        )
+      );
+      parameterLabel.style.marginRight = "0.75em";
+      parameterItem.appendChild(parameterLabel);
+
+      const parameterInput = document.createElement("input");
+      parameterInput.classList.add("form-control");
+      parameterInput.style.flex = "1 1 auto";
+      parameterInput.type = "text";
+      parameterInput.placeholder = `par ${index + 1}`;
+      parameterInput.value = parameter.parName || "";
+      parameterItem.appendChild(parameterInput);
+
+      const persistParameter = () => {
+        this.presenter.setFunctionParameter(uid, index, parameterInput.value);
+        this.openFunctionOptions(uid);
+      };
+
+      parameterInput.addEventListener("blur", persistParameter);
+      parameterInput.addEventListener("keyup", (event) => {
+        if (event.key === "Enter") {
+          parameterInput.blur();
+        }
+      });
+
+      list.appendChild(parameterItem);
+    });
+
+    const cancelButton = document.createElement("div");
+    cancelButton.classList.add("modal-buttons", "hand");
+    cancelButton.appendChild(document.createTextNode(t("common.close")));
+    cancelButton.addEventListener("click", () =>
+      document.getElementById("IEModal").classList.remove("active")
+    );
+    footer.appendChild(cancelButton);
+
+    document.getElementById("IEModal").classList.add("active");
+  }
+
   /**
    * Create option elements and add them to the displayed element
    *
@@ -1797,6 +1932,22 @@ export class Structogram {
         this.openTryCatchOptions(uid)
       );
       optionDiv.appendChild(tryCatchOptions);
+    }
+
+    if (type === "FunctionNode") {
+      const functionOptions = document.createElement("div");
+      functionOptions.classList.add(
+        "gearIcon",
+        "optionIcon",
+        "hand",
+        "tooltip",
+        "tooltip-bottoml"
+      );
+      functionOptions.setAttribute("data-tooltip", t("common.settings"));
+      functionOptions.addEventListener("click", () =>
+        this.openFunctionOptions(uid)
+      );
+      optionDiv.appendChild(functionOptions);
     }
 
     // all elements can be moved, except InsertCases they are bind to the case node
