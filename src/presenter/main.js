@@ -16,6 +16,10 @@
  */
 
 import { guidGenerator } from "../helpers/generator";
+import {
+  generateSourceCode,
+  getSupportedCodeLanguages,
+} from "../helpers/sourceCode";
 import { config } from "../config";
 import {
   getContentDefault,
@@ -249,6 +253,55 @@ export class Presenter {
         view.setLang(lang);
       }
     }
+    this.emitSourceCodeChanged();
+  }
+
+  getSupportedCodeLanguages() {
+    return getSupportedCodeLanguages();
+  }
+
+  getSourceCode(language = this.codeLanguage) {
+    const selectedLanguage = language || this.codeLanguage;
+    if (!selectedLanguage || selectedLanguage === "--") {
+      return {
+        ok: false,
+        code: "NO_LANGUAGE_SELECTED",
+        error: "No source code language selected",
+      };
+    }
+
+    return generateSourceCode(this.model.getTree(), selectedLanguage);
+  }
+
+  getSourceCodeState(language = this.codeLanguage) {
+    const selectedLanguage = language || this.codeLanguage;
+    if (!selectedLanguage || selectedLanguage === "--") {
+      return {
+        ok: true,
+        language: selectedLanguage || "--",
+        displaySourcecode: this.getSourcecodeDisplay(),
+        supported: false,
+        code: "",
+        selected: false,
+      };
+    }
+
+    const sourceCode = this.getSourceCode(selectedLanguage);
+    if (!sourceCode.ok) {
+      return sourceCode;
+    }
+
+    return {
+      ...sourceCode,
+      displaySourcecode: this.getSourcecodeDisplay(),
+      selected: selectedLanguage === this.codeLanguage,
+    };
+  }
+
+  emitSourceCodeChanged(language = this.codeLanguage) {
+    const selectedLanguage = language || this.codeLanguage;
+    const payload = this.getSourceCodeState(selectedLanguage);
+    this.emitExternalEvent("sourcecodeChanged", payload);
   }
 
   getShortcutsEnabled() {
@@ -598,6 +651,7 @@ export class Presenter {
       reason,
       tree: this.model.getTree(),
     });
+    this.emitSourceCodeChanged();
   }
 
   init() {
@@ -609,6 +663,7 @@ export class Presenter {
       embedMode: this.embedMode,
       tree: this.model.getTree(),
     });
+    this.emitSourceCodeChanged();
   }
 
   updateNodeTextFromDefault(node, textKey) {

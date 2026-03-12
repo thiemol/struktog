@@ -185,10 +185,52 @@ export function registerEmbedBridge(presenter) {
         canEditBranches: true,
         canEditFunctions: true,
         canEditCases: true,
+        canExportSourcecode: true,
+        canSetCodeLanguage: true,
         canExportJson: true,
         canExportPng: true,
         canExportSvg: true,
       };
+    },
+
+    getSupportedCodeLanguages() {
+      return {
+        ok: true,
+        languages: presenter.getSupportedCodeLanguages(),
+      };
+    },
+
+    getCode(language = null) {
+      return presenter.getSourceCodeState(
+        language || presenter.getCodeLanguage()
+      );
+    },
+
+    setCodeLanguage(language) {
+      const supportedLanguages = presenter.getSupportedCodeLanguages();
+      if (typeof language !== "string" || language.trim() === "") {
+        return {
+          ok: false,
+          code: "INVALID_LANGUAGE",
+          error: "Invalid language",
+        };
+      }
+
+      const normalizedLanguage = language.trim();
+      if (!supportedLanguages.includes(normalizedLanguage)) {
+        return {
+          ok: false,
+          code: "UNSUPPORTED_LANGUAGE",
+          error: "Unsupported source code language",
+        };
+      }
+
+      presenter.setCodeLanguage(normalizedLanguage);
+      return presenter.getSourceCodeState(normalizedLanguage);
+    },
+
+    getCodeState() {
+      return presenter.getSourceCodeState();
     },
 
     getStructogramMeta() {
