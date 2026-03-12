@@ -16,6 +16,10 @@
  */
 
 import { guidGenerator } from "../helpers/generator";
+import {
+  generateSourceCode,
+  getSupportedCodeLanguages,
+} from "../helpers/sourceCode";
 import { config } from "../config";
 import {
   getContentDefault,
@@ -36,6 +40,7 @@ export class Presenter {
     this.insertMode = false;
     this.insertModeEventActive = false;
     this.activeInsertNodeType = null;
+    this.selectedUid = null;
     this.settingFunctionMode = false; // if the user is setting a function block then true
     this.views = [];
     this.moveId = null;
@@ -130,6 +135,74 @@ export class Presenter {
     return this.model.getElementInTree(uid, this.model.getTree());
   }
 
+  findParentNodeInfo(uid, subTree = this.model.getTree()) {
+    if (!subTree || typeof subTree !== "object") {
+      return null;
+    }
+
+    if (Array.isArray(subTree.cases)) {
+      for (let index = 0; index < subTree.cases.length; index += 1) {
+        const caseNode = subTree.cases[index];
+        if (caseNode && caseNode.id === uid) {
+          return {
+            parentUid: subTree.id,
+            parentType: subTree.type,
+            childUid: caseNode.id,
+            childType: caseNode.type,
+            index,
+          };
+        }
+
+        const nestedResult = this.findParentNodeInfo(uid, caseNode);
+        if (nestedResult) {
+          return nestedResult;
+        }
+      }
+    }
+
+    if (Array.isArray(subTree.catches)) {
+      for (let index = 0; index < subTree.catches.length; index += 1) {
+        const catchNode = subTree.catches[index];
+        if (catchNode && catchNode.id === uid) {
+          return {
+            parentUid: subTree.id,
+            parentType: subTree.type,
+            childUid: catchNode.id,
+            childType:
+              catchNode.specialType && catchNode.specialType === "CatchNode"
+                ? "CatchNode"
+                : catchNode.type,
+            index,
+          };
+        }
+
+        const nestedResult = this.findParentNodeInfo(uid, catchNode);
+        if (nestedResult) {
+          return nestedResult;
+        }
+      }
+    }
+
+    const childKeys = [
+      "followElement",
+      "child",
+      "trueChild",
+      "falseChild",
+      "tryChild",
+      "defaultNode",
+    ];
+    for (const key of childKeys) {
+      if (subTree[key] && typeof subTree[key] === "object") {
+        const nestedResult = this.findParentNodeInfo(uid, subTree[key]);
+        if (nestedResult) {
+          return nestedResult;
+        }
+      }
+    }
+
+    return null;
+  }
+
   resetButtons() {
     for (const view of this.views) {
       view.resetButtons();
@@ -180,6 +253,55 @@ export class Presenter {
         view.setLang(lang);
       }
     }
+    this.emitSourceCodeChanged();
+  }
+
+  getSupportedCodeLanguages() {
+    return getSupportedCodeLanguages();
+  }
+
+  getSourceCode(language = this.codeLanguage) {
+    const selectedLanguage = language || this.codeLanguage;
+    if (!selectedLanguage || selectedLanguage === "--") {
+      return {
+        ok: false,
+        code: "NO_LANGUAGE_SELECTED",
+        error: "No source code language selected",
+      };
+    }
+
+    return generateSourceCode(this.model.getTree(), selectedLanguage);
+  }
+
+  getSourceCodeState(language = this.codeLanguage) {
+    const selectedLanguage = language || this.codeLanguage;
+    if (!selectedLanguage || selectedLanguage === "--") {
+      return {
+        ok: true,
+        language: selectedLanguage || "--",
+        displaySourcecode: this.getSourcecodeDisplay(),
+        supported: false,
+        code: "",
+        selected: false,
+      };
+    }
+
+    const sourceCode = this.getSourceCode(selectedLanguage);
+    if (!sourceCode.ok) {
+      return sourceCode;
+    }
+
+    return {
+      ...sourceCode,
+      displaySourcecode: this.getSourcecodeDisplay(),
+      selected: selectedLanguage === this.codeLanguage,
+    };
+  }
+
+  emitSourceCodeChanged(language = this.codeLanguage) {
+    const selectedLanguage = language || this.codeLanguage;
+    const payload = this.getSourceCodeState(selectedLanguage);
+    this.emitExternalEvent("sourcecodeChanged", payload);
   }
 
   getShortcutsEnabled() {
@@ -436,13 +558,91 @@ export class Presenter {
     return this.moveId;
   }
 
+  getSelectedUid() {
+    return this.selectedUid;
+  }
+
+  getSelectedNode() {
+    if (!this.selectedUid) {
+      return null;
+    }
+    return this.getElementByUid(this.selectedUid);
+  }
+
+  isNodeSelected(uid) {
+    return Boolean(uid) && this.selectedUid === uid;
+  }
+
+  emitSelectionChanged() {
+    const selectedNode = this.getSelectedNode();
+    this.emitExternalEvent("selectionChanged", {
+      uid: selectedNode ? selectedNode.id : null,
+      nodeType: selectedNode ? selectedNode.type : null,
+      text:
+        selectedNode && typeof selectedNode.text === "string"
+          ? selectedNode.text
+          : "",
+    });
+  }
+
+  selectNode(uid, emitEvent = true) {
+    const node = this.getElementByUid(uid);
+    if (!node) {
+      return { ok: false, error: "Node not found" };
+    }
+
+    const selectionChanged = this.selectedUid !== uid;
+    this.selectedUid = uid;
+    if (selectionChanged) {
+      this.renderAllViews();
+      if (emitEvent) {
+        this.emitSelectionChanged();
+      }
+    }
+
+    return { ok: true, node };
+  }
+
+  clearSelectedNode(emitEvent = true) {
+    if (!this.selectedUid) {
+      return { ok: true, cleared: false };
+    }
+
+    this.selectedUid = null;
+    this.renderAllViews();
+    if (emitEvent) {
+      this.emitSelectionChanged();
+    }
+    return { ok: true, cleared: true };
+  }
+
+  syncSelectedNode(emitEvent = false) {
+    if (!this.selectedUid) {
+      return false;
+    }
+
+    if (!this.getElementByUid(this.selectedUid)) {
+      this.selectedUid = null;
+      if (emitEvent) {
+        this.emitSelectionChanged();
+      }
+      return true;
+    }
+
+    return false;
+  }
+
   getNextInsertElement() {
     return this.nextInsertElement;
   }
 
   renderAllViews() {
+    const selectionChanged = this.syncSelectedNode();
     for (const view of this.views) {
       view.render(this.model.getTree());
+    }
+    if (selectionChanged) {
+      this.emitSelectionChanged();
     }
   }
 
@@ -451,6 +651,7 @@ export class Presenter {
       reason,
       tree: this.model.getTree(),
     });
+    this.emitSourceCodeChanged();
   }
 
   init() {
@@ -462,6 +663,7 @@ export class Presenter {
       embedMode: this.embedMode,
       tree: this.model.getTree(),
     });
+    this.emitSourceCodeChanged();
   }
 
   updateNodeTextFromDefault(node, textKey) {
@@ -711,6 +913,80 @@ export class Presenter {
       ...this.getInsertState(),
       reason,
     });
+  }
+
+  getMoveSourceError(uid, options = {}) {
+    const opts = {
+      allowFunctionNode: true,
+      ...options,
+    };
+
+    const sourceNode = this.getElementByUid(uid);
+    if (!sourceNode) {
+      return {
+        code: "NODE_NOT_FOUND",
+        error: "Node not found",
+      };
+    }
+
+    if (
+      sourceNode.type === "InsertNode" ||
+      sourceNode.type === "InsertCase" ||
+      sourceNode.type === "Placeholder" ||
+      sourceNode.specialType === "CatchNode" ||
+      (!opts.allowFunctionNode && sourceNode.type === "FunctionNode")
+    ) {
+      return {
+        code: "NODE_NOT_MOVABLE",
+        error: "Node type cannot be moved",
+      };
+    }
+
+    if (
+      !sourceNode.followElement ||
+      sourceNode.followElement.type !== "InsertNode"
+    ) {
+      return {
+        code: "NODE_NOT_MOVABLE",
+        error: "Source node is malformed",
+      };
+    }
+
+    return null;
+  }
+
+  startMoveByUid(uid) {
+    if (!this.embedMode) {
+      return {
+        ok: false,
+        code: "MOVE_NOT_AVAILABLE",
+        error: "Move bridge mode is only available in embed mode",
+      };
+    }
+
+    if (this.insertMode) {
+      return {
+        ok: false,
+        code: "MOVE_MODE_CONFLICT",
+        error: "Insert or move mode is already active",
+      };
+    }
+
+    const moveError = this.getMoveSourceError(uid, {
+      allowFunctionNode: false,
+    });
+    if (moveError) {
+      return {
+        ok: false,
+        ...moveError,
+      };
+    }
+
+    this.moveElement(uid);
+    return {
+      ok: true,
+      state: this.getInsertState(),
+    };
   }
 
   startInsertByNodeType(nodeType) {
@@ -1136,6 +1412,22 @@ export class Presenter {
    * @param   uid   id of the clicked element in the struktogramm
    */
   addCase(uid) {
+    const element = this.getElementByUid(uid);
+    if (!element || element.type !== "CaseNode") {
+      return { ok: false, error: "Case node not found" };
+    }
+
+    const maxCases = 7;
+    if (element.cases.length >= maxCases) {
+      return {
+        ok: false,
+        error: "Maximum number of cases reached",
+        maxCases,
+        caseCount: element.cases.length,
+        defaultOn: Boolean(element.defaultOn),
+      };
+    }
+
     this.updateUndo();
     this.model.setTree(
       this.model.findAndAlterElement(
@@ -1150,6 +1442,14 @@ export class Presenter {
     this.updateBrowserStore();
     this.renderAllViews();
     this.notifyTreeChanged("addCase");
+    const updatedElement = this.getElementByUid(uid);
+    return {
+      ok: true,
+      caseCount: updatedElement.cases.length,
+      maxCases,
+      defaultOn: Boolean(updatedElement.defaultOn),
+      node: updatedElement,
+    };
   }
 
   /**
@@ -1158,6 +1458,21 @@ export class Presenter {
    * @param   uid   id of the clicked element in the struktogramm
    */
   addCatch(uid) {
+    const element = this.getElementByUid(uid);
+    if (!element || element.type !== "TryCatchNode") {
+      return { ok: false, error: "Try-catch node not found" };
+    }
+
+    const maxCatches = 20;
+    if (element.catches.length >= maxCatches) {
+      return {
+        ok: false,
+        error: "Maximum number of catches reached",
+        maxCatches,
+        catchCount: element.catches.length,
+      };
+    }
+
     this.updateUndo();
     this.model.setTree(
       this.model.findAndAlterElement(
@@ -1172,6 +1487,14 @@ export class Presenter {
     this.updateBrowserStore();
     this.renderAllViews();
     this.notifyTreeChanged("addCatch");
+
+    const updatedElement = this.getElementByUid(uid);
+    return {
+      ok: true,
+      catchCount: updatedElement.catches.length,
+      maxCatches,
+      node: updatedElement,
+    };
   }
 
   getNodeTypeForRemoval(element) {
@@ -1441,6 +1764,147 @@ export class Presenter {
     this.notifyTreeChanged("editElement");
   }
 
+  setBranchCondition(uid, condition) {
+    const branchNode = this.getElementByUid(uid);
+    if (!branchNode || branchNode.type !== "BranchNode") {
+      return { ok: false, error: "Branch node not found" };
+    }
+
+    this.editElement(uid, String(condition));
+    return { ok: true, node: this.getElementByUid(uid) };
+  }
+
+  getCaseSettings(uid) {
+    const element = this.getElementByUid(uid);
+    if (!element || element.type !== "CaseNode") {
+      return { ok: false, error: "Case node not found" };
+    }
+
+    return {
+      ok: true,
+      uid,
+      caseCount: element.cases.length,
+      maxCases: 7,
+      defaultOn: Boolean(element.defaultOn),
+      text: element.text,
+      cases: element.cases.map((caseNode, index) => ({
+        uid: caseNode.id,
+        text: caseNode.text,
+        index,
+      })),
+      defaultCase:
+        element.defaultNode && element.defaultNode.id
+          ? {
+              uid: element.defaultNode.id,
+              text: element.defaultNode.text,
+            }
+          : null,
+    };
+  }
+
+  setCaseLabel(uid, text) {
+    const caseNode = this.getElementByUid(uid);
+    if (!caseNode || caseNode.type !== "InsertCase") {
+      return { ok: false, error: "Case branch not found" };
+    }
+
+    this.editElement(uid, String(text));
+    return { ok: true, node: this.getElementByUid(uid) };
+  }
+
+  removeCase(uid, force = false) {
+    const caseNode = this.getElementByUid(uid);
+    if (!caseNode || caseNode.type !== "InsertCase") {
+      return { ok: false, error: "Case branch not found" };
+    }
+
+    const parentInfo = this.findParentNodeInfo(uid);
+    if (!parentInfo || parentInfo.parentType !== "CaseNode") {
+      return { ok: false, error: "Parent case node not found" };
+    }
+
+    const parentNode = this.getElementByUid(parentInfo.parentUid);
+    const minCases = 2;
+    if (parentNode.cases.length <= minCases) {
+      return {
+        ok: false,
+        error: "Minimum number of cases reached",
+        minCases,
+        caseCount: parentNode.cases.length,
+      };
+    }
+
+    const removalResult = this.removeNode(uid, force);
+    if (!removalResult.ok) {
+      return removalResult;
+    }
+
+    const updatedParentNode = this.getElementByUid(parentInfo.parentUid);
+    return {
+      ok: true,
+      removedUid: uid,
+      parentUid: parentInfo.parentUid,
+      caseCount: updatedParentNode ? updatedParentNode.cases.length : 0,
+      minCases,
+      node: updatedParentNode,
+    };
+  }
+
+  getTryCatchSettings(uid) {
+    const element = this.getElementByUid(uid);
+    if (!element || element.type !== "TryCatchNode") {
+      return { ok: false, error: "Try-catch node not found" };
+    }
+
+    return {
+      ok: true,
+      uid,
+      catchCount: element.catches.length,
+      maxCatches: 20,
+      catches: element.catches.map((catchNode, index) => ({
+        uid: catchNode.id,
+        text: catchNode.text,
+        index,
+      })),
+    };
+  }
+
+  setCatchLabel(uid, text) {
+    const catchNode = this.getElementByUid(uid);
+    if (!catchNode || catchNode.specialType !== "CatchNode") {
+      return { ok: false, error: "Catch node not found" };
+    }
+
+    this.editElement(uid, String(text));
+    return { ok: true, node: this.getElementByUid(uid) };
+  }
+
+  removeCatch(uid, force = false) {
+    const catchNode = this.getElementByUid(uid);
+    if (!catchNode || catchNode.specialType !== "CatchNode") {
+      return { ok: false, error: "Catch node not found" };
+    }
+
+    const parentInfo = this.findParentNodeInfo(uid);
+    if (!parentInfo || parentInfo.parentType !== "TryCatchNode") {
+      return { ok: false, error: "Parent try-catch node not found" };
+    }
+
+    const removalResult = this.removeNode(uid, force);
+    if (!removalResult.ok) {
+      return removalResult;
+    }
+
+    const updatedParentNode = this.getElementByUid(parentInfo.parentUid);
+    return {
+      ok: true,
+      removedUid: uid,
+      parentUid: parentInfo.parentUid,
+      catchCount: updatedParentNode ? updatedParentNode.catches.length : 0,
+      node: updatedParentNode,
+    };
+  }
+
   mutateFunctionNode(uid, mutator) {
     const functionNode = this.getElementByUid(uid);
     if (!functionNode || functionNode.type !== "FunctionNode") {
@@ -1640,7 +2104,8 @@ export class Presenter {
    */
   switchEditState(uid, paramIndex = null) {
     if (this.embedMode) {
-      const node = this.getElementByUid(uid);
+      const result = this.selectNode(uid, true);
+      const node = result.ok ? result.node : null;
       this.emitExternalEvent("nodeSelected", {
         uid,
         nodeType: node ? node.type : null,
@@ -1792,17 +2257,9 @@ export class Presenter {
 
   moveNode(uid, targetInsertUid) {
     const sourceNode = this.getElementByUid(uid);
-    if (!sourceNode) {
-      return { ok: false, error: "Source node not found" };
-    }
-
-    if (
-      sourceNode.type === "InsertNode" ||
-      sourceNode.type === "InsertCase" ||
-      sourceNode.type === "Placeholder" ||
-      sourceNode.specialType === "CatchNode"
-    ) {
-      return { ok: false, error: "Node type cannot be moved" };
+    const moveError = this.getMoveSourceError(uid);
+    if (moveError) {
+      return { ok: false, error: moveError.error };
     }
 
     const targetNode = this.getElementByUid(targetInsertUid);
@@ -1813,14 +2270,6 @@ export class Presenter {
     if (this.nodeContainsUid(sourceNode, targetInsertUid)) {
       return { ok: false, error: "Target cannot be inside moved subtree" };
     }
-
-    if (
-      !sourceNode.followElement ||
-      sourceNode.followElement.type !== "InsertNode"
-    ) {
-      return { ok: false, error: "Source node is malformed" };
-    }
-
     this.moveId = uid;
     this.insertMode = true;
     this.insertModeEventActive = false;

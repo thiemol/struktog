@@ -387,3 +387,11 @@ $main-background-color: rgba(128, 212, 255, 0.5);
   border: 0.15em solid #264040;
   font-size: 100%;
 }
+
+.embed-selected-node {
+  position: relative;
+  z-index: 1;
+  outline: 0.2em solid rgba(15, 110, 95, 0.9);
+  outline-offset: 0.12em;
+  box-shadow: 0 0 0 0.3em rgba(15, 110, 95, 0.18);
+}

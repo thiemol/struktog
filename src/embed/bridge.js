@@ -56,6 +56,10 @@ export function registerEmbedBridge(presenter) {
       return presenter.getElementByUid(uid);
     },
 
+    getSelectedNode() {
+      return presenter.getSelectedNode();
+    },
+
     getInsertTargets() {
       return presenter.getInsertTargets();
     },
@@ -118,6 +122,44 @@ export function registerEmbedBridge(presenter) {
       }
     },
 
+    startMove(uid) {
+      try {
+        const result = presenter.startMoveByUid(uid);
+        if (result && result.ok) {
+          return result;
+        }
+
+        const errorResult = normalizeBridgeError(
+          result,
+          "INTERNAL_ERROR",
+          "Failed to start move mode"
+        );
+        emitToAndroid({
+          type: "insertRejected",
+          payload: {
+            code: errorResult.code,
+            error: errorResult.error,
+          },
+        });
+        return errorResult;
+      } catch (error) {
+        const message =
+          error && error.message ? error.message : "Internal error";
+        emitToAndroid({
+          type: "insertRejected",
+          payload: {
+            code: "INTERNAL_ERROR",
+            error: message,
+          },
+        });
+        return {
+          ok: false,
+          code: "INTERNAL_ERROR",
+          error: message,
+        };
+      }
+    },
+
     getInsertState() {
       return {
         ok: true,
@@ -139,12 +181,56 @@ export function registerEmbedBridge(presenter) {
         canMove: true,
         canUndoRedo: true,
         canRemoveWithChecks: true,
+        canSelectNodes: true,
+        canEditBranches: true,
         canEditFunctions: true,
         canEditCases: true,
+        canExportSourcecode: true,
+        canSetCodeLanguage: true,
         canExportJson: true,
         canExportPng: true,
         canExportSvg: true,
       };
+    },
+
+    getSupportedCodeLanguages() {
+      return {
+        ok: true,
+        languages: presenter.getSupportedCodeLanguages(),
+      };
+    },
+
+    getCode(language = null) {
+      return presenter.getSourceCodeState(
+        language || presenter.getCodeLanguage()
+      );
+    },
+
+    setCodeLanguage(language) {
+      const supportedLanguages = presenter.getSupportedCodeLanguages();
+      if (typeof language !== "string" || language.trim() === "") {
+        return {
+          ok: false,
+          code: "INVALID_LANGUAGE",
+          error: "Invalid language",
+        };
+      }
+
+      const normalizedLanguage = language.trim();
+      if (!supportedLanguages.includes(normalizedLanguage)) {
+        return {
+          ok: false,
+          code: "UNSUPPORTED_LANGUAGE",
+          error: "Unsupported source code language",
+        };
+      }
+
+      presenter.setCodeLanguage(normalizedLanguage);
+      return presenter.getSourceCodeState(normalizedLanguage);
+    },
+
+    getCodeState() {
+      return presenter.getSourceCodeState();
     },
 
     getStructogramMeta() {
@@ -197,6 +283,14 @@ export function registerEmbedBridge(presenter) {
       return presenter.insertNodeAt(targetInsertUid, nodeType);
     },
 
+    selectNode(uid) {
+      return presenter.selectNode(uid);
+    },
+
+    clearSelectedNode() {
+      return presenter.clearSelectedNode();
+    },
+
     moveNode(uid, targetInsertUid) {
       return presenter.moveNode(uid, targetInsertUid);
     },
@@ -217,8 +311,7 @@ export function registerEmbedBridge(presenter) {
 
     addCase(uid) {
       try {
-        presenter.addCase(uid);
-        return { ok: true };
+        return presenter.addCase(uid);
       } catch (error) {
         return { ok: false, error: error.message };
       }
@@ -226,8 +319,7 @@ export function registerEmbedBridge(presenter) {
 
     addCatch(uid) {
       try {
-        presenter.addCatch(uid);
-        return { ok: true };
+        return presenter.addCatch(uid);
       } catch (error) {
         return { ok: false, error: error.message };
       }
@@ -235,6 +327,34 @@ export function registerEmbedBridge(presenter) {
 
     setCaseDefault(uid, enabled) {
       return presenter.setCaseDefault(uid, enabled);
+    },
+
+    getCaseSettings(uid) {
+      return presenter.getCaseSettings(uid);
+    },
+
+    setCaseLabel(uid, text) {
+      return presenter.setCaseLabel(uid, text);
+    },
+
+    removeCase(uid, force = false) {
+      return presenter.removeCase(uid, Boolean(force));
+    },
+
+    getTryCatchSettings(uid) {
+      return presenter.getTryCatchSettings(uid);
+    },
+
+    setCatchLabel(uid, text) {
+      return presenter.setCatchLabel(uid, text);
+    },
+
+    removeCatch(uid, force = false) {
+      return presenter.removeCatch(uid, Boolean(force));
+    },
+
+    setBranchCondition(uid, condition) {
+      return presenter.setBranchCondition(uid, condition);
     },
 
     setFunctionName(uid, name) {

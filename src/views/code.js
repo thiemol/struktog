@@ -16,6 +16,12 @@
  */
 
 import { newElement } from "../helpers/domBuilding";
+import {
+  SOURCE_CODE_TRANSLATIONS,
+  generateSourceCode,
+  getSupportedCodeLanguages,
+  isSourceCodeTranslatable,
+} from "../helpers/sourceCode";
 import { t } from "../i18n";
 
 export class CodeView {
@@ -23,400 +29,8 @@ export class CodeView {
     this.presenter = presenter;
     this.domRoot = domRoot;
     this.lang = "--";
-    this.translationMap = {
-      Python: {
-        untranslatable: [],
-        InputNode: {
-          pre: "",
-          post: ' = input("Eingabe")\n',
-        },
-        OutputNode: {
-          pre: "print(",
-          post: ")\n",
-        },
-        TaskNode: {
-          pre: "",
-          post: "\n",
-        },
-        BranchNode: {
-          pre: "if ",
-          post: ":\n",
-          between: "else:\n",
-        },
-        TryCatchNode: {
-          pre: "try:\n",
-          between: "except",
-          post: ":\n",
-        },
-        CountLoopNode: {
-          pre: "for ",
-          post: ":\n",
-        },
-        HeadLoopNode: {
-          pre: "while ",
-          post: ":\n",
-        },
-        FunctionNode: {
-          pre: "def ",
-          between: "(",
-          post: "):\n",
-        },
-        FootLoopNode: {
-          prepre: "while True:\n",
-          pre: "    if not ",
-          post: ":\n        break\n",
-        },
-        CaseNode: {
-          pre: "if ",
-          post: ":\n",
-        },
-        InsertCase: {
-          preNormal: "elif ",
-          preDefault: "default",
-          post: ":\n",
-          postpost: "\n",
-        },
-        leftBracket: "",
-        rightBracket: "",
-        pseudoSwitch: true,
-      },
-      "Python ab v3.10": {
-        untranslatable: [],
-        InputNode: {
-          pre: "",
-          post: ' = input("Eingabe")\n',
-        },
-        OutputNode: {
-          pre: "print(",
-          post: ")\n",
-        },
-        TaskNode: {
-          pre: "",
-          post: "\n",
-        },
-        BranchNode: {
-          pre: "if ",
-          post: ":\n",
-          between: "else:\n",
-        },
-        TryCatchNode: {
-          pre: "try:\n",
-          between: "except",
-          post: ":\n",
-        },
-        CountLoopNode: {
-          pre: "for ",
-          post: ":\n",
-        },
-        HeadLoopNode: {
-          pre: "while ",
-          post: ":\n",
-        },
-        FunctionNode: {
-          pre: "def ",
-          between: "(",
-          post: "):\n",
-        },
-        FootLoopNode: {
-          prepre: "while True:\n",
-          pre: "    if not ",
-          post: ":\n        break\n",
-        },
-        CaseNode: {
-          pre: "match ",
-          post: ":\n",
-        },
-        InsertCase: {
-          preNormal: "case ",
-          preDefault: "case _",
-          post: ":\n",
-          postpost: "\n",
-        },
-        leftBracket: "",
-        rightBracket: "",
-        pseudoSwitch: false,
-      },
-      PHP: {
-        untranslatable: [],
-        InputNode: {
-          pre: "",
-          post: ' = readline("Eingabe");\n',
-        },
-        OutputNode: {
-          pre: "echo ",
-          post: ";\n",
-        },
-        TaskNode: {
-          pre: "",
-          post: ";\n",
-        },
-        BranchNode: {
-          pre: "if (",
-          post: ")\n",
-          between: "} else {\n",
-        },
-        TryCatchNode: {
-          pre: "try\n",
-          between: "catch (",
-          post: ")\n",
-        },
-        CountLoopNode: {
-          pre: "for (",
-          post: ")\n",
-        },
-        HeadLoopNode: {
-          pre: "while (",
-          post: ")\n",
-        },
-        FootLoopNode: {
-          prepre: "do\n",
-          pre: "while (",
-          post: ");\n",
-        },
-        FunctionNode: {
-          pre: "function ",
-          between: "(",
-          post: ")\n",
-        },
-        CaseNode: {
-          pre: "switch (",
-          post: ")\n",
-        },
-        InsertCase: {
-          preNormal: "case ",
-          preDefault: "default",
-          post: ":\n",
-          postpost: "break;\n",
-        },
-        leftBracket: "{",
-        rightBracket: "}",
-        pseudoSwitch: false,
-      },
-      Java: {
-        untranslatable: [],
-        InputNode: {
-          pre: "",
-          post: " = System.console().readLine();\n",
-        },
-        OutputNode: {
-          pre: "System.out.println(",
-          post: ");\n",
-        },
-        TaskNode: {
-          pre: "",
-          post: ";\n",
-        },
-        BranchNode: {
-          pre: "if (",
-          post: ")\n",
-          between: "} else {\n",
-        },
-        TryCatchNode: {
-          pre: "try\n",
-          between: "catch (",
-          post: ")\n",
-        },
-        CountLoopNode: {
-          pre: "for (",
-          post: ")\n",
-        },
-        HeadLoopNode: {
-          pre: "while (",
-          post: ")\n",
-        },
-        FootLoopNode: {
-          prepre: "do\n",
-          pre: "while (",
-          post: ");\n",
-        },
-        FunctionNode: {
-          pre: "public void ",
-          between: "(",
-          post: ")\n",
-        },
-        CaseNode: {
-          pre: "switch (",
-          post: ")\n",
-        },
-        InsertCase: {
-          preNormal: "case ",
-          preDefault: "default",
-          post: ":\n",
-          postpost: "break;\n",
-        },
-        leftBracket: "{",
-        rightBracket: "}",
-        pseudoSwitch: false,
-      },
-      "C#": {
-        untranslatable: [],
-        InputNode: {
-          pre: "",
-          post: " = Console.ReadLine();\n",
-        },
-        OutputNode: {
-          pre: "Console.WriteLine(",
-          post: ");\n",
-        },
-        TaskNode: {
-          pre: "",
-          post: ";\n",
-        },
-        BranchNode: {
-          pre: "if (",
-          post: ")\n",
-          between: "} else {\n",
-        },
-        TryCatchNode: {
-          pre: "try\n",
-          between: "catch (",
-          post: ")\n",
-        },
-        CountLoopNode: {
-          pre: "for (",
-          post: ")\n",
-        },
-        HeadLoopNode: {
-          pre: "while (",
-          post: ")\n",
-        },
-        FootLoopNode: {
-          prepre: "do\n",
-          pre: "while (",
-          post: ");\n",
-        },
-        FunctionNode: {
-          pre: "public void ",
-          between: "(",
-          post: ")\n",
-        },
-        CaseNode: {
-          pre: "switch (",
-          post: ")\n",
-        },
-        InsertCase: {
-          preNormal: "case ",
-          preDefault: "default",
-          post: ":\n",
-          postpost: "break;\n",
-        },
-        leftBracket: "{",
-        rightBracket: "}",
-        pseudoSwitch: false,
-      },
-      "C++": {
-        untranslatable: [],
-        InputNode: {
-          pre: "std::cin >> ",
-          post: ";\n",
-        },
-        OutputNode: {
-          pre: "std::cout << ",
-          post: ";\n",
-        },
-        TaskNode: {
-          pre: "",
-          post: ";\n",
-        },
-        BranchNode: {
-          pre: "if (",
-          post: ")\n",
-          between: "} else {\n",
-        },
-        TryCatchNode: {
-          pre: "try\n",
-          between: "catch (",
-          post: ")\n",
-        },
-        CountLoopNode: {
-          pre: "for (",
-          post: ")\n",
-        },
-        HeadLoopNode: {
-          pre: "while (",
-          post: ")\n",
-        },
-        FootLoopNode: {
-          prepre: "do\n",
-          pre: "while (",
-          post: ");\n",
-        },
-        FunctionNode: {
-          pre: "void ",
-          between: "(",
-          post: ")\n",
-        },
-        CaseNode: {
-          pre: "switch (",
-          post: ")\n",
-        },
-        InsertCase: {
-          preNormal: "case ",
-          preDefault: "default",
-          post: ":\n",
-          postpost: "break;\n",
-        },
-        leftBracket: "{",
-        rightBracket: "}",
-        pseudoSwitch: false,
-      },
-      C: {
-        untranslatable: ["TryCatchNode"],
-        InputNode: {
-          pre: "scanf(",
-          post: ");\n",
-        },
-        OutputNode: {
-          pre: "printf(",
-          post: ");\n",
-        },
-        TaskNode: {
-          pre: "",
-          post: ";\n",
-        },
-        BranchNode: {
-          pre: "if (",
-          post: ")\n",
-          between: "} else {\n",
-        },
-        TryCatchNode: {
-          pre: "",
-          between: "",
-          post: "",
-        },
-        CountLoopNode: {
-          pre: "for (",
-          post: ")\n",
-        },
-        HeadLoopNode: {
-          pre: "while (",
-          post: ")\n",
-        },
-        FootLoopNode: {
-          prepre: "do\n",
-          pre: "while (",
-          post: ");\n",
-        },
-        FunctionNode: {
-          pre: "void ",
-          between: "(",
-          post: ")\n",
-        },
-        CaseNode: {
-          pre: "switch (",
-          post: ")\n",
-        },
-        InsertCase: {
-          preNormal: "case ",
-          preDefault: "default",
-          post: ":\n",
-          postpost: "break;\n",
-        },
-        leftBracket: "{",
-        rightBracket: "}",
-        pseudoSwitch: false,
-      },
-    };
+    this.sourcecodeActivatedFullWidth = false;
+    this.translationMap = SOURCE_CODE_TRANSLATIONS;
 
     this.preRender();
   }
@@ -442,7 +56,7 @@ export class CodeView {
     sourcecodeOption.value = "--";
     sourcecodeOption.appendChild(document.createTextNode("--"));
     sourcecodeSelect.appendChild(sourcecodeOption);
-    for (const lang in this.translationMap) {
+    for (const lang of getSupportedCodeLanguages()) {
       const langDiv = document.createElement("option");
       langDiv.value = lang;
       langDiv.appendChild(document.createTextNode(lang));
@@ -510,11 +124,7 @@ export class CodeView {
     // only translate, if some language is selected
     if (this.lang !== "--") {
       // check if translation is possible with current tree
-      let isTranslatable = false;
-      for (const nodeType of this.translationMap[this.lang].untranslatable) {
-        isTranslatable =
-          isTranslatable || this.checkForUntranslatable(model, nodeType);
-      }
+      const isTranslatable = isSourceCodeTranslatable(model, this.lang);
 
       // create container for the spans
       const preBlock = document.createElement("pre");
@@ -526,7 +136,7 @@ export class CodeView {
 
       // start appending the translated elements
       let codeText = "";
-      if (!isTranslatable) {
+      if (isTranslatable) {
         const content = this.transformToCode(model, 0, this.lang);
         content.forEach(function (i) {
           codeBlock.appendChild(i);
@@ -535,7 +145,13 @@ export class CodeView {
       } else {
         codeBlock.appendChild(document.createTextNode(t("code.unsupported")));
       }
-      localStorage.setItem("struktog_code", codeText);
+      const generatedCode = generateSourceCode(model, this.lang);
+      localStorage.setItem(
+        "struktog_code",
+        generatedCode.ok && generatedCode.supported
+          ? generatedCode.code
+          : codeText
+      );
 
       preBlock.appendChild(codeBlock);
       this.domRoot.appendChild(preBlock);
@@ -1385,22 +1001,52 @@ export class CodeView {
    */
   displaySourcecode(buttonClass) {
     const fields = document.getElementsByClassName(buttonClass);
+    const sourcecodeDisplay = document.getElementById("SourcecodeDisplay");
+    const editorContent = document.getElementById("editorContent");
+    const structogram = document.getElementById("structogram");
+    const hasStructogram = Boolean(structogram);
+    const isFullWidth =
+      hasStructogram && structogram.classList.contains("structogramFullWidth");
+
     if (this.presenter.getSourcecodeDisplay()) {
       for (const item of fields) {
         item.setAttribute("data-tooltip", "Quellcode ausblenden");
       }
-      document.getElementById("SourcecodeDisplay").style.display = "block";
-      if (window.matchMedia("(max-width: 1200px)")) {
-        document.getElementById("editorContent").style.flexBasis = "75%";
+      sourcecodeDisplay.style.display = "block";
+      if (editorContent) {
+        editorContent.style.flexBasis = "75%";
+      }
+      if (hasStructogram && !isFullWidth) {
+        structogram.classList.add("structogramFullWidth");
+        this.sourcecodeActivatedFullWidth = true;
+      } else {
+        this.sourcecodeActivatedFullWidth = false;
       }
     } else {
       for (const item of fields) {
         item.setAttribute("data-tooltip", t("code.showSourcecode"));
       }
-      document.getElementById("SourcecodeDisplay").style.display = "none";
-      if (window.matchMedia("(max-width: 1200px)")) {
-        document.getElementById("editorContent").style.flexBasis = "100%";
+      sourcecodeDisplay.style.display = "none";
+      if (editorContent) {
+        editorContent.style.flexBasis = "100%";
       }
+      if (hasStructogram && this.sourcecodeActivatedFullWidth) {
+        structogram.classList.remove("structogramFullWidth");
+      }
+      this.sourcecodeActivatedFullWidth = false;
+    }
+
+    const toggleButtons = document.getElementsByClassName("ToggleEditorWidth");
+    const tooltipText =
+      hasStructogram && structogram.classList.contains("structogramFullWidth")
+        ? t("editor.limitEditorWidth")
+        : t("editor.expandEditorWidth");
+    for (const button of toggleButtons) {
+      button.setAttribute("data-tooltip", tooltipText);
+      button.classList.toggle(
+        "struktoOptionActive",
+        hasStructogram && structogram.classList.contains("structogramFullWidth")
+      );
     }
   }
 }
