@@ -1869,6 +1869,27 @@ export class Presenter {
     };
   }
 
+  getFunctionSettings(uid) {
+    const element = this.getElementByUid(uid);
+    if (!element || element.type !== "FunctionNode") {
+      return { ok: false, error: "Function node not found" };
+    }
+
+    const parameters = this.normalizeFunctionParameters(element.parameters);
+
+    return {
+      ok: true,
+      uid,
+      text: element.text,
+      returnType: element.returnType || "",
+      parameterCount: parameters.length,
+      parameters: parameters.map((parameter, index) => ({
+        index,
+        name: parameter.parName,
+      })),
+    };
+  }
+
   setCatchLabel(uid, text) {
     const catchNode = this.getElementByUid(uid);
     if (!catchNode || catchNode.specialType !== "CatchNode") {
