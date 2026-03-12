@@ -56,6 +56,10 @@ export function registerEmbedBridge(presenter) {
       return presenter.getElementByUid(uid);
     },
 
+    getSelectedNode() {
+      return presenter.getSelectedNode();
+    },
+
     getInsertTargets() {
       return presenter.getInsertTargets();
     },
@@ -177,6 +181,8 @@ export function registerEmbedBridge(presenter) {
         canMove: true,
         canUndoRedo: true,
         canRemoveWithChecks: true,
+        canSelectNodes: true,
+        canEditBranches: true,
         canEditFunctions: true,
         canEditCases: true,
         canExportJson: true,
@@ -235,6 +241,14 @@ export function registerEmbedBridge(presenter) {
       return presenter.insertNodeAt(targetInsertUid, nodeType);
     },
 
+    selectNode(uid) {
+      return presenter.selectNode(uid);
+    },
+
+    clearSelectedNode() {
+      return presenter.clearSelectedNode();
+    },
+
     moveNode(uid, targetInsertUid) {
       return presenter.moveNode(uid, targetInsertUid);
     },
@@ -255,8 +269,7 @@ export function registerEmbedBridge(presenter) {
 
     addCase(uid) {
       try {
-        presenter.addCase(uid);
-        return { ok: true };
+        return presenter.addCase(uid);
       } catch (error) {
         return { ok: false, error: error.message };
       }
@@ -264,8 +277,7 @@ export function registerEmbedBridge(presenter) {
 
     addCatch(uid) {
       try {
-        presenter.addCatch(uid);
-        return { ok: true };
+        return presenter.addCatch(uid);
       } catch (error) {
         return { ok: false, error: error.message };
       }
@@ -273,6 +285,34 @@ export function registerEmbedBridge(presenter) {
 
     setCaseDefault(uid, enabled) {
       return presenter.setCaseDefault(uid, enabled);
+    },
+
+    getCaseSettings(uid) {
+      return presenter.getCaseSettings(uid);
+    },
+
+    setCaseLabel(uid, text) {
+      return presenter.setCaseLabel(uid, text);
+    },
+
+    removeCase(uid, force = false) {
+      return presenter.removeCase(uid, Boolean(force));
+    },
+
+    getTryCatchSettings(uid) {
+      return presenter.getTryCatchSettings(uid);
+    },
+
+    setCatchLabel(uid, text) {
+      return presenter.setCatchLabel(uid, text);
+    },
+
+    removeCatch(uid, force = false) {
+      return presenter.removeCatch(uid, Boolean(force));
+    },
+
+    setBranchCondition(uid, condition) {
+      return presenter.setBranchCondition(uid, condition);
     },
 
     setFunctionName(uid, name) {

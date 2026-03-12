@@ -403,7 +403,7 @@ export class Structogram {
     this.domRoot.appendChild(lastLine);
   }
 
-  handleEmbedFunctionNodeSelection(event, uid) {
+  handleEmbedNodeSelection(event, uid) {
     if (!this.presenter.isEmbedMode() || this.presenter.getInsertMode()) {
       return false;
     }
@@ -418,6 +418,11 @@ export class Structogram {
         target.closest(".acceptIcon") ||
         target.closest(".deleteIcon")
       ) {
+        return false;
+      }
+
+      const closestNode = target.closest("[data-node-id]");
+      if (closestNode && closestNode.getAttribute("data-node-id") !== uid) {
         return false;
       }
     }
@@ -487,7 +492,7 @@ export class Structogram {
       removeParamBtn.style.border = "none";
       removeParamBtn.setAttribute("data-tooltip", t("common.remove"));
       removeParamBtn.addEventListener("click", (event) => {
-        if (this.handleEmbedFunctionNodeSelection(event, uid)) {
+        if (this.handleEmbedNodeSelection(event, uid)) {
           return;
         }
         this.presenter.removeParamFromParameters(pos);
@@ -504,7 +509,7 @@ export class Structogram {
 
     // text can be clicked and afterwards can be changed
     textNodeSpan.addEventListener("click", (event) => {
-      if (this.handleEmbedFunctionNodeSelection(event, uid)) {
+      if (this.handleEmbedNodeSelection(event, uid)) {
         return;
       }
 
@@ -725,7 +730,7 @@ export class Structogram {
     addParamBtn.type = "button";
     addParamBtn.setAttribute("data-tooltip", t("common.addParameter"));
     addParamBtn.addEventListener("click", (event) => {
-      if (this.handleEmbedFunctionNodeSelection(event, uid)) {
+      if (this.handleEmbedNodeSelection(event, uid)) {
         return;
       }
       event.preventDefault();
@@ -794,6 +799,10 @@ export class Structogram {
       const container = document.createElement("div");
       if (subTree.id) {
         container.id = subTree.id;
+        container.setAttribute("data-node-id", subTree.id);
+        if (this.presenter.isNodeSelected(subTree.id)) {
+          container.classList.add("embed-selected-node");
+        }
       }
       container.classList.add("vcontainer", "frameTopLeft", "columnAuto");
       container.style.backgroundColor = config.get()[subTree.type].color;
@@ -1050,6 +1059,9 @@ export class Structogram {
           divHead.appendChild(divHeadTop);
           divHead.appendChild(divHeadBottom);
           divBranchNode.appendChild(divHead);
+          divBranchNode.addEventListener("click", (event) =>
+            this.handleEmbedNodeSelection(event, subTree.id)
+          );
 
           const divChildren = document.createElement("div");
           divChildren.classList.add("columnAuto", "branchCenter", "container");
@@ -1106,14 +1118,23 @@ export class Structogram {
             ["columnAuto", "vcontainer", "tryCatchNode"],
             container
           );
+          divTryCatchNode.setAttribute("data-node-id", subTree.id);
+          if (this.presenter.isNodeSelected(subTree.id)) {
+            divTryCatchNode.classList.add("embed-selected-node");
+          }
           const divTry = newElement(
             "div",
             ["container", "fixedHeight", "padding"],
             divTryCatchNode
           );
+          divTry.setAttribute("data-node-id", subTree.id);
+          divTry.addEventListener("click", (event) =>
+            this.handleEmbedNodeSelection(event, subTree.id)
+          );
           const optionDiv = this.createOptionDiv(subTree.type, subTree.id);
           divTry.appendChild(optionDiv);
           const textTry = newElement("div", ["symbol"], divTry);
+          textTry.setAttribute("data-node-id", subTree.id);
           textTry.appendChild(
             document.createTextNode(getContentDefault("tryLabel"))
           );
@@ -1159,6 +1180,7 @@ export class Structogram {
               divTryCatchNode
             );
             divCatch.id = catchElem.id;
+            divCatch.setAttribute("data-node-id", catchElem.id);
 
             if (i !== 0) {
               const optionDiv = this.createOptionDiv("CatchNode", divCatch.id);
@@ -1316,7 +1338,7 @@ export class Structogram {
           innerDiv.appendChild(vertLineContainer);
           innerDiv.appendChild(divFuncFoot);
           innerDiv.addEventListener("click", (event) =>
-            this.handleEmbedFunctionNodeSelection(event, subTree.id)
+            this.handleEmbedNodeSelection(event, subTree.id)
           );
           container.appendChild(innerDiv);
           elemArray.push(container);
@@ -1439,6 +1461,9 @@ export class Structogram {
           }
 
           div.appendChild(divChildren);
+          div.addEventListener("click", (event) =>
+            this.handleEmbedNodeSelection(event, subTree.id)
+          );
           container.appendChild(div);
           elemArray.push(container);
 
