@@ -345,6 +345,10 @@ export function registerEmbedBridge(presenter) {
       return presenter.getTryCatchSettings(uid);
     },
 
+    getFunctionSettings(uid) {
+      return presenter.getFunctionSettings(uid);
+    },
+
     setCatchLabel(uid, text) {
       return presenter.setCatchLabel(uid, text);
     },
