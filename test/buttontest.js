@@ -463,7 +463,9 @@ async function uiTest(
             );
             if (visibleBranchRoot) {
               const scopedBranchSides = await visibleBranchRoot.findElements(
-                By.css(`[data-branch-side='${branchSide}']`)
+                By.css(
+                  `[data-branch-center='true'] > [data-branch-side='${branchSide}']`
+                )
               );
               const visibleScopedSide = await getFirstVisibleEnabledElement(
                 scopedBranchSides
@@ -475,7 +477,7 @@ async function uiTest(
 
             const branchSideRoots = await driver.findElements(
               By.css(
-                `[data-node-type='branch'] [data-branch-side='${branchSide}']`
+                `[data-node-type='branch'] [data-branch-center='true'] > [data-branch-side='${branchSide}']`
               )
             );
 
