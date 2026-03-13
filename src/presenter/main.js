@@ -31,6 +31,10 @@ import {
   t,
 } from "../i18n";
 
+const STRUCTOGRAM_NAME_STORAGE_KEY = "struktog_structogram_name";
+const FUNCTION_INSERT_RESTRICTION_STORAGE_KEY =
+  "struktog_settings_function_insert_top_only";
+
 export class Presenter {
   constructor(model, options = {}) {
     this.model = model;
@@ -48,6 +52,7 @@ export class Presenter {
     this.displaySourcecode = false;
     this.codeLanguage = "--";
     this.shortcutsEnabled = true;
+    this.restrictFunctionInsertToTop = true;
     this.activeConfigProfile = "standard";
     this.uiLanguage = getUiLanguagePreference();
     this.structogramName = t("nav.unnamed");
@@ -72,6 +77,14 @@ export class Presenter {
       if (getUiLanguageStorageKey() in localStorage) {
         this.uiLanguage = localStorage[getUiLanguageStorageKey()];
         setUiLanguagePreference(this.uiLanguage, false);
+      }
+      if (STRUCTOGRAM_NAME_STORAGE_KEY in localStorage) {
+        this.structogramName = localStorage[STRUCTOGRAM_NAME_STORAGE_KEY];
+      }
+      if (FUNCTION_INSERT_RESTRICTION_STORAGE_KEY in localStorage) {
+        this.restrictFunctionInsertToTop = JSON.parse(
+          localStorage[FUNCTION_INSERT_RESTRICTION_STORAGE_KEY]
+        );
       }
     }
   }
@@ -127,6 +140,11 @@ export class Presenter {
     if (structoNameNode) {
       structoNameNode.innerHTML = normalizedName;
     }
+
+    this.updateBrowserStore();
+    this.emitExternalEvent("structogramMetaChanged", {
+      structoName: normalizedName,
+    });
 
     return normalizedName;
   }
@@ -312,6 +330,14 @@ export class Presenter {
     this.shortcutsEnabled = Boolean(enabled);
   }
 
+  getRestrictFunctionInsertToTop() {
+    return this.restrictFunctionInsertToTop;
+  }
+
+  setRestrictFunctionInsertToTop(enabled) {
+    this.restrictFunctionInsertToTop = Boolean(enabled);
+  }
+
   setActiveConfigProfile(profile) {
     if (profile && profile in config.alternatives) {
       this.activeConfigProfile = profile;
@@ -434,6 +460,11 @@ export class Presenter {
         localStorage.struktog_settings_shortcuts
       );
     }
+    if (FUNCTION_INSERT_RESTRICTION_STORAGE_KEY in localStorage) {
+      settings.restrictFunctionInsertToTop = JSON.parse(
+        localStorage[FUNCTION_INSERT_RESTRICTION_STORAGE_KEY]
+      );
+    }
 
     return settings;
   }
@@ -458,6 +489,9 @@ export class Presenter {
     localStorage.struktog_settings_colors = JSON.stringify(colorSettings);
     localStorage.struktog_settings_shortcuts = JSON.stringify(
       this.shortcutsEnabled
+    );
+    localStorage[FUNCTION_INSERT_RESTRICTION_STORAGE_KEY] = JSON.stringify(
+      this.restrictFunctionInsertToTop
     );
     localStorage[getUiLanguageStorageKey()] = this.uiLanguage;
   }
@@ -507,6 +541,15 @@ export class Presenter {
       this.setShortcutsEnabled(settings.shortcutsEnabled);
     }
 
+    if (
+      Object.prototype.hasOwnProperty.call(
+        settings,
+        "restrictFunctionInsertToTop"
+      )
+    ) {
+      this.setRestrictFunctionInsertToTop(settings.restrictFunctionInsertToTop);
+    }
+
     if (Object.prototype.hasOwnProperty.call(settings, "uiLanguage")) {
       this.setUiLanguage(settings.uiLanguage);
     }
@@ -539,6 +582,7 @@ export class Presenter {
       language: "--",
       displaySourcecode: false,
       shortcutsEnabled: true,
+      restrictFunctionInsertToTop: true,
     });
   }
 
@@ -551,6 +595,7 @@ export class Presenter {
       // update the model as stringified JSON data
       localStorage.tree = JSON.stringify(this.model.getTree());
       localStorage.displaySourcecode = this.displaySourcecode;
+      localStorage[STRUCTOGRAM_NAME_STORAGE_KEY] = this.structogramName;
     }
   }
 
@@ -658,6 +703,7 @@ export class Presenter {
     if (this.migrateLocalizedDefaultContent()) {
       this.updateBrowserStore();
     }
+    this.setStructogramName(this.structogramName);
     this.renderAllViews();
     this.emitExternalEvent("ready", {
       embedMode: this.embedMode,
@@ -906,6 +952,66 @@ export class Presenter {
       state.nodeType = this.activeInsertNodeType;
     }
     return state;
+  }
+
+  getPendingInsertNodeType() {
+    if (this.activeInsertNodeType) {
+      return this.activeInsertNodeType;
+    }
+
+    if (
+      this.nextInsertElement &&
+      typeof this.nextInsertElement.type === "string" &&
+      this.nextInsertElement.type !== ""
+    ) {
+      return this.nextInsertElement.type;
+    }
+
+    return null;
+  }
+
+  isTopLevelInsertTarget(uid) {
+    const tree = this.model.getTree();
+    return Boolean(tree && tree.type === "InsertNode" && tree.id === uid);
+  }
+
+  isProtectedTopFunctionInsertTarget(uid) {
+    if (!this.getRestrictFunctionInsertToTop()) {
+      return false;
+    }
+
+    if (!this.isTopLevelInsertTarget(uid)) {
+      return false;
+    }
+
+    const tree = this.model.getTree();
+    return Boolean(
+      tree && tree.followElement && tree.followElement.type === "FunctionNode"
+    );
+  }
+
+  canInsertAt(uid, nodeType = this.getPendingInsertNodeType()) {
+    const targetNode = this.getElementByUid(uid);
+    if (!targetNode || targetNode.type !== "InsertNode") {
+      return {
+        ok: false,
+        code: "INVALID_INSERT_TARGET",
+        error: "Invalid insert target",
+      };
+    }
+
+    if (
+      this.isProtectedTopFunctionInsertTarget(uid) &&
+      nodeType !== "FunctionNode"
+    ) {
+      return {
+        ok: false,
+        code: "FUNCTION_TOP_POSITION_PROTECTED",
+        error: "Top-level function position is protected",
+      };
+    }
+
+    return { ok: true };
   }
 
   emitInsertModeChanged(reason) {
@@ -2054,6 +2160,11 @@ export class Presenter {
    * @param   uid   id of the clicked InsertNode in the struktogramm
    */
   appendElement(uid) {
+    const insertValidation = this.canInsertAt(uid);
+    if (!insertValidation.ok) {
+      return insertValidation;
+    }
+
     this.updateUndo();
     // remove old node, when moving is used
     const insertStateBeforeAppend = this.getInsertState();
@@ -2115,6 +2226,8 @@ export class Presenter {
       }
       this.emitExternalEvent("insertModeChanged", payload);
     }
+
+    return { ok: true, insertedUid: elemId };
   }
 
   /**
@@ -2288,6 +2401,11 @@ export class Presenter {
       return { ok: false, error: "Invalid insert target" };
     }
 
+    const targetValidation = this.canInsertAt(targetInsertUid, sourceNode.type);
+    if (!targetValidation.ok) {
+      return targetValidation;
+    }
+
     if (this.nodeContainsUid(sourceNode, targetInsertUid)) {
       return { ok: false, error: "Target cannot be inside moved subtree" };
     }
@@ -2298,7 +2416,10 @@ export class Presenter {
     this.nextInsertElement = sourceNode;
     this.nextInsertElement.followElement.followElement = null;
 
-    this.appendElement(targetInsertUid);
+    const appendResult = this.appendElement(targetInsertUid);
+    if (!appendResult || !appendResult.ok) {
+      return appendResult || { ok: false, error: "Move failed" };
+    }
     return { ok: true, movedUid: uid };
   }
 
@@ -2308,9 +2429,9 @@ export class Presenter {
       return { ok: false, error: "Unknown node type" };
     }
 
-    const targetNode = this.getElementByUid(targetInsertUid);
-    if (!targetNode || targetNode.type !== "InsertNode") {
-      return { ok: false, error: "Invalid insert target" };
+    const targetValidation = this.canInsertAt(targetInsertUid, nodeType);
+    if (!targetValidation.ok) {
+      return targetValidation;
     }
 
     const prepared = this.setNextInsertElementByButtonId(buttonId);
@@ -2322,7 +2443,10 @@ export class Presenter {
     this.insertMode = true;
     this.insertModeEventActive = false;
     this.activeInsertNodeType = this.getInsertNodeTypeByButtonId(buttonId);
-    this.appendElement(targetInsertUid);
+    const appendResult = this.appendElement(targetInsertUid);
+    if (!appendResult || !appendResult.ok) {
+      return appendResult || { ok: false, error: "Insert failed" };
+    }
     return { ok: true, newUid };
   }
 
@@ -2364,6 +2488,7 @@ export class Presenter {
       language: this.getCodeLanguage(),
       displaySourcecode: this.getSourcecodeDisplay(),
       shortcutsEnabled: this.getShortcutsEnabled(),
+      restrictFunctionInsertToTop: this.getRestrictFunctionInsertToTop(),
     };
   }
 

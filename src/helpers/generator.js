@@ -157,13 +157,6 @@ export function generateHtmltree(options = {}) {
   dividerText.innerHTML = t("nav.unnamed");
   dividerText.classList.add("tooltip", "tooltip-top", "hand");
   dividerText.setAttribute("data-tooltip", t("nav.renameTooltip"));
-  dividerText.addEventListener("click", () => {
-    let structoName = window.prompt(t("nav.renamePrompt"));
-    if (structoName === null || structoName.trim() === " ") {
-      structoName = t("nav.unnamed");
-    }
-    dividerText.innerHTML = structoName;
-  });
   dividerText.setAttribute("id", "structoName");
   structoNameContainer.appendChild(dividerText);
   document.body.appendChild(structoNameContainer);
