@@ -4,6 +4,7 @@ stages:
   - deploymaster
   - deploydev
   - ontags
+  - release
 
 packen:
   image: node:jod
@@ -67,7 +68,29 @@ ontags:
     - echo "$DEPLOY_KEY" | tr -d '\r' | ssh-add -
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
-    - scp -o stricthostkeychecking=no -r ./release/${CI_PROJECT_NAME}-${CI_COMMIT_TAG}.tar.gz deploy@5.189.136.208:tools/release/struktog
+    - cp ./release/${CI_PROJECT_NAME}-${CI_COMMIT_TAG}.tar.gz ./release/${CI_PROJECT_NAME}-latest.tar.gz
+    - scp -o stricthostkeychecking=no -r ./release/${CI_PROJECT_NAME}-${CI_COMMIT_TAG}.tar.gz deploy@5.189.136.208:releases
+    - scp -o stricthostkeychecking=no -r ./release/${CI_PROJECT_NAME}-latest.tar.gz deploy@5.189.136.208:releases
+  only:
+    - tags
+
+release_gitlab:
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  stage: release
+  script:
+    - echo "Creating GitLab release for ${CI_COMMIT_TAG}"
+  release:
+    tag_name: "$CI_COMMIT_TAG"
+    name: "Struktog $CI_COMMIT_TAG"
+    description: "Release $CI_COMMIT_TAG"
+    assets:
+      links:
+        - name: "Release archive"
+          url: "${CI_PROJECT_URL}/-/jobs/artifacts/${CI_COMMIT_TAG}/raw/release/${CI_PROJECT_NAME}-${CI_COMMIT_TAG}.tar.gz?job=packen"
+        - name: "Latest release archive"
+          url: "https://releases.ddi.education/${CI_PROJECT_NAME}-latest.tar.gz"
+        - name: "External versioned archive"
+          url: "https://releases.ddi.education/${CI_PROJECT_NAME}-${CI_COMMIT_TAG}.tar.gz"
   only:
     - tags
 
