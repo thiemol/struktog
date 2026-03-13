@@ -137,6 +137,22 @@ window.onload = function () {
   // TODO: this should not be necessary, but some functions depend on moveId and nextInsertElement
   model.setPresenter(presenter);
 
+  if (!isEmbedMode) {
+    const structogramNameNode = document.getElementById("structoName");
+    if (structogramNameNode) {
+      structogramNameNode.addEventListener("click", () => {
+        const structogramName = window.prompt(
+          t("nav.renamePrompt"),
+          presenter.getStructogramName()
+        );
+        if (structogramName === null) {
+          return;
+        }
+        presenter.setStructogramName(structogramName);
+      });
+    }
+  }
+
   // create our view objects
   const structogram = new Structogram(
     presenter,

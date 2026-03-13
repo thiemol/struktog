@@ -1235,6 +1235,8 @@ export class ImportExport {
       language: this.presenter.getCodeLanguage(),
       displaySourcecode: this.presenter.getSourcecodeDisplay(),
       shortcutsEnabled: this.presenter.getShortcutsEnabled(),
+      restrictFunctionInsertToTop:
+        this.presenter.getRestrictFunctionInsertToTop(),
     };
 
     const title = document.createElement("div");
@@ -1541,6 +1543,17 @@ export class ImportExport {
     );
     generalPanel.appendChild(shortcutToggle);
 
+    const functionInsertToggle = document.createElement("label");
+    functionInsertToggle.classList.add("settingsCheck");
+    const functionInsertCheckbox = document.createElement("input");
+    functionInsertCheckbox.type = "checkbox";
+    functionInsertCheckbox.checked = settings.restrictFunctionInsertToTop;
+    functionInsertToggle.appendChild(functionInsertCheckbox);
+    functionInsertToggle.appendChild(
+      document.createTextNode(t("importExport.restrictFunctionInsertToTop"))
+    );
+    generalPanel.appendChild(functionInsertToggle);
+
     const saveButton = document.createElement("div");
     saveButton.classList.add("modal-buttons", "settingsActionButton", "hand");
     saveButton.appendChild(document.createTextNode(t("common.ok")));
@@ -1571,6 +1584,7 @@ export class ImportExport {
         language: languageSelect.value,
         displaySourcecode: sourcecodeCheckbox.checked,
         shortcutsEnabled: shortcutCheckbox.checked,
+        restrictFunctionInsertToTop: functionInsertCheckbox.checked,
       });
       document.getElementById("IEModal").classList.remove("active");
       if (uiLanguageSelect.value !== previousUiLanguage) {

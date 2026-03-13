@@ -103,6 +103,8 @@ const translations = {
       uiAuto: "Automatisch (Browser)",
       showSourcecode: "Quellcode anzeigen",
       enableShortcuts: "Shortcuts (Alt+1..0) aktivieren",
+      restrictFunctionInsertToTop:
+        "Funktionsblock nur am Anfang des Struktogramms einfügen",
       resetColors: "Reset Farben",
       colorGroupInputOutput: "Ein- und Ausgabe",
       colorGroupLoops: "Schleifen",
@@ -246,6 +248,8 @@ const translations = {
       uiAuto: "Automatic (browser)",
       showSourcecode: "Show source code",
       enableShortcuts: "Enable shortcuts (Alt+1..0)",
+      restrictFunctionInsertToTop:
+        "Only allow function blocks at the top of the structogram",
       resetColors: "Reset colors",
       colorGroupInputOutput: "Input and output",
       colorGroupLoops: "Loops",
@@ -388,6 +392,8 @@ const translations = {
       uiAuto: "Automatique (navigateur)",
       showSourcecode: "Afficher le code source",
       enableShortcuts: "Activer les raccourcis (Alt+1..0)",
+      restrictFunctionInsertToTop:
+        "Autoriser les blocs fonction uniquement en haut du structogramme",
       resetColors: "Réinitialiser les couleurs",
       colorGroupInputOutput: "Entrée et sortie",
       colorGroupLoops: "Boucles",
@@ -531,6 +537,8 @@ const translations = {
       uiAuto: "Automático (navegador)",
       showSourcecode: "Mostrar código fuente",
       enableShortcuts: "Activar atajos (Alt+1..0)",
+      restrictFunctionInsertToTop:
+        "Permitir bloques de función solo al inicio del estructograma",
       resetColors: "Restablecer colores",
       colorGroupInputOutput: "Entrada y salida",
       colorGroupLoops: "Bucles",

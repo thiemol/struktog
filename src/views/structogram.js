@@ -384,6 +384,9 @@ export class Structogram {
 
   render(tree) {
     this.refreshInsertButtons();
+    const restrictFunctionInsertToTop =
+      this.presenter.getSettingFunctionMode() &&
+      this.presenter.getRestrictFunctionInsertToTop();
     // remove content
     while (this.domRoot.hasChildNodes()) {
       this.domRoot.removeChild(this.domRoot.lastChild);
@@ -393,7 +396,7 @@ export class Structogram {
       tree,
       false,
       false,
-      this.presenter.getSettingFunctionMode()
+      restrictFunctionInsertToTop
     )) {
       this.applyCodeEventListeners(elem);
       this.domRoot.appendChild(elem);
@@ -769,9 +772,22 @@ export class Structogram {
             if (noInsert) {
               return this.renderElement(subTree.followElement, false, true);
             } else {
+              const restrictFunctionInsertToTop =
+                this.presenter.getSettingFunctionMode() &&
+                this.presenter.getRestrictFunctionInsertToTop();
               // inserting any other object instead of a function block
               if (this.presenter.getInsertMode()) {
-                if (!this.presenter.getSettingFunctionMode()) {
+                const canInsertHere = this.presenter.canInsertAt(subTree.id).ok;
+                if (!canInsertHere) {
+                  return this.renderElement(
+                    subTree.followElement,
+                    false,
+                    noInsert,
+                    renderInsertNode
+                  );
+                }
+
+                if (!restrictFunctionInsertToTop) {
                   const div = document.createElement("div");
                   div.classList.add(
                     "container",
@@ -1950,10 +1966,14 @@ export class Structogram {
       optionDiv.appendChild(functionOptions);
     }
 
+    const functionMoveRestricted =
+      type === "FunctionNode" &&
+      this.presenter.getRestrictFunctionInsertToTop();
+
     // all elements can be moved, except InsertCases they are bind to the case node
     if (
       type !== "InsertCase" &&
-      type !== "FunctionNode" &&
+      !functionMoveRestricted &&
       type !== "CatchNode"
     ) {
       const moveElem = document.createElement("div");
