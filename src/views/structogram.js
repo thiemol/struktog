@@ -36,6 +36,7 @@ export class Structogram {
         ? options.embedUi.toLowerCase()
         : "minimal";
     this.embedDragEnabled = Boolean(options.embedDragEnabled);
+    this.embedInteractionRoot = null;
     this.insertShortcuts = {
       Digit1: "InputButton",
       Digit2: "OutputButton",
@@ -118,6 +119,7 @@ export class Structogram {
 
   preRender() {
     if (this.presenter.isEmbedMode()) {
+      const embedPageRoot = this.domRoot.closest("main") || this.domRoot;
       if (this.embedUi === "hybrid") {
         this.domRoot.appendChild(this.createInsertSection());
       }
@@ -137,7 +139,9 @@ export class Structogram {
       divEditorContentSplitTop.appendChild(divWorkingArea);
       this.domRoot.appendChild(divEditorContent);
 
+      this.embedInteractionRoot = embedPageRoot;
       this.domRoot = document.getElementById("structogram");
+      this.registerEmbedInteractionHandlers();
       return;
     }
 
@@ -202,6 +206,25 @@ export class Structogram {
     codeAndOptions.appendChild(sourcecode);
 
     this.domRoot = document.getElementById("structogram");
+  }
+
+  registerEmbedInteractionHandlers() {
+    if (!this.presenter.isEmbedMode() || !this.embedInteractionRoot) {
+      return;
+    }
+
+    this.embedInteractionRoot.addEventListener("click", (event) =>
+      this.handleEmbedBackgroundSelectionClear(event)
+    );
+  }
+
+  markEmbedSelectionSurface(element) {
+    if (!this.presenter.isEmbedMode() || !element) {
+      return element;
+    }
+
+    element.setAttribute("data-selection-surface", "true");
+    return element;
   }
 
   createInsertSection() {
@@ -433,6 +456,31 @@ export class Structogram {
     event.preventDefault();
     event.stopPropagation();
     this.presenter.switchEditState(uid);
+    return true;
+  }
+
+  handleEmbedBackgroundSelectionClear(event) {
+    if (!this.presenter.isEmbedMode() || this.presenter.getInsertMode()) {
+      return false;
+    }
+
+    const target =
+      event && event.target instanceof Element ? event.target : null;
+    if (!target || target.closest("[data-selection-surface]")) {
+      return false;
+    }
+
+    if (
+      target.closest("#IEModal") ||
+      target.closest("button") ||
+      target.closest("input") ||
+      target.closest("textarea") ||
+      target.closest("select")
+    ) {
+      return false;
+    }
+
+    this.presenter.clearSelectedNode(true);
     return true;
   }
 
@@ -923,6 +971,7 @@ export class Structogram {
           container.classList.add("frameLeft", "fixedHeight");
           const divTaskNode = document.createElement("div");
           divTaskNode.classList.add("fixedHeight", "container");
+          this.markEmbedSelectionSurface(divTaskNode);
 
           const textDiv = this.createTextDiv(
             subTree.type,
@@ -947,6 +996,7 @@ export class Structogram {
         case "TaskNode": {
           const divTaskNode = document.createElement("div");
           divTaskNode.classList.add("fixedHeight", "container");
+          this.markEmbedSelectionSurface(divTaskNode);
           if (subTree.type === "BlockCallNode") {
             divTaskNode.classList.add("blockCallNode");
           }
@@ -974,6 +1024,7 @@ export class Structogram {
           divBranchNode.classList.add("columnAuto", "vcontainer");
           divBranchNode.setAttribute("data-node-type", "branch");
           divBranchNode.setAttribute("data-node-id", subTree.id);
+          this.markEmbedSelectionSurface(divBranchNode);
 
           const divHead = document.createElement("div");
           divHead.classList.add(
@@ -1085,6 +1136,7 @@ export class Structogram {
             container
           );
           divTryCatchNode.setAttribute("data-node-id", subTree.id);
+          this.markEmbedSelectionSurface(divTryCatchNode);
           if (this.presenter.isNodeSelected(subTree.id)) {
             divTryCatchNode.classList.add("embed-selected-node");
           }
@@ -1147,6 +1199,7 @@ export class Structogram {
             );
             divCatch.id = catchElem.id;
             divCatch.setAttribute("data-node-id", catchElem.id);
+            this.markEmbedSelectionSurface(divCatch);
 
             if (i !== 0) {
               const optionDiv = this.createOptionDiv("CatchNode", divCatch.id);
@@ -1198,6 +1251,7 @@ export class Structogram {
             subTree.type === "HeadLoopNode" ? "head" : "count"
           );
           div.setAttribute("data-node-id", subTree.id);
+          this.markEmbedSelectionSurface(div);
 
           const divHead = document.createElement("div");
           divHead.classList.add("container", "fixedHeight");
@@ -1241,6 +1295,7 @@ export class Structogram {
         case "FunctionNode": {
           const innerDiv = document.createElement("div");
           innerDiv.classList.add("columnAuto", "vcontainer");
+          this.markEmbedSelectionSurface(innerDiv);
 
           const divFunctionHeader = this.renderFunctionBox(
             subTree.id,
@@ -1319,6 +1374,7 @@ export class Structogram {
           div.setAttribute("data-node-type", "loop");
           div.setAttribute("data-loop-kind", "foot");
           div.setAttribute("data-node-id", subTree.id);
+          this.markEmbedSelectionSurface(div);
 
           const divChild = document.createElement("div");
           divChild.classList.add("columnAuto", "container", "loopShift");
@@ -1367,6 +1423,7 @@ export class Structogram {
         case "CaseNode": {
           const div = document.createElement("div");
           div.classList.add("columnAuto", "vcontainer");
+          this.markEmbedSelectionSurface(div);
 
           const divHead = document.createElement("div");
           divHead.classList.add("vcontainer", "fixedHeight");
@@ -2082,7 +2139,12 @@ export class Structogram {
       if (!this.presenter.getInsertMode()) {
         innerTextDiv.classList.add("hand", "fullHeight");
       }
-      innerTextDiv.addEventListener("click", () => {
+      innerTextDiv.addEventListener("click", (event) => {
+        if (this.presenter.isEmbedMode()) {
+          this.handleEmbedNodeSelection(event, uid);
+          return;
+        }
+
         this.presenter.renderAllViews();
         this.presenter.switchEditState(uid, null);
       });

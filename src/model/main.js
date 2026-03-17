@@ -292,7 +292,6 @@ class Model {
         subTree.parameters.push({ pos: words[0], parName: words[1] });
       }
     } else {
-      console.log(subTree);
       subTree.text = text;
     }
 
@@ -405,11 +404,9 @@ class Model {
     // console.log(subTree, uid)
     // stop recursion if the end of a sub tree is reached
     if (subTree === null || subTree.type === "Placeholder") {
-      console.log("not found");
       return null;
     } else {
       if (subTree.id === uid) {
-        console.log("found");
         // return a real copy
         return JSON.parse(JSON.stringify(subTree));
       } else {

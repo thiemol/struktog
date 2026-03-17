@@ -626,7 +626,7 @@ export class Presenter {
       text:
         selectedNode && typeof selectedNode.text === "string"
           ? selectedNode.text
-          : "",
+          : null,
     });
   }
 
