@@ -200,6 +200,20 @@ export function registerEmbedBridge(presenter) {
       };
     },
 
+    getSupportedUiLanguages() {
+      return {
+        ok: true,
+        languages: presenter.getSupportedUiLanguages(),
+      };
+    },
+
+    getUiLanguage() {
+      return {
+        ok: true,
+        language: presenter.getUiLanguage(),
+      };
+    },
+
     getCode(language = null) {
       return presenter.getSourceCodeState(
         language || presenter.getCodeLanguage()
@@ -227,6 +241,38 @@ export function registerEmbedBridge(presenter) {
 
       presenter.setCodeLanguage(normalizedLanguage);
       return presenter.getSourceCodeState(normalizedLanguage);
+    },
+
+    setUiLanguage(language) {
+      if (typeof language !== "string" || language.trim() === "") {
+        return {
+          ok: false,
+          code: "INVALID_LANGUAGE",
+          error: "Invalid language",
+        };
+      }
+
+      const result = presenter.setUiLanguage(language.trim());
+      if (!result.ok) {
+        return result;
+      }
+
+      presenter.persistSettings();
+      presenter.updateBrowserStore();
+      presenter.renderAllViews();
+      for (const view of presenter.views) {
+        if (typeof view.displaySourcecode === "function") {
+          view.displaySourcecode("ToggleSourcecode");
+        }
+      }
+      presenter.emitExternalEvent("settingsChanged", {
+        settings: presenter.getCurrentSettingsSnapshot(),
+      });
+
+      return {
+        ok: true,
+        language: presenter.getUiLanguage(),
+      };
     },
 
     getCodeState() {

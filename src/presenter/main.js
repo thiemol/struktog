@@ -24,6 +24,7 @@ import { config } from "../config";
 import {
   getContentDefault,
   getNodeLabel,
+  getSupportedUiLanguages,
   getUiLanguagePreference,
   getUiLanguageStorageKey,
   localizeContentDefault,
@@ -376,9 +377,32 @@ export class Presenter {
     return this.uiLanguage;
   }
 
+  getSupportedUiLanguages() {
+    return getSupportedUiLanguages();
+  }
+
   setUiLanguage(uiLanguage) {
-    this.uiLanguage = uiLanguage;
-    setUiLanguagePreference(uiLanguage, false);
+    const supportedLanguages = this.getSupportedUiLanguages();
+    const normalizedLanguage =
+      typeof uiLanguage === "string" ? uiLanguage.trim() : "";
+
+    if (normalizedLanguage === "auto") {
+      this.uiLanguage = normalizedLanguage;
+      setUiLanguagePreference(normalizedLanguage, false);
+      return { ok: true, language: this.getUiLanguage() };
+    }
+
+    if (!supportedLanguages.includes(normalizedLanguage)) {
+      return {
+        ok: false,
+        code: "UNSUPPORTED_UI_LANGUAGE",
+        error: "Unsupported UI language",
+      };
+    }
+
+    this.uiLanguage = normalizedLanguage;
+    setUiLanguagePreference(normalizedLanguage, false);
+    return { ok: true, language: this.getUiLanguage() };
   }
 
   getSettingsColors() {
@@ -551,7 +575,10 @@ export class Presenter {
     }
 
     if (Object.prototype.hasOwnProperty.call(settings, "uiLanguage")) {
-      this.setUiLanguage(settings.uiLanguage);
+      const uiLanguageResult = this.setUiLanguage(settings.uiLanguage);
+      if (!uiLanguageResult.ok) {
+        throw new Error(uiLanguageResult.error);
+      }
     }
 
     this.migrateLocalizedDefaultContent();

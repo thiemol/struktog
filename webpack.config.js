@@ -114,7 +114,7 @@ const config = {
       },
     }),
     new CopyPlugin({
-      patterns: [{ from: "*", to: "./build/" }, "./src/assets/examples/"],
+      patterns: ["./src/assets/examples/"],
       options: {
         concurrency: 100,
       },
