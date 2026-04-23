@@ -183,8 +183,8 @@ const translations = {
     },
     nav: {
       unnamed: "untitled",
-      renameTooltip: "Rename your structogram.",
-      renamePrompt: "Please enter a name for your structogram:",
+      renameTooltip: "Rename your diagram.",
+      renamePrompt: "Please enter a name for your diagram:",
       donate: "Donate",
       donateTooltip: "Support Struktog",
     },
@@ -227,7 +227,7 @@ const translations = {
       copyCode: "Copy code",
       showSourcecode: "Show source code",
       unsupported:
-        "The structogram contains elements\nthat are not directly available\nin the selected programming language.\nPlease convert them to code manually.",
+        "The diagram contains elements\nthat are not directly available\nin the selected programming language.\nPlease convert them to code manually.",
     },
     importExport: {
       startTour: "Start tour",
@@ -249,7 +249,7 @@ const translations = {
       showSourcecode: "Show source code",
       enableShortcuts: "Enable shortcuts (Alt+1..0)",
       restrictFunctionInsertToTop:
-        "Only allow function blocks at the top of the structogram",
+        "Only allow function blocks at the top of the diagram",
       resetColors: "Reset colors",
       colorGroupInputOutput: "Input and output",
       colorGroupLoops: "Loops",
@@ -261,19 +261,19 @@ const translations = {
       unknownImportFormat: "File could not be imported: unknown format.",
     },
     webtour: {
-      titleIntro: "What is a structogram?",
+      titleIntro: "What is a Nassi-Shneiderman diagram?",
       textIntro:
-        "A structogram describes an algorithm using clear, structured building blocks. You plan program flow step by step with sequence, branch, and loop before writing source code. The editor helps you create these blocks consistently, arrange them logically, and transform them into executable code.",
+        "A Nassi-Shneiderman diagram describes an algorithm using clear, structured building blocks. You plan program flow step by step with sequence, branch, and loop before writing source code. The editor helps you create these blocks consistently, arrange them logically, and transform them into executable code.",
       titleStart: "Quick tour",
       textStart: "You can start this introduction here at any time.",
-      titleNaming: "Name your structogram",
+      titleNaming: "Name your diagram",
       textNaming:
-        "You can rename your structogram here. This name is also used for future JSON and PNG export filenames.",
+        "You can rename your diagram here. This name is also used for future JSON and PNG export filenames.",
       titleInsert: "Insert elements",
       textInsert:
         "Choose an element here and insert it by click or drag and drop.",
       titleWorkspace: "Workspace",
-      textWorkspace: "Build your structogram here and edit content directly.",
+      textWorkspace: "Build your diagram here and edit content directly.",
       titleElementOptions: "Element options",
       textElementOptions:
         "Inserted elements provide actions like delete and type-specific options.",
@@ -326,8 +326,8 @@ const translations = {
     },
     nav: {
       unnamed: "sans titre",
-      renameTooltip: "Renommez votre structogramme.",
-      renamePrompt: "Veuillez saisir un nom pour votre structogramme :",
+      renameTooltip: "Renommez votre diagramme.",
+      renamePrompt: "Veuillez saisir un nom pour votre diagramme :",
       donate: "Faire un don",
       donateTooltip: "Soutenir Struktog",
     },
@@ -371,7 +371,7 @@ const translations = {
       copyCode: "Copier le code",
       showSourcecode: "Afficher le code source",
       unsupported:
-        "Le structogramme contient des éléments\nqui ne sont pas directement disponibles\ndans le langage sélectionné.\nVeuillez les convertir manuellement en code.",
+        "Le diagramme contient des éléments\nqui ne sont pas directement disponibles\ndans le langage sélectionné.\nVeuillez les convertir manuellement en code.",
     },
     importExport: {
       startTour: "Démarrer la visite",
@@ -393,7 +393,7 @@ const translations = {
       showSourcecode: "Afficher le code source",
       enableShortcuts: "Activer les raccourcis (Alt+1..0)",
       restrictFunctionInsertToTop:
-        "Autoriser les blocs function uniquement en haut du structogramme",
+        "Autoriser les blocs function uniquement en haut du diagramme",
       resetColors: "Réinitialiser les couleurs",
       colorGroupInputOutput: "Entrée et sortie",
       colorGroupLoops: "Boucles",
@@ -406,20 +406,20 @@ const translations = {
         "Le fichier ne peut pas être importé : format inconnu.",
     },
     webtour: {
-      titleIntro: "Qu'est-ce qu'un structogramme ?",
+      titleIntro: "Qu'est-ce qu'un diagramme de Nassi-Shneiderman ?",
       textIntro:
-        "Un structogramme décrit un algorithme avec des blocs structurés clairs. Vous planifiez le déroulement du programme étape par étape avec séquence, branchement et boucle avant d'écrire le code source. L'éditeur vous aide à créer ces blocs de manière cohérente, à les organiser logiquement et à les transformer en code exécutable.",
+        "Un diagramme de Nassi-Shneiderman décrit un algorithme avec des blocs structurés clairs. Vous planifiez le déroulement du programme étape par étape avec séquence, branchement et boucle avant d'écrire le code source. L'éditeur vous aide à créer ces blocs de manière cohérente, à les organiser logiquement et à les transformer en code exécutable.",
       titleStart: "Visite rapide",
       textStart: "Vous pouvez démarrer cette introduction ici à tout moment.",
-      titleNaming: "Nommer le structogramme",
+      titleNaming: "Nommer le diagramme",
       textNaming:
-        "Vous pouvez renommer votre structogramme ici. Ce nom est aussi utilisé pour les futurs noms de fichiers d'export JSON et PNG.",
+        "Vous pouvez renommer votre diagramme ici. Ce nom est aussi utilisé pour les futurs noms de fichiers d'export JSON et PNG.",
       titleInsert: "Insérer des éléments",
       textInsert:
         "Choisissez ici un élément et insérez-le par clic ou glisser-déposer.",
       titleWorkspace: "Espace de travail",
       textWorkspace:
-        "Construisez votre structogramme ici et modifiez les contenus directement.",
+        "Construisez votre diagramme ici et modifiez les contenus directement.",
       titleElementOptions: "Options des éléments",
       textElementOptions:
         "Les éléments insérés offrent des actions comme supprimer et des options selon le type.",
@@ -472,8 +472,8 @@ const translations = {
     },
     nav: {
       unnamed: "sin título",
-      renameTooltip: "Renombra tu estructograma.",
-      renamePrompt: "Introduce un nombre para tu estructograma:",
+      renameTooltip: "Renombra tu diagrama.",
+      renamePrompt: "Introduce un nombre para tu diagrama:",
       donate: "Donar",
       donateTooltip: "Apoya Struktog",
     },
@@ -516,7 +516,7 @@ const translations = {
       copyCode: "Copiar código",
       showSourcecode: "Mostrar código fuente",
       unsupported:
-        "El estructograma contiene elementos\nque no están disponibles directamente\nen el lenguaje de programación seleccionado.\nPor favor, conviértelos manualmente a código.",
+        "El diagrama contiene elementos\nque no están disponibles directamente\nen el lenguaje de programación seleccionado.\nPor favor, conviértelos manualmente a código.",
     },
     importExport: {
       startTour: "Iniciar tour",
@@ -538,7 +538,7 @@ const translations = {
       showSourcecode: "Mostrar código fuente",
       enableShortcuts: "Activar atajos (Alt+1..0)",
       restrictFunctionInsertToTop:
-        "Permitir bloques function solo al inicio del estructograma",
+        "Permitir bloques function solo al inicio del diagrama",
       resetColors: "Restablecer colores",
       colorGroupInputOutput: "Entrada y salida",
       colorGroupLoops: "Bucles",
@@ -551,20 +551,20 @@ const translations = {
         "No se pudo importar el archivo: formato desconocido.",
     },
     webtour: {
-      titleIntro: "¿Qué es un estructograma?",
+      titleIntro: "¿Qué es un diagrama de Nassi-Shneiderman?",
       textIntro:
-        "Un estructograma describe un algoritmo con bloques claros y estructurados. Planificas el flujo del programa paso a paso con secuencia, rama y bucle antes de escribir código fuente. El editor te ayuda a crear estos bloques de forma coherente, ordenarlos lógicamente y transformarlos en código ejecutable.",
+        "Un diagrama de Nassi-Shneiderman describe un algoritmo con bloques claros y estructurados. Planificas el flujo del programa paso a paso con secuencia, rama y bucle antes de escribir código fuente. El editor te ayuda a crear estos bloques de forma coherente, ordenarlos lógicamente y transformarlos en código ejecutable.",
       titleStart: "Tour rápido",
       textStart: "Puedes iniciar esta introducción aquí en cualquier momento.",
-      titleNaming: "Nombrar el estructograma",
+      titleNaming: "Nombrar el diagrama",
       textNaming:
-        "Aquí puedes renombrar tu estructograma. Este nombre también se usa para futuros nombres de archivo en las exportaciones JSON y PNG.",
+        "Aquí puedes renombrar tu diagrama. Este nombre también se usa para futuros nombres de archivo en las exportaciones JSON y PNG.",
       titleInsert: "Insertar elementos",
       textInsert:
         "Elige un elemento aquí e insértalo con clic o arrastrar y soltar.",
       titleWorkspace: "Área de trabajo",
       textWorkspace:
-        "Aquí construyes tu estructograma y editas el contenido directamente.",
+        "Aquí construyes tu diagrama y editas el contenido directamente.",
       titleElementOptions: "Opciones del elemento",
       textElementOptions:
         "Los elementos insertados ofrecen acciones como eliminar y otras opciones según el tipo.",
