@@ -153,6 +153,10 @@ const translations = {
         "Struktog - Struktogramme erstellen und unterrichten | ddi.education",
       description:
         "Struktog ist ein kostenloses Open-Source-Tool zum Erstellen von Struktogrammen für Informatikunterricht und Lehrerbildung.",
+      locale: "de_DE",
+      keywords:
+        "Struktogramm, Nassi-Shneiderman-Diagramm, Informatikunterricht, Lehrerbildung, Open Source, Diagrammeditor, Codegenerierung",
+      jsonLdLanguage: "de",
     },
   },
   en: {
@@ -302,6 +306,10 @@ const translations = {
         "Struktog - Create and teach Nassi-Shneiderman diagrams | ddi.education",
       description:
         "Struktog is a free open-source tool for creating Nassi-Shneiderman diagrams in computer science education and teacher training.",
+      locale: "en_US",
+      keywords:
+        "Nassi-Shneiderman diagram, structogram, computer science education, teacher training, open source, diagram editor, code generation",
+      jsonLdLanguage: "en",
     },
   },
   fr: {
@@ -454,6 +462,10 @@ const translations = {
         "Struktog - Créer et enseigner les diagrammes de Nassi-Shneiderman | ddi.education",
       description:
         "Struktog est un outil open source gratuit pour créer des diagrammes de Nassi-Shneiderman dans l'enseignement de l'informatique et la formation des enseignants.",
+      locale: "fr_FR",
+      keywords:
+        "diagramme de Nassi-Shneiderman, enseignement de l'informatique, formation des enseignants, open source, editeur de diagrammes, generation de code",
+      jsonLdLanguage: "fr",
     },
   },
   es: {
@@ -605,6 +617,10 @@ const translations = {
         "Struktog - Crear y enseñar diagramas de Nassi-Shneiderman | ddi.education",
       description:
         "Struktog es una herramienta gratuita de código abierto para crear diagramas de Nassi-Shneiderman en la enseñanza de la informática y la formación docente.",
+      locale: "es_ES",
+      keywords:
+        "diagrama de Nassi-Shneiderman, ensenanza de la informatica, formacion docente, codigo abierto, editor de diagramas, generacion de codigo",
+      jsonLdLanguage: "es",
     },
   },
 };

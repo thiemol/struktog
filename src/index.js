@@ -43,12 +43,29 @@ function updateMetaTag(selector, attributeName, attributeValue, content) {
   tag.setAttribute("content", content);
 }
 
+function updateStructuredData(data) {
+  let tag = document.head.querySelector('script[data-structured-data="struktog"]');
+  if (!tag) {
+    tag = document.createElement("script");
+    tag.type = "application/ld+json";
+    tag.setAttribute("data-structured-data", "struktog");
+    document.head.appendChild(tag);
+  }
+  tag.textContent = JSON.stringify(data);
+}
+
 function updateDocumentMetadata() {
   const title = t("meta.title");
   const description = t("meta.description");
+  const locale = t("meta.locale");
+  const keywords = t("meta.keywords");
+  const jsonLdLanguage = t("meta.jsonLdLanguage");
+  const canonicalUrl = "https://ddi.education/struktog";
 
   document.title = title;
   updateMetaTag('meta[name="description"]', "name", "description", description);
+  updateMetaTag('meta[name="robots"]', "name", "robots", "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1");
+  updateMetaTag('meta[name="keywords"]', "name", "keywords", keywords);
   updateMetaTag('meta[property="og:title"]', "property", "og:title", title);
   updateMetaTag(
     'meta[property="og:description"]',
@@ -56,6 +73,21 @@ function updateDocumentMetadata() {
     "og:description",
     description
   );
+  updateMetaTag('meta[property="og:type"]', "property", "og:type", "website");
+  updateMetaTag('meta[property="og:url"]', "property", "og:url", canonicalUrl);
+  updateMetaTag(
+    'meta[property="og:site_name"]',
+    "property",
+    "og:site_name",
+    "Struktog"
+  );
+  updateMetaTag(
+    'meta[property="og:locale"]',
+    "property",
+    "og:locale",
+    locale
+  );
+  updateMetaTag('meta[name="twitter:card"]', "name", "twitter:card", "summary_large_image");
   updateMetaTag('meta[name="twitter:title"]', "name", "twitter:title", title);
   updateMetaTag(
     'meta[name="twitter:description"]',
@@ -63,6 +95,39 @@ function updateDocumentMetadata() {
     "twitter:description",
     description
   );
+
+  updateStructuredData({
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: "Struktog",
+    alternateName: "Struktog Diagram Editor",
+    url: canonicalUrl,
+    description,
+    applicationCategory: "EducationalApplication",
+    applicationSubCategory: "Diagram Editor",
+    operatingSystem: "Web",
+    browserRequirements: "Requires JavaScript and a modern web browser",
+    inLanguage: jsonLdLanguage,
+    isAccessibleForFree: true,
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "EUR",
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "ddi.education",
+      url: "https://ddi.education",
+    },
+    keywords,
+    featureList: [
+      "Create Nassi-Shneiderman diagrams",
+      "Generate source code",
+      "Export diagrams as PNG and SVG",
+      "Save and load diagrams as JSON",
+      "Use in computer science education",
+    ],
+  });
 }
 
 function registerServiceWorker() {
