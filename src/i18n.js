@@ -148,6 +148,12 @@ const translations = {
       done: "Fertig",
       finish: "Beenden",
     },
+    meta: {
+      title:
+        "Struktog - Struktogramme erstellen und unterrichten | ddi.education",
+      description:
+        "Struktog ist ein kostenloses Open-Source-Tool zum Erstellen von Struktogrammen für Informatikunterricht und Lehrerbildung.",
+    },
   },
   en: {
     common: {
@@ -290,6 +296,12 @@ const translations = {
       next: "Next",
       done: "Done",
       finish: "Close",
+    },
+    meta: {
+      title:
+        "Struktog - Create and teach Nassi-Shneiderman diagrams | ddi.education",
+      description:
+        "Struktog is a free open-source tool for creating Nassi-Shneiderman diagrams in computer science education and teacher training.",
     },
   },
   fr: {
@@ -437,6 +449,12 @@ const translations = {
       done: "Terminer",
       finish: "Fermer",
     },
+    meta: {
+      title:
+        "Struktog - Créer et enseigner les diagrammes de Nassi-Shneiderman | ddi.education",
+      description:
+        "Struktog est un outil open source gratuit pour créer des diagrammes de Nassi-Shneiderman dans l'enseignement de l'informatique et la formation des enseignants.",
+    },
   },
   es: {
     common: {
@@ -581,6 +599,12 @@ const translations = {
       next: "Siguiente",
       done: "Listo",
       finish: "Cerrar",
+    },
+    meta: {
+      title:
+        "Struktog - Crear y enseñar diagramas de Nassi-Shneiderman | ddi.education",
+      description:
+        "Struktog es una herramienta gratuita de código abierto para crear diagramas de Nassi-Shneiderman en la enseñanza de la informática y la formación docente.",
     },
   },
 };

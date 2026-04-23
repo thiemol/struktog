@@ -33,6 +33,38 @@ import { initializeI18n, t } from "./i18n";
 
 import "./assets/scss/structog.scss";
 
+function updateMetaTag(selector, attributeName, attributeValue, content) {
+  let tag = document.head.querySelector(selector);
+  if (!tag) {
+    tag = document.createElement("meta");
+    tag.setAttribute(attributeName, attributeValue);
+    document.head.appendChild(tag);
+  }
+  tag.setAttribute("content", content);
+}
+
+function updateDocumentMetadata() {
+  const title = t("meta.title");
+  const description = t("meta.description");
+
+  document.title = title;
+  updateMetaTag('meta[name="description"]', "name", "description", description);
+  updateMetaTag('meta[property="og:title"]', "property", "og:title", title);
+  updateMetaTag(
+    'meta[property="og:description"]',
+    "property",
+    "og:description",
+    description
+  );
+  updateMetaTag('meta[name="twitter:title"]', "name", "twitter:title", title);
+  updateMetaTag(
+    'meta[name="twitter:description"]',
+    "name",
+    "twitter:description",
+    description
+  );
+}
+
 function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) {
     return;
@@ -88,6 +120,7 @@ window.onload = function () {
   const embedUiMode = resolveEmbedUiMode(appMode);
   let configId = null;
   initializeI18n();
+  updateDocumentMetadata();
   // manipulate the localStorage before loading the presenter
   if (typeof Storage !== "undefined") {
     const url = new URL(window.location.href);
@@ -134,6 +167,11 @@ window.onload = function () {
 
   // create presenter object
   const presenter = new Presenter(model, { embedMode: isEmbedMode });
+  presenter.setExternalEventHandler((event) => {
+    if (event && event.type === "uiLanguageChanged") {
+      updateDocumentMetadata();
+    }
+  });
   // TODO: this should not be necessary, but some functions depend on moveId and nextInsertElement
   model.setPresenter(presenter);
 

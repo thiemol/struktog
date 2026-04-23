@@ -597,6 +597,10 @@ export class Presenter {
       }
     }
 
+    this.emitExternalEvent("uiLanguageChanged", {
+      language: this.getUiLanguage(),
+    });
+
     this.emitExternalEvent("settingsChanged", {
       settings: this.getCurrentSettingsSnapshot(),
     });
