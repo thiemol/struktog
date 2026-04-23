@@ -61,6 +61,7 @@ function updateDocumentMetadata() {
   const keywords = t("meta.keywords");
   const jsonLdLanguage = t("meta.jsonLdLanguage");
   const canonicalUrl = "https://ddi.education/struktog";
+  const previewImageUrl = canonicalUrl + "/social-preview.svg";
 
   document.title = title;
   updateMetaTag('meta[name="description"]', "name", "description", description);
@@ -87,6 +88,12 @@ function updateDocumentMetadata() {
     "og:locale",
     locale
   );
+  updateMetaTag(
+    'meta[property="og:image"]',
+    "property",
+    "og:image",
+    previewImageUrl
+  );
   updateMetaTag('meta[name="twitter:card"]', "name", "twitter:card", "summary_large_image");
   updateMetaTag('meta[name="twitter:title"]', "name", "twitter:title", title);
   updateMetaTag(
@@ -94,6 +101,12 @@ function updateDocumentMetadata() {
     "name",
     "twitter:description",
     description
+  );
+  updateMetaTag(
+    'meta[name="twitter:image"]',
+    "name",
+    "twitter:image",
+    previewImageUrl
   );
 
   updateStructuredData({

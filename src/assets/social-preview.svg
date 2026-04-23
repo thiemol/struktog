@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Struktog social preview</title>
+  <desc id="desc">Struktog logo with subtitle for Nassi-Shneiderman diagrams in education.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#f6fbff" />
+      <stop offset="100%" stop-color="#d9eef1" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)" />
+  <rect x="70" y="70" width="1060" height="490" rx="32" fill="#ffffff" stroke="#d5e7ea" stroke-width="4" />
+
+  <g transform="translate(120 120) scale(1.35)">
+    <line x1="5" y1="5" x2="125" y2="5" stroke="#264040" stroke-linecap="round" stroke-width="10" />
+    <line x1="5" y1="5" x2="5" y2="125" stroke="#264040" stroke-linecap="round" stroke-width="10" />
+    <line x1="125" y1="5" x2="125" y2="45" stroke="#264040" stroke-linecap="round" stroke-width="10" />
+    <line x1="5" y1="45" x2="125" y2="45" stroke="#264040" stroke-linecap="round" stroke-width="10" />
+    <line x1="5" y1="85" x2="125" y2="85" stroke="#264040" stroke-linecap="round" stroke-width="10" />
+    <line x1="125" y1="85" x2="125" y2="205" stroke="#264040" stroke-linecap="round" stroke-width="10" />
+    <line x1="5" y1="125" x2="125" y2="125" stroke="#264040" stroke-linecap="round" stroke-width="10" />
+    <line x1="5" y1="165" x2="125" y2="165" stroke="#264040" stroke-linecap="round" stroke-width="10" />
+    <line x1="5" y1="165" x2="5" y2="205" stroke="#264040" stroke-linecap="round" stroke-width="10" />
+    <line x1="5" y1="205" x2="125" y2="205" stroke="#264040" stroke-linecap="round" stroke-width="10" />
+    <line x1="145" y1="85" x2="265" y2="85" stroke="#264040" stroke-linecap="round" stroke-width="10" />
+    <line x1="145" y1="125" x2="265" y2="125" stroke="#264040" stroke-linecap="round" stroke-width="10" />
+    <line x1="145" y1="85" x2="145" y2="205" stroke="#264040" stroke-linecap="round" stroke-width="10" />
+    <line x1="265" y1="85" x2="265" y2="285" stroke="#264040" stroke-linecap="round" stroke-width="10" />
+    <line x1="145" y1="165" x2="265" y2="165" stroke="#264040" stroke-linecap="round" stroke-width="10" />
+    <line x1="145" y1="205" x2="265" y2="205" stroke="#264040" stroke-linecap="round" stroke-width="10" />
+    <line x1="145" y1="245" x2="265" y2="245" stroke="#264040" stroke-linecap="round" stroke-width="10" />
+    <line x1="145" y1="245" x2="145" y2="285" stroke="#264040" stroke-linecap="round" stroke-width="10" />
+    <line x1="145" y1="285" x2="265" y2="285" stroke="#264040" stroke-linecap="round" stroke-width="10" />
+    <line x1="45" y1="45" x2="45" y2="85" stroke="#264040" stroke-linecap="round" stroke-width="10" />
+    <line x1="85" y1="125" x2="85" y2="165" stroke="#264040" stroke-linecap="round" stroke-width="10" />
+    <line x1="185" y1="125" x2="185" y2="165" stroke="#264040" stroke-linecap="round" stroke-width="10" />
+    <line x1="225" y1="125" x2="225" y2="165" stroke="#264040" stroke-linecap="round" stroke-width="10" />
+    <line x1="225" y1="205" x2="225" y2="245" stroke="#264040" stroke-linecap="round" stroke-width="10" />
+    <line x1="285" y1="205" x2="325" y2="205" stroke="#264040" stroke-linecap="round" stroke-width="10" />
+    <line x1="285" y1="205" x2="285" y2="245" stroke="#264040" stroke-linecap="round" stroke-width="10" />
+    <line x1="325" y1="205" x2="325" y2="245" stroke="#264040" stroke-linecap="round" stroke-width="10" />
+    <line x1="285" y1="245" x2="325" y2="245" stroke="#264040" stroke-linecap="round" stroke-width="10" />
+  </g>
+
+  <text x="560" y="240" fill="#264040" font-family="Verdana, Geneva, sans-serif" font-size="76" font-weight="700">
+    Struktog
+  </text>
+  <text x="560" y="308" fill="#3d5f5f" font-family="Verdana, Geneva, sans-serif" font-size="30">
+    Nassi-Shneiderman diagrams for education
+  </text>
+  <text x="560" y="378" fill="#4f6c6c" font-family="Verdana, Geneva, sans-serif" font-size="24">
+    Create diagrams, generate code, export PNG, SVG and JSON.
+  </text>
+
+  <rect x="560" y="430" width="200" height="44" rx="22" fill="#264040" />
+  <text x="660" y="459" text-anchor="middle" fill="#ffffff" font-family="Verdana, Geneva, sans-serif" font-size="20" font-weight="700">
+    ddi.education
+  </text>
+</svg>
